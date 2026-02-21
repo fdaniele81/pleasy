@@ -1,0 +1,20 @@
+{
+  "entity": "Festività",
+  "title": "Gestione Festività",
+  "description": "Gestisci le festività della tua azienda",
+  "newHoliday": "Nuova Festività",
+  "addHoliday": "Aggiungi Festività",
+  "searchPlaceholder": "Cerca per nome festività...",
+  "name": "Nome",
+  "date": "Data",
+  "recurring": "Ricorrente",
+  "noHolidays": "Nessuna Festività",
+  "noHolidaysForSearch": "Nessuna festività trovata per",
+  "emptyMessage": "Inizia aggiungendo la prima festività",
+  "holidayNameRequired": "Il nome della festività è obbligatorio",
+  "dateRequired": "La data è obbligatoria",
+  "holidayNameLabel": "Nome Festività *",
+  "holidayNamePlaceholder": "Es. Natale",
+  "dateLabel": "Data *",
+  "recurringLabel": "Festività ricorrente (si ripete ogni anno)"
+}

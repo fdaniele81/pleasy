@@ -1,0 +1,32 @@
+{
+  "name": "pleasy-backend",
+  "version": "1.0.2",
+  "description": "Pleasy Backend - REST API for project planning, resource management, and timesheet tracking",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
+  },
+  "keywords": ["project-management", "timesheet", "resource-planning", "rest-api", "express", "postgresql"],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "pg": "^8.16.3",
+    "uuid": "^13.0.0",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

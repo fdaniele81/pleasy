@@ -1,0 +1,21 @@
+{
+  "title": "Time Off Plan",
+  "holidays": "Holidays",
+  "exportTitle": "Export Time Off Plan",
+  "vacationLeave": "Vacation / Leave",
+  "other": "Other",
+  "exportError": "Error during export: {{message}}",
+  "searchPlaceholder": "Search user by name or email...",
+  "daily": "Daily",
+  "weekly": "Weekly",
+  "userHeader": "User",
+  "totalShort": "Tot",
+  "today": "Today",
+  "weekShort": "Wk",
+
+  "excelSheetName": "Time Off Plan",
+  "excelUser": "User",
+  "excelTotal": "Total",
+  "excelVacation": "Vacation / Leave",
+  "excelOther": "Other"
+}

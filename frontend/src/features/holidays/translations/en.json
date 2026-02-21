@@ -1,0 +1,20 @@
+{
+  "entity": "Holiday",
+  "title": "Holiday Management",
+  "description": "Manage your company's holidays",
+  "newHoliday": "New Holiday",
+  "addHoliday": "Add Holiday",
+  "searchPlaceholder": "Search by holiday name...",
+  "name": "Name",
+  "date": "Date",
+  "recurring": "Recurring",
+  "noHolidays": "No Holidays",
+  "noHolidaysForSearch": "No holidays found for",
+  "emptyMessage": "Start by adding the first holiday",
+  "holidayNameRequired": "Holiday name is required",
+  "dateRequired": "Date is required",
+  "holidayNameLabel": "Holiday Name *",
+  "holidayNamePlaceholder": "E.g. Christmas",
+  "dateLabel": "Date *",
+  "recurringLabel": "Recurring holiday (repeats every year)"
+}

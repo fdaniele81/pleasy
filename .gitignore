@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment files (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vite
+.vite/
+
+# Testing
+coverage/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Deployment
+.vercel/
+.netlify/
+.wrangler/

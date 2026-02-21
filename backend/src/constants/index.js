@@ -1,0 +1,38 @@
+export const ROLES = {
+  ADMIN: "ADMIN",
+  PM: "PM",
+  USER: "USER",
+};
+
+export const STATUS = {
+  ACTIVE: "ACTIVE",
+  DELETED: "DELETED",
+};
+
+export const TASK_STATUS = {
+  TODO: "TODO",
+  IN_PROGRESS: "IN PROGRESS",
+  DONE: "DONE",
+  DELETED: "DELETED",
+};
+
+export const PROJECT_TYPE = {
+  PROJECT: "PROJECT",
+  TM: "TM",
+};
+
+export const TOKEN_TYPE = {
+  ACCESS: "access",
+  REFRESH: "refresh",
+};
+
+export const AUDIT_EVENTS = {
+  LOGIN_SUCCESS: "LOGIN_SUCCESS",
+  LOGIN_FAILED: "LOGIN_FAILED",
+  LOGOUT: "LOGOUT",
+  IMPERSONATION: "IMPERSONATION",
+  PASSWORD_CHANGE: "PASSWORD_CHANGE",
+  USER_CREATED: "USER_CREATED",
+  USER_DELETED: "USER_DELETED",
+  UNAUTHORIZED_ACCESS: "UNAUTHORIZED_ACCESS",
+};

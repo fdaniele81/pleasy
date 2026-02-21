@@ -1,0 +1,21 @@
+{
+  "title": "Piano Ferie",
+  "holidays": "Festività",
+  "exportTitle": "Esporta Piano Ferie",
+  "vacationLeave": "Ferie / Permessi",
+  "other": "Altro",
+  "exportError": "Errore durante l'esportazione: {{message}}",
+  "searchPlaceholder": "Cerca utente per nome o email...",
+  "daily": "Giornaliero",
+  "weekly": "Settimanale",
+  "userHeader": "Utente",
+  "totalShort": "Tot",
+  "today": "Oggi",
+  "weekShort": "Sett",
+
+  "excelSheetName": "Piano Ferie",
+  "excelUser": "Utente",
+  "excelTotal": "Totale",
+  "excelVacation": "Ferie / Permessi",
+  "excelOther": "Altro"
+}

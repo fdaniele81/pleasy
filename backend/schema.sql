@@ -700,3 +700,31 @@ INSERT INTO public.project_type (project_type_id, description) VALUES
   ('PROJECT', 'Progetto a corpo'),
   ('TM', 'Time & Material')
 ON CONFLICT (project_type_id) DO NOTHING;
+
+INSERT INTO public.project_status (project_status_id, description) VALUES
+  ('ACTIVE', 'Attivo'),
+  ('CLOSED', 'Chiuso'),
+  ('DELETED', 'Cancellato')
+ON CONFLICT (project_status_id) DO NOTHING;
+
+-- ============================================================================
+-- SEED: DEFAULT COMPANY & ADMIN USER
+-- ============================================================================
+-- Password: admin123 (bcrypt, salt 10) - change after first login
+-- Uses ON CONFLICT to be idempotent on re-runs
+
+INSERT INTO public.company (company_id, company_key, legal_name, vat_number, status_id)
+VALUES ('1a4c130e-864c-4c34-a3b6-39814534d518', 'SYS', 'System', 'n/a', 'ACTIVE')
+ON CONFLICT (company_key) DO NOTHING;
+
+INSERT INTO public.users (user_id, company_id, email, password_hash, role_id, status_id, full_name)
+VALUES (
+  '2e9c3a99-1da6-4843-bd96-81a7d2f03823',
+  '1a4c130e-864c-4c34-a3b6-39814534d518',
+  'admin@system.local',
+  '$2b$10$CkAm1XpjTk9hrVRdQs9dh.UU9nvdylxH7tK9mUtfiP0L5ilVAoy7q',
+  'ADMIN',
+  'ACTIVE',
+  'Admin'
+)
+ON CONFLICT (email) DO NOTHING;

@@ -2,8 +2,6 @@ import { apiSlice } from '../../../api/apiSlice';
 import { TAG_TYPES } from '../../../api/tags';
 import { CACHE_STRATEGIES } from '../../../api/cacheStrategies';
 
-const BASE_URL = import.meta.env.VITE_API_URL;
-
 export const reconciliationEndpoints = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getReconciliationTemplate: builder.query({
@@ -14,26 +12,19 @@ export const reconciliationEndpoints = apiSlice.injectEndpoints({
     }),
 
     uploadReconciliationStaging: builder.mutation({
-      queryFn: async (file) => {
-        try {
-          const formData = new FormData();
-          formData.append('excelFile', file);
-          formData.append('template_name', 'Template Riconciliazione');
+      queryFn: async (file, _api, _extraOptions, baseQuery) => {
+        const formData = new FormData();
+        formData.append('excelFile', file);
+        formData.append('template_name', 'Template Riconciliazione');
 
-          const response = await fetch(`${BASE_URL}/api/reconciliation/upload`, {
-            method: 'POST',
-            credentials: 'include',
-            body: formData,
-          });
+        const result = await baseQuery({
+          url: '/reconciliation/upload',
+          method: 'POST',
+          body: formData,
+          formData: true,
+        });
 
-          const data = await response.json();
-          if (!response.ok) {
-            return { error: { status: response.status, data } };
-          }
-          return { data };
-        } catch (error) {
-          return { error: { status: 'FETCH_ERROR', error: error.message } };
-        }
+        return result.error ? { error: result.error } : { data: result.data };
       },
       invalidatesTags: [{ type: TAG_TYPES.RECONCILIATION, id: 'TEMPLATE' }],
       onQueryStarted: async (_, { queryFulfilled }) => {
@@ -45,26 +36,19 @@ export const reconciliationEndpoints = apiSlice.injectEndpoints({
     }),
 
     saveReconciliationTemplate: builder.mutation({
-      queryFn: async ({ templateName, sqlQuery }) => {
-        try {
-          const formData = new FormData();
-          formData.append('template_name', templateName);
-          formData.append('sql_query', sqlQuery);
+      queryFn: async ({ templateName, sqlQuery }, _api, _extraOptions, baseQuery) => {
+        const formData = new FormData();
+        formData.append('template_name', templateName);
+        formData.append('sql_query', sqlQuery);
 
-          const response = await fetch(`${BASE_URL}/api/reconciliation/template`, {
-            method: 'POST',
-            credentials: 'include',
-            body: formData,
-          });
+        const result = await baseQuery({
+          url: '/reconciliation/template',
+          method: 'POST',
+          body: formData,
+          formData: true,
+        });
 
-          const data = await response.json();
-          if (!response.ok) {
-            return { error: { status: response.status, data } };
-          }
-          return { data };
-        } catch (error) {
-          return { error: { status: 'FETCH_ERROR', error: error.message } };
-        }
+        return result.error ? { error: result.error } : { data: result.data };
       },
       invalidatesTags: [{ type: TAG_TYPES.RECONCILIATION, id: 'TEMPLATE' }],
       onQueryStarted: async (_, { queryFulfilled }) => {
@@ -87,6 +71,32 @@ export const reconciliationEndpoints = apiSlice.injectEndpoints({
           window.dispatchEvent(new Event('reconciliation-template-updated'));
         } catch {}
       },
+    }),
+
+    getReconciliationSyncStatus: builder.query({
+      query: () => '/reconciliation/sync-status',
+      providesTags: [{ type: TAG_TYPES.RECONCILIATION, id: 'SYNC' }],
+      keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
+    }),
+
+    uploadReconciliationFile: builder.mutation({
+      queryFn: async (file, _api, _extraOptions, baseQuery) => {
+        const formData = new FormData();
+        formData.append('excelFile', file);
+
+        const result = await baseQuery({
+          url: '/reconciliation/upload',
+          method: 'POST',
+          body: formData,
+          formData: true,
+        });
+
+        return result.error ? { error: result.error } : { data: result.data };
+      },
+      invalidatesTags: [
+        { type: TAG_TYPES.RECONCILIATION, id: 'TEMPLATE' },
+        { type: TAG_TYPES.RECONCILIATION, id: 'SYNC' },
+      ],
     }),
 
     previewReconciliationQuery: builder.mutation({
@@ -114,6 +124,8 @@ export const {
   useUploadReconciliationStagingMutation,
   useSaveReconciliationTemplateMutation,
   useDeleteReconciliationTemplateMutation,
+  useGetReconciliationSyncStatusQuery,
+  useUploadReconciliationFileMutation,
   usePreviewReconciliationQueryMutation,
   useLazyPreviewReconciliationStagingQuery,
   useLazyPreviewReconciliationUsersQuery,

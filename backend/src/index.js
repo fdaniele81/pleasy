@@ -10,7 +10,7 @@ import { dirname, join } from "path";
 import logger from "./utils/logger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const { version } = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
+const { version } = JSON.parse(readFileSync(join(__dirname, "../../version.json"), "utf-8"));
 
 import authRoutes from "./routes/auth.routes.js";
 import companyRoutes from "./routes/company.routes.js";
@@ -39,8 +39,10 @@ if (missingEnvVars.length > 0) {
 const app = express();
 const port = process.env.PORT;
 
+const normalizeOrigin = (o) => o.trim().replace(/:80$/, '').replace(/:443$/, '');
+
 const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+  ? process.env.CORS_ORIGINS.split(",").map(normalizeOrigin)
   : ["http://localhost:5173"];
 
 app.use(helmet({
@@ -68,7 +70,7 @@ app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(normalizeOrigin(origin))) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));

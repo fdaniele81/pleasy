@@ -133,6 +133,15 @@ export const timesheetEndpoints = apiSlice.injectEndpoints({
       providesTags: [{ type: TAG_TYPES.TIME_OFF_TYPE, id: 'LIST' }],
     }),
 
+    getGanttDailyTimeOffs: builder.query({
+      query: ({ startDate, endDate }) => ({
+        url: '/timeoff/gantt-daily',
+        params: { start_date: startDate, end_date: endDate },
+      }),
+      transformResponse: (response) => response.timeOffs || [],
+      keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
+    }),
+
     getCompanyTimeOffPlan: builder.query({
       query: ({ startDate, endDate }) => ({
         url: '/timeoff/company-plan',
@@ -161,6 +170,7 @@ export const {
   useLazyGetTimeOffsQuery,
   useSaveTimeOffMutation,
   useGetTimeOffTypesQuery,
+  useGetGanttDailyTimeOffsQuery,
   useGetCompanyTimeOffPlanQuery,
   useLazyGetCompanyTimeOffPlanQuery,
 } = timesheetEndpoints;

@@ -1,9 +1,7 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, User, Key, LogOut } from 'lucide-react';
 import LanguageSwitcher from '../LanguageSwitcher';
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 const UserMenuDropdown = memo(function UserMenuDropdown({
   isOpen,
@@ -14,14 +12,6 @@ const UserMenuDropdown = memo(function UserMenuDropdown({
   onLogout,
 }) {
   const { t } = useTranslation(['common', 'navigation']);
-  const [version, setVersion] = useState(null);
-
-  useEffect(() => {
-    fetch(`${API_URL}/api/version`)
-      .then((res) => res.json())
-      .then((data) => setVersion(data.version))
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="relative" ref={menuRef}>
@@ -68,7 +58,7 @@ const UserMenuDropdown = memo(function UserMenuDropdown({
           </div>
 
           <div className="px-4 py-1.5 border-t border-gray-100 text-center">
-            <span className="text-[11px] text-gray-400">{version ? `v${version}` : '...'}</span>
+            <span className="text-[11px] text-gray-400">v{__APP_VERSION__}</span>
           </div>
         </div>
       )}

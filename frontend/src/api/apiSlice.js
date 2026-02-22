@@ -2,13 +2,16 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { TAG_TYPES } from './tags';
 import { CACHE_STRATEGIES, REFETCH_STRATEGIES } from './cacheStrategies';
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 const baseQueryWithAuth = fetchBaseQuery({
   baseUrl: `${BASE_URL}/api`,
   credentials: 'include',
-  prepareHeaders: (headers) => {
-    headers.set('Content-Type', 'application/json');
+  prepareHeaders: (headers, { getState, arg }) => {
+    // Don't override Content-Type for FormData (browser sets multipart boundary)
+    if (!headers.has('Content-Type') && !(arg?.body instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
+    }
     return headers;
   },
 });

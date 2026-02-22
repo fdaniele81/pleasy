@@ -1,11 +1,12 @@
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /app/backend
 
-COPY package*.json ./
+COPY backend/package*.json ./
 RUN npm ci --omit=dev
 
-COPY . .
+COPY backend/ .
+COPY version.json /app/version.json
 
 ENV PORT=5001
 EXPOSE 5001

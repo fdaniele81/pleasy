@@ -1,5 +1,6 @@
 import { apiSlice } from '../../../api/apiSlice';
 import { TAG_TYPES } from '../../../api/tags';
+import { CACHE_STRATEGIES } from '../../../api/cacheStrategies';
 
 export const taskEndpoints = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -150,6 +151,18 @@ export const taskEndpoints = apiSlice.injectEndpoints({
         { type: TAG_TYPES.TASK, id: taskId },
       ],
     }),
+
+    getFteReport: builder.query({
+      query: ({ startDate, endDate, etcReferenceDate }) => ({
+        url: '/task/fte-report',
+        params: {
+          data_inizio: startDate,
+          data_fine: endDate,
+          ...(etcReferenceDate && { data_riferimento_etc: etcReferenceDate }),
+        },
+      }),
+      keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
+    }),
   }),
 });
 
@@ -167,4 +180,5 @@ export const {
   useUpdateTaskDetailsForUserMutation,
   useGetTaskDetailsQuery,
   useLazyGetTaskDetailsQuery,
+  useGetFteReportQuery,
 } = taskEndpoints;

@@ -4,6 +4,7 @@ import { CheckCircle, AlertCircle, Loader2, FileSpreadsheet, ChevronDown, Chevro
 import { useDispatch } from 'react-redux';
 import logger from '../../utils/logger';
 import { useReconciliationData } from './hooks/useReconciliationData';
+import { useUploadReconciliationFileMutation } from '../templateconfiguration/api/reconciliationEndpoints';
 import PageHeader from '../../shared/ui/PageHeader';
 import EmptyState from '../../shared/ui/EmptyState';
 import AlertBanner from '../../shared/ui/AlertBanner';
@@ -12,8 +13,8 @@ import TableContainer from '../../shared/ui/table/TableContainer';
 
 function Reconciliation() {
   const { t } = useTranslation(['reconciliation', 'common']);
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
   const dispatch = useDispatch();
+  const [uploadFile] = useUploadReconciliationFileMutation();
 
   const { syncData, loading, hasTemplate, hasValidQuery, refetch } = useReconciliationData();
 
@@ -130,58 +131,44 @@ function Reconciliation() {
 
     setUploading(true);
 
-    const formData = new FormData();
-    formData.append('excelFile', selectedFile);
-
     try {
-      const response = await fetch(`${API_BASE_URL}/api/reconciliation/upload`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
+      const data = await uploadFile(selectedFile).unwrap();
 
-      const data = await response.json();
-      if (response.ok) {
-        let successText = data.message;
-        if (data.rowsInserted > 0) {
-          successText += ` - ${t('reconciliation:rowsLoaded', { count: data.rowsInserted })}`;
-        }
-        if (data.rowsProcessed > 0) {
-          successText += ` - ${t('reconciliation:rowsReconciled', { count: data.rowsProcessed })}`;
-        }
-
-        dispatch({
-          type: 'planning/showToast',
-          payload: { message: successText, type: 'success' }
-        });
-        setSelectedFile(null);
-
-        setTimeout(() => refetch(), 1000);
-      } else {
-        let errorText = data.error || t('reconciliation:uploadError');
-        if (data.detail) {
-          errorText += ` - ${data.detail}`;
-        }
-        if (data.problematicKeys && data.problematicKeys.length > 0) {
-          errorText += ` | ${t('reconciliation:problematicKeys')} ${data.problematicKeys.join(', ')}`;
-        }
-        if (data.missing && data.missing.length > 0) {
-          errorText += ` | ${t('reconciliation:missingColumns')} ${data.missing.join(', ')}`;
-        }
-        if (data.suggestion) {
-          errorText += ` | ${data.suggestion}`;
-        }
-
-        dispatch({
-          type: 'planning/showToast',
-          payload: { message: errorText, type: 'error' }
-        });
+      let successText = data.message;
+      if (data.rowsInserted > 0) {
+        successText += ` - ${t('reconciliation:rowsLoaded', { count: data.rowsInserted })}`;
       }
-    } catch (error) {
-      logger.error('Upload error:', error);
+      if (data.rowsProcessed > 0) {
+        successText += ` - ${t('reconciliation:rowsReconciled', { count: data.rowsProcessed })}`;
+      }
+
       dispatch({
         type: 'planning/showToast',
-        payload: { message: t('reconciliation:connectionError'), type: 'error' }
+        payload: { message: successText, type: 'success' }
+      });
+      setSelectedFile(null);
+
+      setTimeout(() => refetch(), 1000);
+    } catch (err) {
+      const data = err.data || {};
+      let errorText = data.error || t('reconciliation:uploadError');
+      if (data.detail) {
+        errorText += ` - ${data.detail}`;
+      }
+      if (data.problematicKeys && data.problematicKeys.length > 0) {
+        errorText += ` | ${t('reconciliation:problematicKeys')} ${data.problematicKeys.join(', ')}`;
+      }
+      if (data.missing && data.missing.length > 0) {
+        errorText += ` | ${t('reconciliation:missingColumns')} ${data.missing.join(', ')}`;
+      }
+      if (data.suggestion) {
+        errorText += ` | ${data.suggestion}`;
+      }
+
+      logger.error('Upload error:', err);
+      dispatch({
+        type: 'planning/showToast',
+        payload: { message: errorText, type: 'error' }
       });
     } finally {
       setUploading(false);

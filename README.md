@@ -106,6 +106,7 @@ pleasy/
 │   ├── nginx.conf
 │   └── package.json
 ├── docker-compose.yml      # Stack completo (DB + BE + FE)
+├── version.json            # Versione unica del prodotto (source of truth)
 ├── .env.example            # Template variabili d'ambiente
 └── LICENSE                 # MIT
 ```
@@ -158,6 +159,19 @@ Ogni funzionalit&agrave; &egrave; un modulo indipendente con componenti, endpoin
 | `/api/project-draft` | Bozze progetto | Admin, PM |
 | `/api/reconciliation` | Quadratura timesheet | Admin, PM |
 | `/api/dashboard` | Metriche e KPI | Tutti |
+
+## Versioning
+
+La versione del prodotto &egrave; definita in un unico file `version.json` alla root del progetto:
+
+```json
+{ "version": "1.0.2" }
+```
+
+- **Backend**: legge `version.json` all'avvio e lo espone via `GET /api/version`
+- **Frontend**: Vite inietta la versione a build time (costante `__APP_VERSION__`), senza chiamate API
+
+Per aggiornare la versione, modificare solo `version.json` e riavviare/rebuildare.
 
 ## Variabili d'ambiente
 

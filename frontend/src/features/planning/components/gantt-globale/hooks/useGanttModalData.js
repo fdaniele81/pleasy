@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetHolidaysQuery } from '../../../../holidays/api/holidayEndpoints';
+import { useGetFteReportQuery } from '../../../api/taskEndpoints';
+import { useGetGanttDailyTimeOffsQuery } from '../../../../timesheet/api/timesheetEndpoints';
 import { formatDateISO } from '../../../../../utils/date/dateUtils';
-import logger from '../../../../../utils/logger';
 import { useLocale } from '../../../../../hooks/useLocale';
 
 const NUM_COLUMNS = 14;
@@ -25,8 +26,6 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
   const { t } = useTranslation('planning');
   const locale = useLocale();
   const { data: holidays = [] } = useGetHolidaysQuery();
-  const [allUsersTimeOffs, setAllUsersTimeOffs] = useState([]);
-  const [fteReportData, setFteReportData] = useState([]);
   const [expandedUsers, setExpandedUsers] = useState({});
   const [excludedTasks, setExcludedTasks] = useState({});
   const [timeInterval, setTimeInterval] = useState(12);
@@ -58,72 +57,25 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
     setTableWidth(totalWidth);
   }, []);
 
-  useEffect(() => {
-    const fetchFteReport = async () => {
-      if (!isOpen) { setFteReportData([]); return; }
-      try {
-        const BASE_URL = import.meta.env.VITE_API_URL;
-        const totalDays = timeInterval * 7;
-        const startDate = new Date();
-        startDate.setHours(0, 0, 0, 0);
-        startDate.setDate(startDate.getDate() + dateOffset);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + totalDays);
-        const dataInizio = formatDateISO(startDate);
-        const dataFine = formatDateISO(endDate);
-        let url = `${BASE_URL}/api/task/fte-report?data_inizio=${dataInizio}&data_fine=${dataFine}`;
-        if (etcReferenceDate) { url += `&data_riferimento_etc=${etcReferenceDate}`; }
-        const response = await fetch(url, {
-          method: 'GET', credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        if (response.ok) {
-          setFteReportData(await response.json());
-        } else {
-          const errorData = await response.text();
-          logger.error('[GanttModal] Error fetching FTE report:', response.status, errorData);
-          setFteReportData({ tasks: [], intervals: [], period: {} });
-        }
-      } catch (error) {
-        logger.error('[GanttModal] Error fetching FTE report:', error);
-        setFteReportData({ tasks: [], intervals: [], period: {} });
-      }
-    };
-    fetchFteReport();
-  }, [isOpen, timeInterval, dateOffset, refreshTrigger, etcReferenceDate]);
+  const dateRange = useMemo(() => {
+    const totalDays = timeInterval * 7;
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() + dateOffset);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + totalDays);
+    return { startDate: formatDateISO(startDate), endDate: formatDateISO(endDate) };
+  }, [timeInterval, dateOffset]);
 
-  useEffect(() => {
-    const fetchAllUsersTimeOffs = async () => {
-      if (!isOpen || !projects || projects.length === 0) { setAllUsersTimeOffs([]); return; }
-      try {
-        const BASE_URL = import.meta.env.VITE_API_URL;
-        const totalDays = timeInterval * 7;
-        const startDate = new Date();
-        startDate.setHours(0, 0, 0, 0);
-        startDate.setDate(startDate.getDate() + dateOffset);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + totalDays);
-        const startDateStr = formatDateISO(startDate);
-        const endDateStr = formatDateISO(endDate);
-        const response = await fetch(
-          `${BASE_URL}/api/timeoff/gantt-daily?start_date=${startDateStr}&end_date=${endDateStr}`,
-          { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setAllUsersTimeOffs(data.timeOffs || []);
-        } else {
-          const errorData = await response.text();
-          logger.error('[GanttModal] Error response:', response.status, errorData);
-          setAllUsersTimeOffs([]);
-        }
-      } catch (error) {
-        logger.error('[GanttModal] Error fetching time offs:', error);
-        setAllUsersTimeOffs([]);
-      }
-    };
-    fetchAllUsersTimeOffs();
-  }, [isOpen, projects, timeInterval, dateOffset, refreshTrigger]);
+  const { data: fteReportData = { tasks: [], intervals: [], period: {} } } = useGetFteReportQuery(
+    { startDate: dateRange.startDate, endDate: dateRange.endDate, etcReferenceDate },
+    { skip: !isOpen }
+  );
+
+  const { data: allUsersTimeOffs = [] } = useGetGanttDailyTimeOffsQuery(
+    { startDate: dateRange.startDate, endDate: dateRange.endDate },
+    { skip: !isOpen || !projects || projects.length === 0 }
+  );
 
   useEffect(() => { setDateOffset(0); }, [timeInterval]);
   useEffect(() => { if (isOpen) { setHeight(null); } }, [isOpen]);

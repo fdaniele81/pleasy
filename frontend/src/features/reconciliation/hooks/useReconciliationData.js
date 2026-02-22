@@ -1,76 +1,42 @@
-import { useEffect, useState, useCallback } from 'react';
-import logger from '../../../utils/logger';
+import { useEffect, useMemo, useCallback } from 'react';
+import {
+  useGetReconciliationTemplateQuery,
+  useGetReconciliationSyncStatusQuery,
+} from '../../templateconfiguration/api/reconciliationEndpoints';
 
 export function useReconciliationData() {
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const {
+    data: template,
+    isLoading: templateLoading,
+    isError: templateError,
+    refetch: refetchTemplate,
+  } = useGetReconciliationTemplateQuery();
 
-  const [syncData, setSyncData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [hasTemplate, setHasTemplate] = useState(true);
-  const [hasValidQuery, setHasValidQuery] = useState(true);
+  const hasTemplate = !templateError && template != null;
+  const hasValidQuery = hasTemplate && !!template?.sql_query?.trim();
 
-  const fetchSyncData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const templateResponse = await fetch(`${API_BASE_URL}/api/reconciliation/template`, {
-        credentials: 'include',
-      });
+  const {
+    data: syncResponse,
+    isLoading: syncLoading,
+    refetch: refetchSync,
+  } = useGetReconciliationSyncStatusQuery(undefined, {
+    skip: !hasTemplate,
+  });
 
-      if (!templateResponse.ok) {
-        setHasTemplate(false);
-        setSyncData([]);
-        return;
-      }
+  const syncData = useMemo(() => syncResponse?.data || [], [syncResponse]);
+  const loading = templateLoading || syncLoading;
 
-      const templateData = await templateResponse.json();
-
-      if (!templateData.template) {
-        setHasTemplate(false);
-        setHasValidQuery(false);
-        setSyncData([]);
-        return;
-      }
-
-      const queryEmpty = !templateData.template.sql_query || templateData.template.sql_query.trim() === '';
-
-      setHasTemplate(true);
-      setHasValidQuery(!queryEmpty);
-
-      const response = await fetch(`${API_BASE_URL}/api/reconciliation/sync-status`, {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSyncData(data.data || []);
-      } else {
-        logger.error('[SYNC] Error fetching sync data');
-        setSyncData([]);
-      }
-    } catch (error) {
-      logger.error('[SYNC] Fetch sync data exception:', error);
-      setHasTemplate(false);
-      setHasValidQuery(false);
-      setSyncData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [API_BASE_URL]);
-
-  useEffect(() => {
-    fetchSyncData();
-  }, [fetchSyncData]);
+  const refetch = useCallback(() => {
+    refetchTemplate();
+    refetchSync();
+  }, [refetchTemplate, refetchSync]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchSyncData();
-      }
+      if (!document.hidden) refetch();
     };
 
-    const handleTemplateUpdate = () => {
-      fetchSyncData();
-    };
+    const handleTemplateUpdate = () => refetch();
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('reconciliation-template-updated', handleTemplateUpdate);
@@ -79,13 +45,13 @@ export function useReconciliationData() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('reconciliation-template-updated', handleTemplateUpdate);
     };
-  }, [fetchSyncData]);
+  }, [refetch]);
 
   return {
     syncData,
     loading,
     hasTemplate,
     hasValidQuery,
-    refetch: fetchSyncData,
+    refetch,
   };
 }

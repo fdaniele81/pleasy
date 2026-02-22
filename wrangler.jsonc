@@ -2,6 +2,7 @@
   "name": "pleasy",
   "compatibility_date": "2026-02-22",
   "assets": {
-    "directory": "./frontend/dist"
+    "directory": "./frontend/dist",
+    "not_found_handling": "single-page-application"
   }
 }

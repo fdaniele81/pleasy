@@ -1,0 +1,103 @@
+name: ✨ Feature Request
+description: Proponi una nuova funzionalità o un miglioramento per Pleasy
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per il tuo suggerimento! Le idee della community sono fondamentali per far crescere Pleasy.
+        Prima di aprire questa issue, dai un'occhiata alle [Discussions](../../discussions/categories/ideas) per verificare che non sia già stata proposta.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema o necessità
+      description: Descrivi il problema o la frustrazione che questa feature risolverebbe. Usa il formato user story se possibile.
+      placeholder: |
+        Come [tipo di utente], vorrei [azione/funzionalità] per poter [beneficio/obiettivo].
+
+        Esempio: Come project manager, vorrei poter esportare il Gantt in PDF per condividerlo facilmente con gli stakeholder.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Soluzione proposta
+      description: Descrivi come immagini la funzionalità. Sii il più specifico possibile.
+      placeholder: "Vorrei un pulsante che..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative considerate
+      description: Hai considerato soluzioni alternative? Workaround attuali?
+      placeholder: "Attualmente risolvo così... ma non è ideale perché..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area del progetto
+      description: A quale area di Pleasy si riferisce questa richiesta?
+      multiple: true
+      options:
+        - 📋 Project Management (task, board, timeline)
+        - 👥 Resource Planning (team, allocazione, capacity)
+        - 📊 Dashboard / Reportistica
+        - 🔗 Integrazioni (API, webhook, import/export)
+        - 🎨 UI/UX
+        - 🔧 Configurazione / Admin
+        - 📱 Mobile
+        - 🔐 Sicurezza / Permessi
+        - 📚 Documentazione
+        - Altro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impatto stimato
+      description: Quanti utenti beneficerebbero di questa feature?
+      options:
+        - 🌍 Tutti gli utenti
+        - 👥 La maggior parte degli utenti
+        - 🎯 Un segmento specifico di utenti
+        - 👤 Solo il mio caso d'uso
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockup / Riferimenti
+      description: Se hai mockup, screenshot di riferimento da altri tool, o diagrammi, allegali qui.
+      placeholder: "Trascina qui le immagini..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Disponibilità a contribuire
+      description: Saresti disponibile a contribuire all'implementazione?
+      options:
+        - label: Sono disponibile a lavorare su una PR per questa feature
+          required: false
+        - label: Posso aiutare con test e feedback durante lo sviluppo
+          required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Ho cercato nelle issue e discussions esistenti e questa feature non è già stata proposta
+          required: true

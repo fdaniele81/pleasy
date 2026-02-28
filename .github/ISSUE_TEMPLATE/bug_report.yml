@@ -17,6 +17,7 @@ body:
     attributes:
       label: Severity
       description: How much does this bug impact usage?
+      default: 3
       options:
         - 🔴 Critical - App is unusable / data loss
         - 🟠 High - Important feature is broken
@@ -24,12 +25,3 @@ body:
         - 🟢 Low - Cosmetic issue or minor annoyance
     validations:
       required: true
-
-  - type: textarea
-    id: screenshots
-    attributes:
-      label: Screenshots / Logs
-      description: If possible, attach relevant screenshots or logs. You can drag images directly here.
-      placeholder: "Drag images here or paste error logs..."
-    validations:
-      required: false

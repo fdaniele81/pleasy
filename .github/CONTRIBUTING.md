@@ -22,7 +22,7 @@ Grazie per il tuo interesse nel contribuire a Pleasy! Ogni contributo, grande o 
 
 ```bash
 # Fork e clone
-git clone https://github.com/[YOUR_USERNAME]/pleasy.git
+git clone https://github.com/fdaniele81/pleasy.git
 cd pleasy
 
 # Installa le dipendenze

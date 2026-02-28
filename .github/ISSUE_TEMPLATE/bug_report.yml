@@ -1,9 +1,16 @@
 name: 🐛 Bug Report
 description: Report a bug to help us improve Pleasy
-title: "[Bug]: "
 labels: ["bug", "triage"]
 assignees: []
 body:
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: A short, descriptive title for the bug.
+    validations:
+      required: true
+
   - type: textarea
     id: description
     attributes:

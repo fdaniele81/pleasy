@@ -1,6 +1,6 @@
 name: 🐛 Bug Report
 description: Segnala un bug per aiutarci a migliorare Pleasy
-title: ""
+title: "[Bug]: "
 labels: ["bug", "triage"]
 assignees: []
 body:

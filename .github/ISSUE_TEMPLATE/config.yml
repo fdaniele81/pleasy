@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 💬 Discussions - Idee & Brainstorming
+  - name: 💬 Discussions - Ideas & Brainstorming
     url: https://github.com/fdaniele81/pleasy/discussions/categories/ideas
-    about: Hai un'idea ancora vaga? Inizia una discussione prima di aprire una issue.
-  - name: ❓ Discussions - Domande & Supporto
+    about: Have a rough idea? Start a discussion before opening an issue.
+  - name: ❓ Discussions - Questions & Support
     url: https://github.com/fdaniele81/pleasy/discussions/categories/q-a
-    about: Hai bisogno di aiuto o hai una domanda? Chiedi qui.
-  - name: 📚 Documentazione
+    about: Need help or have a question? Ask here.
+  - name: 📚 Documentation
     url: https://github.com/fdaniele81/pleasy/wiki
-    about: Consulta la documentazione prima di segnalare un problema.
+    about: Check the documentation before reporting a problem.

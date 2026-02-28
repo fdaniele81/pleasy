@@ -25,11 +25,3 @@ body:
     validations:
       required: true
 
-  - type: textarea
-    id: screenshots
-    attributes:
-      label: Screenshots / Logs
-      description: If possible, attach relevant screenshots or logs. You can drag images directly here.
-      placeholder: "Drag images here or paste error logs..."
-    validations:
-      required: false

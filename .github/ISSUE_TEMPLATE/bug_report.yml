@@ -7,29 +7,29 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: Descrizione del bug
-      description: Descrivi in modo chiaro e conciso il problema riscontrato e i passi per riprodurre il caso
+      label: Bug description
+      description: Clearly and concisely describe the issue and the steps to reproduce it
     validations:
       required: true
 
   - type: dropdown
     id: severity
     attributes:
-      label: Gravità
-      description: Quanto impatta questo bug sull'utilizzo?
+      label: Severity
+      description: How much does this bug impact usage?
       options:
-        - 🔴 Critico - L'app è inutilizzabile / perdita dati
-        - 🟠 Alto - Funzionalità importante non funziona
-        - 🟡 Medio - Funzionalità parzialmente compromessa, esiste workaround
-        - 🟢 Basso - Problema cosmetico o fastidio minore
+        - 🔴 Critical - App is unusable / data loss
+        - 🟠 High - Important feature is broken
+        - 🟡 Medium - Feature partially impaired, workaround exists
+        - 🟢 Low - Cosmetic issue or minor annoyance
     validations:
       required: true
 
   - type: textarea
     id: screenshots
     attributes:
-      label: Screenshot / Log
-      description: Se possibile, allega screenshot o log rilevanti. Puoi trascinare immagini direttamente qui.
-      placeholder: "Trascina qui le immagini o incolla i log di errore..."
+      label: Screenshots / Logs
+      description: If possible, attach relevant screenshots or logs. You can drag images directly here.
+      placeholder: "Drag images here or paste error logs..."
     validations:
       required: false

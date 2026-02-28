@@ -7,16 +7,16 @@ body:
   - type: textarea
     id: problem
     attributes:
-      label: Problema o necessità
-      description: Descrivi il problema o la frustrazione che questa feature risolverebbe.
+      label: Problem or need
+      description: Describe the problem or frustration this feature would solve.
     validations:
       required: true
 
   - type: textarea
     id: mockups
     attributes:
-      label: Mockup / Riferimenti
-      description: Se hai mockup, screenshot di riferimento da altri tool, o diagrammi, allegali qui.
-      placeholder: "Trascina qui le immagini..."
+      label: Mockups / References
+      description: If you have mockups, reference screenshots from other tools, or diagrams, attach them here.
+      placeholder: "Drag images here..."
     validations:
       required: false

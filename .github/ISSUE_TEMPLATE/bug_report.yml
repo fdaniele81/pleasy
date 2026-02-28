@@ -1,52 +1,14 @@
 name: 🐛 Bug Report
 description: Segnala un bug per aiutarci a migliorare Pleasy
-title: "[Bug]: "
+title: ""
 labels: ["bug", "triage"]
 assignees: []
-
-body:
-  - type: markdown
-    attributes:
-      value: |
-        Grazie per la segnalazione! Compila il form nel modo più dettagliato possibile per aiutarci a riprodurre e risolvere il problema.
 
   - type: textarea
     id: description
     attributes:
       label: Descrizione del bug
-      description: Descrivi in modo chiaro e conciso il problema riscontrato.
-      placeholder: "Quando clicco su X succede Y invece di Z..."
-    validations:
-      required: true
-
-  - type: textarea
-    id: steps
-    attributes:
-      label: Steps to Reproduce
-      description: Elenca i passaggi per riprodurre il bug.
-      placeholder: |
-        1. Vai a '...'
-        2. Clicca su '...'
-        3. Scrolla fino a '...'
-        4. Osserva l'errore
-    validations:
-      required: true
-
-  - type: textarea
-    id: expected
-    attributes:
-      label: Comportamento atteso
-      description: Cosa ti aspettavi che succedesse?
-      placeholder: "Mi aspettavo che..."
-    validations:
-      required: true
-
-  - type: textarea
-    id: actual
-    attributes:
-      label: Comportamento attuale
-      description: Cosa succede effettivamente?
-      placeholder: "Invece succede che..."
+      description: Descrivi in modo chiaro e conciso il problema riscontrato e i passi per riprodurre il caso
     validations:
       required: true
 
@@ -63,39 +25,6 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: version
-    attributes:
-      label: Versione
-      description: Quale versione di Pleasy stai usando?
-      placeholder: "es. 1.0.0, latest, commit hash"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: browser
-    attributes:
-      label: Browser
-      description: Su quale browser si verifica il problema?
-      multiple: true
-      options:
-        - Chrome
-        - Firefox
-        - Safari
-        - Edge
-        - Altro
-    validations:
-      required: false
-
-  - type: input
-    id: os
-    attributes:
-      label: Sistema Operativo
-      description: Quale OS stai usando?
-      placeholder: "es. Windows 11, macOS 14.2, Ubuntu 24.04"
-    validations:
-      required: false
-
   - type: textarea
     id: screenshots
     attributes:
@@ -104,21 +33,3 @@ body:
       placeholder: "Trascina qui le immagini o incolla i log di errore..."
     validations:
       required: false
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Contesto aggiuntivo
-      description: Qualsiasi altra informazione utile (configurazione, database, deployment, ecc.)
-    validations:
-      required: false
-
-  - type: checkboxes
-    id: checklist
-    attributes:
-      label: Checklist
-      options:
-        - label: Ho cercato nelle issue esistenti e questo bug non è già stato segnalato
-          required: true
-        - label: Ho provato con l'ultima versione disponibile
-          required: false

@@ -8,15 +8,6 @@ body:
     id: problem
     attributes:
       label: Problem or need
-      description: Describe the problem or frustration this feature would solve.
+      description: Describe the problem or frustration this feature would solve. If you have mockups, reference screenshots from other tools, or diagrams, attach them.
     validations:
       required: true
-
-  - type: textarea
-    id: mockups
-    attributes:
-      label: Mockups / References
-      description: If you have mockups, reference screenshots from other tools, or diagrams, attach them here.
-      placeholder: "Drag images here..."
-    validations:
-      required: false

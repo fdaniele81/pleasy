@@ -8,7 +8,7 @@ body:
     id: description
     attributes:
       label: Bug description
-      description: Clearly and concisely describe the issue and the steps to reproduce it
+      description: Clearly and concisely describe the issue and the steps to reproduce it. f possible, attach relevant screenshots or logs. You can drag images
     validations:
       required: true
 
@@ -25,3 +25,11 @@ body:
     validations:
       required: true
 
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Logs
+      description: If possible, attach relevant screenshots or logs. You can drag images directly here.
+      placeholder: "Drag images here or paste error logs..."
+    validations:
+      required: false

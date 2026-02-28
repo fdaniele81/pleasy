@@ -3,7 +3,7 @@ description: Proponi una nuova funzionalità o un miglioramento per Pleasy
 title: ""
 labels: ["enhancement", "triage"]
 assignees: []
-
+body:
   - type: textarea
     id: problem
     attributes:

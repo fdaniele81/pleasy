@@ -3,7 +3,7 @@ description: Segnala un bug per aiutarci a migliorare Pleasy
 title: ""
 labels: ["bug", "triage"]
 assignees: []
-
+body:
   - type: textarea
     id: description
     attributes:

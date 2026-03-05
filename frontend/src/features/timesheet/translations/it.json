@@ -105,5 +105,26 @@
   "startDate": "Data inizio",
   "undoSuccess": "Annullato: {{label}}",
   "undoError": "Annullamento fallito",
-  "undoEmpty": "Niente da annullare"
+  "undoEmpty": "Niente da annullare",
+
+  "taskHistory": "Storico Ore",
+  "taskHistoryChart": "Ore nel Tempo",
+  "taskHistoryEntries": "Tutte le Registrazioni",
+  "taskHistoryDate": "Data",
+  "taskHistoryHours": "Ore",
+  "taskHistoryDetails": "Note / Dettagli",
+  "taskHistorySubmitted": "Sottomesso",
+  "taskHistoryNotSubmitted": "Da Sottomettere",
+  "taskHistoryStatus": "Stato",
+  "taskHistoryFilterAll": "Tutti",
+  "taskHistoryFilterSubmitted": "Sottomessi",
+  "taskHistoryFilterNotSubmitted": "Da Sottomettere",
+  "taskHistoryNoEntries": "Nessuna registrazione trovata",
+  "taskHistoryWeekly": "Settimanale",
+  "taskHistoryMonthly": "Mensile",
+  "taskHistoryTotal": "Totale",
+  "taskHistoryBudget": "Budget",
+  "timeOffEntries": "Tutte le Registrazioni",
+  "timeOffNoEntries": "Nessuna registrazione trovata",
+  "last12months": "Ultimi 12 mesi"
 }

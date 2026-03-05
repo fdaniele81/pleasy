@@ -20,7 +20,8 @@ const BaseModal = ({
   size = 'lg',
   showFooter = true,
   customFooter = null,
-  confirmButtonColor = 'cyan'
+  confirmButtonColor = 'cyan',
+  noBodyScroll = false
 }) => {
   const { t } = useTranslation('common');
 
@@ -89,7 +90,7 @@ const BaseModal = ({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto mb-6 p-0.5 flex flex-col min-h-0">
+        <div className={`flex-1 ${noBodyScroll ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden mb-6 p-0.5 flex flex-col min-h-0`}>
           {children}
         </div>
 
@@ -142,6 +143,7 @@ BaseModal.propTypes = {
   showFooter: PropTypes.bool,
   customFooter: PropTypes.node,
   confirmButtonColor: PropTypes.string,
+  noBodyScroll: PropTypes.bool,
 };
 
 export default BaseModal;

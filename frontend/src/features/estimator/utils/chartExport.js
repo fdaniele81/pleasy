@@ -83,7 +83,7 @@ function getPhaseRange(intervals) {
  * Costruisce un SVG Gantt programmaticamente dai dati e lo esporta come PNG.
  * Non dipende dal DOM, produce output ad alta risoluzione.
  */
-export const exportMultiGanttAsPNG = (estimatesList, totalDays, filenamePrefix = 'gantt', { onError } = {}) => {
+export const exportMultiGanttAsPNG = (estimatesList, totalDays, filenamePrefix = 'gantt', { onError, colorMap } = {}) => {
   if (!estimatesList || estimatesList.length === 0) {
     onError?.('Nessuna stima da esportare');
     return;
@@ -154,8 +154,8 @@ export const exportMultiGanttAsPNG = (estimatesList, totalDays, filenamePrefix =
   let currentY = topMargin;
 
   estimatesList.forEach((estimateItem, estimateIndex) => {
-    const { estimate, phaseIntervals } = estimateItem;
-    const color = ESTIMATE_COLORS[estimateIndex % ESTIMATE_COLORS.length];
+    const { estimate, phaseIntervals, estimateId } = estimateItem;
+    const color = (colorMap && colorMap[estimateId]) || ESTIMATE_COLORS[estimateIndex % ESTIMATE_COLORS.length];
     const blockStartY = currentY;
 
     // --- Righe fasi ---

@@ -496,6 +496,40 @@ async function getTMPlanningData(companyId, startDate, endDate, pmUserId) {
   return result.rows;
 }
 
+async function getTaskHistory(taskId, userId, allUsers = false) {
+  const query = `
+    SELECT
+      tt.timesheet_id,
+      TO_CHAR(tt.timesheet_date, 'YYYY-MM-DD') as timesheet_date,
+      tt.total_hours,
+      tt.details,
+      CASE WHEN tt.snapshot_id IS NOT NULL THEN true ELSE false END as is_submitted,
+      tt.user_id as logged_by_user_id,
+      u.full_name as logged_by_user_name,
+      t.task_id,
+      t.title as task_title,
+      t.task_number,
+      t.budget,
+      t.initial_actual,
+      p.project_key,
+      p.title as project_title,
+      p.project_type_id,
+      c.client_name,
+      c.client_key,
+      c.color as client_color
+    FROM task_timesheet tt
+    JOIN task t ON tt.task_id = t.task_id
+    JOIN project p ON t.project_id = p.project_id
+    JOIN client c ON p.client_id = c.client_id
+    JOIN users u ON tt.user_id = u.user_id
+    WHERE tt.task_id = $1 ${allUsers ? '' : 'AND tt.user_id = $2'}
+    ORDER BY tt.timesheet_date ASC`;
+
+  const params = allUsers ? [taskId] : [taskId, userId];
+  const result = await db.query(query, params);
+  return result.rows;
+}
+
 async function getTMTasksHoursTotals(userId) {
   const query = `
     SELECT
@@ -544,7 +578,8 @@ export {
   updateSnapshotStatus,
   getPool,
   getTMPlanningData,
-  getTMTasksHoursTotals
+  getTMTasksHoursTotals,
+  getTaskHistory
 };
 
 export default {
@@ -574,5 +609,6 @@ export default {
   updateSnapshotStatus,
   getPool,
   getTMPlanningData,
-  getTMTasksHoursTotals
+  getTMTasksHoursTotals,
+  getTaskHistory
 };

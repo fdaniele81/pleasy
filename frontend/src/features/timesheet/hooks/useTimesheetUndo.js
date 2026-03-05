@@ -1,8 +1,9 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback } from 'react';
 import {
   useSaveTimesheetMutation,
   useSaveTimeOffMutation,
 } from '../api/timesheetEndpoints';
+import { useUndoRedoKeyboard } from '../../../hooks/useUndoRedoKeyboard';
 
 const MAX_UNDO_DEPTH = 10;
 
@@ -123,33 +124,14 @@ export function useTimesheetUndo({ isEditingRef, cancelEditingRef, activateCellR
     }
   }, [saveTimesheet, saveTimeOff, activateCellRef]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const isUndo = (e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey;
-      const isRedo = (e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey));
-      if (!isUndo && !isRedo) return;
-
-      const activeEl = document.activeElement;
-      const isInInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
-
-      if (isUndo) {
-        if (undoStackRef.current.length === 0) return;
-        if (isInInput && !isEditingRef.current) return;
-        e.preventDefault();
-        cancelEditingRef.current?.();
-        executeUndo();
-      } else if (isRedo) {
-        e.preventDefault();
-        if (redoStackRef.current.length === 0) return;
-        if (isInInput && !isEditingRef.current) return;
-        cancelEditingRef.current?.();
-        executeRedo();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [executeUndo, executeRedo, isEditingRef, cancelEditingRef]);
+  useUndoRedoKeyboard({
+    isEditingRef,
+    cancelEditingRef,
+    executeUndo,
+    executeRedo,
+    undoStackRef,
+    redoStackRef,
+  });
 
   return { pushUndo };
 }

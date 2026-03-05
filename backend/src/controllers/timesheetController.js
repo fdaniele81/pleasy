@@ -182,6 +182,21 @@ async function saveTimesheetForPM(req, res) {
   }
 }
 
+async function getTaskHistory(req, res) {
+  try {
+    const taskId = timesheetValidator.validateTimesheetId(req.params.task_id);
+    const allUsers = req.query.allUsers === 'true';
+    const result = await timesheetService.getTaskHistory(taskId, req.user, allUsers);
+
+    res.status(200).json({
+      message: "Storico task recuperato correttamente",
+      ...result
+    });
+  } catch (err) {
+    handleError(res, err, "GET TASK HISTORY ERR");
+  }
+}
+
 export {
   getTimesheets,
   saveTimesheet,
@@ -194,7 +209,8 @@ export {
   getPreviewSubmission,
   reopenSnapshot,
   getTMPlanning,
-  saveTimesheetForPM
+  saveTimesheetForPM,
+  getTaskHistory
 };
 
 export default {
@@ -209,5 +225,6 @@ export default {
   getPreviewSubmission,
   reopenSnapshot,
   getTMPlanning,
-  saveTimesheetForPM
+  saveTimesheetForPM,
+  getTaskHistory
 };

@@ -1,6 +1,6 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, Hourglass } from "lucide-react";
+import { AlertCircle, Hourglass, ExternalLink } from "lucide-react";
 import TimesheetCell from "./TimesheetCell";
 import { SelectionCheckbox } from "../../../shared/ui/table";
 import {
@@ -33,6 +33,7 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
   onCellBlur,
   onKeyDown,
   onEditValueChange,
+  onTaskHistoryClick,
 }) {
   const { t } = useTranslation(['timesheet', 'common']);
   const isEditing = task.task_id === editingTaskId;
@@ -188,7 +189,7 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
         onMouseEnter={(e) => onTooltipHover(e, task.task_id)}
         onMouseLeave={onTooltipLeave}
       >
-        <div className="flex items-center justify-center gap-1">
+        <div className="relative flex items-center justify-center">
           <span
             className={
               cellColorStatus === "red"
@@ -200,6 +201,16 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
           >
             {formatHours(totalHours)}
           </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onTaskHistoryClick && onTaskHistoryClick(task);
+            }}
+            className="absolute right-0 p-0.5 rounded hover:bg-gray-200 transition-colors text-gray-400 hover:text-cyan-600"
+            title={t('timesheet:taskHistory')}
+          >
+            <ExternalLink size={12} />
+          </button>
         </div>
       </td>
 

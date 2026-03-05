@@ -52,6 +52,7 @@ function TimesheetTable({
   onTimeOffCellBlur,
   onTimeOffKeyDown,
   onTimeOffTotalClick,
+  onTaskHistoryClick,
 }) {
   const { t } = useTranslation(['timesheet', 'common']);
   const locale = useLocale();
@@ -262,6 +263,7 @@ function TimesheetTable({
                       onCellBlur={onCellBlur}
                       onKeyDown={onKeyDown}
                       onEditValueChange={onEditValueChange}
+                      onTaskHistoryClick={onTaskHistoryClick}
                     />
                   );
                 })}
@@ -316,6 +318,7 @@ function TimesheetTable({
                       onCellBlur={onCellBlur}
                       onKeyDown={onKeyDown}
                       onEditValueChange={onEditValueChange}
+                      onTaskHistoryClick={onTaskHistoryClick}
                     />
                   );
                 })}

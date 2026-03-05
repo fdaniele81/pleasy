@@ -200,5 +200,6 @@
   "unlockCode": "Sblocca per inserire un codice personalizzato",
   "lockCode": "Blocca e genera automaticamente",
   "validateCode": "Verifica disponibilità codice",
-  "projectCodeValidated": "Codice personalizzato confermato"
+  "projectCodeValidated": "Codice personalizzato confermato",
+  "singleItemEstimate": "Stima mono-voce"
 }

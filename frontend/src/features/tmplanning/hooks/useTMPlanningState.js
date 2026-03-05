@@ -64,6 +64,9 @@ export function useTMPlanningState() {
   const [detailsModalTask, setDetailsModalTask] = useState(null);
   const [detailsModalIsSubmitted, setDetailsModalIsSubmitted] = useState(false);
 
+  const [showTaskHistoryModal, setShowTaskHistoryModal] = useState(false);
+  const [selectedTaskForHistory, setSelectedTaskForHistory] = useState(null);
+
   const [hoveredNoteCell, setHoveredNoteCell] = useState(null);
   const [noteTooltipPosition, setNoteTooltipPosition] = useState({ x: 0, y: 0 });
   const noteTooltipTimeoutRef = useRef(null);
@@ -83,10 +86,12 @@ export function useTMPlanningState() {
   const [saveTMTimesheet] = useSaveTMTimesheetMutation();
 
   const tmUsers = data?.tmUsers || [];
+  const pushUndoRef = useRef(null);
 
   const hoursEditCell = useInlineEditCell({
     onSave: useCallback(
       async (taskId, dateStr, hours, _previousValue, { details, externalKey }) => {
+        const previousHours = parseFloat(_previousValue) || 0;
         try {
           let finalExternalKey = externalKey;
           if (finalExternalKey === undefined) {
@@ -107,6 +112,20 @@ export function useTMPlanningState() {
             details: details || null,
             externalKey: finalExternalKey,
           }).unwrap();
+
+          if (pushUndoRef.current) {
+            pushUndoRef.current({
+              type: 'SAVE_TM_TASK',
+              taskId,
+              workDate: dateStr,
+              previousHours,
+              previousDetails: details || null,
+              newHours: hours,
+              newDetails: details || null,
+              externalKey: finalExternalKey,
+            });
+          }
+
           await refetch();
           setGanttRefreshTrigger((prev) => prev + 1);
         } catch (error) {
@@ -189,6 +208,8 @@ export function useTMPlanningState() {
     detailsModalDate, setDetailsModalDate,
     detailsModalTask, setDetailsModalTask,
     detailsModalIsSubmitted, setDetailsModalIsSubmitted,
+    showTaskHistoryModal, setShowTaskHistoryModal,
+    selectedTaskForHistory, setSelectedTaskForHistory,
     hoveredNoteCell, setHoveredNoteCell,
     noteTooltipPosition, setNoteTooltipPosition,
     noteTooltipTimeoutRef,
@@ -197,6 +218,7 @@ export function useTMPlanningState() {
     saveTMTimesheet,
     tmUsers,
     hoursEditCell,
+    pushUndoRef,
     dateRange,
     getDateInfo,
     isAtToday,

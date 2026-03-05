@@ -17,6 +17,7 @@ export function useTMPlanningActions({
   setDetailsModalData,
   setDetailsModalDate,
   setDetailsModalTask,
+  detailsModalIsSubmitted,
   setDetailsModalIsSubmitted,
   setShowExportModal,
   setGanttRefreshTrigger,
@@ -25,10 +26,12 @@ export function useTMPlanningActions({
   noteTooltipPosition,
   setNoteTooltipPosition,
   noteTooltipTimeoutRef,
+  detailsModalData,
   detailsModalDate,
   detailsModalTask,
   saveTMTimesheet,
   refetch,
+  pushUndo,
   filteredUsers,
   tmUsers,
   holidays,
@@ -39,6 +42,8 @@ export function useTMPlanningActions({
   setSearchTerm,
   setSelectedUserIds,
   setSelectedClientIds,
+  setShowTaskHistoryModal,
+  setSelectedTaskForHistory,
 }) {
   const { t } = useTranslation(['tmplanning', 'common']);
 
@@ -75,13 +80,33 @@ export function useTMPlanningActions({
 
   const handleCellClick = useCallback(
     (taskId, date, currentHours, isSubmitted, details) => {
+      if (isSubmitted && currentHours > 0) {
+        const client = allClients.find(c => c.task_id === taskId);
+        if (client) {
+          const timesheet = getTimesheetForDate(client.timesheets, date);
+          setDetailsModalData({
+            hours: timesheet?.hours_worked || 0,
+            details: timesheet?.details || "",
+            external_key: timesheet?.external_key || client.project_key || "",
+          });
+          setDetailsModalDate(date);
+          setDetailsModalTask({
+            task_id: taskId,
+            client_name: client.client_name,
+            project_key: client.project_key,
+          });
+          setDetailsModalIsSubmitted(true);
+          setShowDetailsModal(true);
+        }
+        return;
+      }
       const dateStr = formatDateISO(date);
       hoursEditCell.handleCellClick(taskId, dateStr, currentHours || "", {
         isLocked: false,
         details,
       });
     },
-    [hoursEditCell]
+    [hoursEditCell, allClients, getTimesheetForDate, setDetailsModalData, setDetailsModalDate, setDetailsModalTask, setDetailsModalIsSubmitted, setShowDetailsModal]
   );
 
   const handleCellContextMenu = useCallback(
@@ -118,6 +143,32 @@ export function useTMPlanningActions({
     setShowDetailsModal(true);
     setContextMenu(null);
   }, [contextMenu, getTimesheetForDate, setDetailsModalData, setDetailsModalDate, setDetailsModalTask, setDetailsModalIsSubmitted, setShowDetailsModal, setContextMenu]);
+
+  const handleCellNoteClick = useCallback(
+    (taskId, date, currentEditValue, isSubmitted) => {
+      const client = allClients.find(c => c.task_id === taskId);
+      if (!client) return;
+      const timesheet = getTimesheetForDate(client.timesheets, date);
+      const hours = currentEditValue !== undefined && currentEditValue !== ''
+        ? (parseFloat(currentEditValue) || 0)
+        : (timesheet?.hours_worked || 0);
+      hoursEditCell.cancelEditing();
+      setDetailsModalData({
+        hours,
+        details: timesheet?.details || "",
+        external_key: timesheet?.external_key || client.project_key || "",
+      });
+      setDetailsModalDate(date);
+      setDetailsModalTask({
+        task_id: taskId,
+        client_name: client.client_name,
+        project_key: client.project_key,
+      });
+      setDetailsModalIsSubmitted(isSubmitted);
+      setShowDetailsModal(true);
+    },
+    [allClients, hoursEditCell, getTimesheetForDate, setDetailsModalData, setDetailsModalDate, setDetailsModalTask, setDetailsModalIsSubmitted, setShowDetailsModal]
+  );
 
   const handleCellBlur = useCallback(
     (taskId, date, previousValue, timesheetDetails) => {
@@ -217,6 +268,9 @@ export function useTMPlanningActions({
         ? data.external_key
         : detailsModalTask.project_key || null;
 
+      const previousHours = parseFloat(detailsModalData?.hours) || 0;
+      const previousDetails = detailsModalData?.details || null;
+
       try {
         await saveTMTimesheet({
           taskId: detailsModalTask.task_id,
@@ -225,6 +279,20 @@ export function useTMPlanningActions({
           details: data.details?.trim() || null,
           externalKey,
         }).unwrap();
+
+        if (pushUndo && !detailsModalIsSubmitted) {
+          pushUndo({
+            type: 'SAVE_TM_TASK',
+            taskId: detailsModalTask.task_id,
+            workDate: dateStr,
+            previousHours,
+            previousDetails,
+            newHours: data.hours,
+            newDetails: data.details?.trim() || null,
+            externalKey,
+          });
+        }
+
         await refetch();
         setGanttRefreshTrigger((prev) => prev + 1);
       } catch (error) {
@@ -237,7 +305,7 @@ export function useTMPlanningActions({
       setDetailsModalTask(null);
       setDetailsModalIsSubmitted(false);
     },
-    [saveTMTimesheet, refetch, detailsModalDate, detailsModalTask, setGanttRefreshTrigger, setShowDetailsModal, setDetailsModalData, setDetailsModalDate, setDetailsModalTask, setDetailsModalIsSubmitted]
+    [saveTMTimesheet, refetch, detailsModalDate, detailsModalTask, detailsModalData, detailsModalIsSubmitted, pushUndo, setGanttRefreshTrigger, setShowDetailsModal, setDetailsModalData, setDetailsModalDate, setDetailsModalTask, setDetailsModalIsSubmitted]
   );
 
   const handleDetailsModalClose = useCallback(() => {
@@ -247,6 +315,21 @@ export function useTMPlanningActions({
     setDetailsModalTask(null);
     setDetailsModalIsSubmitted(false);
   }, [setShowDetailsModal, setDetailsModalData, setDetailsModalDate, setDetailsModalTask, setDetailsModalIsSubmitted]);
+
+  const handleTaskHistoryClick = useCallback((client) => {
+    setSelectedTaskForHistory({
+      task_id: client.task_id,
+      client_name: client.client_name,
+      client_color: client.client_color,
+      project_key: client.project_key,
+    });
+    setShowTaskHistoryModal(true);
+  }, [setSelectedTaskForHistory, setShowTaskHistoryModal]);
+
+  const handleCloseTaskHistoryModal = useCallback(() => {
+    setShowTaskHistoryModal(false);
+    setSelectedTaskForHistory(null);
+  }, [setShowTaskHistoryModal, setSelectedTaskForHistory]);
 
   const handleExport = useCallback(
     async ({ startDate: exportStartDate, endDate: exportEndDate }) => {
@@ -269,12 +352,15 @@ export function useTMPlanningActions({
     handleCellClick,
     handleCellContextMenu,
     handleContextMenuInsertNotes,
+    handleCellNoteClick,
     handleCellBlur,
     handleKeyDown,
     handleNoteTooltipHover,
     handleNoteTooltipLeave,
     handleDetailsModalConfirm,
     handleDetailsModalClose,
+    handleTaskHistoryClick,
+    handleCloseTaskHistoryModal,
     handleExport,
   };
 }

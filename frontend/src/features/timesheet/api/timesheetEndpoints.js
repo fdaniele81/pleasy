@@ -143,6 +143,27 @@ export const timesheetEndpoints = apiSlice.injectEndpoints({
       keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
     }),
 
+    getTaskHistory: builder.query({
+      query: (arg) => {
+        const taskId = typeof arg === 'string' ? arg : arg.taskId;
+        const allUsers = typeof arg === 'object' && arg.allUsers;
+        return {
+          url: `/timesheet/task-history/${taskId}`,
+          params: allUsers ? { allUsers: 'true' } : undefined,
+        };
+      },
+      transformResponse: (response) => ({
+        task: response.task,
+        entries: response.entries || [],
+        totalHours: response.totalHours || 0
+      }),
+      providesTags: (result, error, arg) => {
+        const taskId = typeof arg === 'string' ? arg : arg.taskId;
+        return [{ type: TAG_TYPES.TIMESHEET, id: `task-history-${taskId}` }];
+      },
+      keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
+    }),
+
     getCompanyTimeOffPlan: builder.query({
       query: ({ startDate, endDate }) => ({
         url: '/timeoff/company-plan',
@@ -174,4 +195,5 @@ export const {
   useGetGanttDailyTimeOffsQuery,
   useGetCompanyTimeOffPlanQuery,
   useLazyGetCompanyTimeOffPlanQuery,
+  useLazyGetTaskHistoryQuery,
 } = timesheetEndpoints;

@@ -29,7 +29,8 @@ export function useTaskEdit({
   fetchAvailableUsers,
   availableUsers,
   confirmFn,
-  showInDays
+  showInDays,
+  pushUndo,
 }) {
   const dispatch = useDispatch();
 
@@ -70,8 +71,10 @@ export function useTaskEdit({
             .find(p => p.project_id === projectId)
             ?.tasks.find(t => t.task_id === taskId);
 
-          const startDate = field === 'start_date' ? newValue : formatDateISO(task?.start_date);
-          const endDate = field === 'end_date' ? newValue : formatDateISO(task?.end_date);
+          const prevStartDate = formatDateISO(task?.start_date);
+          const prevEndDate = formatDateISO(task?.end_date);
+          const startDate = field === 'start_date' ? newValue : prevStartDate;
+          const endDate = field === 'end_date' ? newValue : prevEndDate;
 
           await updateTask({
             taskId,
@@ -81,6 +84,15 @@ export function useTaskEdit({
               end_date: endDate || null
             }
           }).unwrap();
+
+          if (pushUndo) {
+            pushUndo({
+              type: 'UPDATE_TASK',
+              taskId, projectId, field,
+              previousValue: { start_date: prevStartDate || null, end_date: prevEndDate || null },
+              newValue: { start_date: startDate || null, end_date: endDate || null },
+            });
+          }
 
           await refetchPlanning();
         } else if (field === 'status') {
@@ -111,6 +123,15 @@ export function useTaskEdit({
             taskData: { task_status_id: newValue }
           }).unwrap();
 
+          if (pushUndo) {
+            pushUndo({
+              type: 'UPDATE_TASK',
+              taskId, projectId, field,
+              previousValue: previousValue || null,
+              newValue,
+            });
+          }
+
           await refetchPlanning();
         } else if (field === 'assignee') {
           const normalizedOwnerId = newValue?.trim() || null;
@@ -120,22 +141,49 @@ export function useTaskEdit({
             taskData: { owner_id: normalizedOwnerId }
           }).unwrap();
 
+          if (pushUndo) {
+            pushUndo({
+              type: 'UPDATE_TASK',
+              taskId, projectId, field,
+              previousValue: previousValue || null,
+              newValue: normalizedOwnerId,
+            });
+          }
+
           await refetchPlanning();
         } else if (field === 'etc') {
           const etcValue = parseFloat(newValue) || 0;
+          const rawEtc = showInDays ? etcValue * 8 : etcValue;
+          const rawPrevEtc = showInDays ? (parseFloat(previousValue) || 0) * 8 : (parseFloat(previousValue) || 0);
           await updateTaskETC({
             taskId,
-            etc: showInDays ? etcValue * 8 : etcValue
+            etc: rawEtc
           }).unwrap();
+
+          if (pushUndo) {
+            pushUndo({
+              type: 'UPDATE_TASK',
+              taskId, projectId, field,
+              previousValue: rawPrevEtc,
+              newValue: rawEtc,
+            });
+          }
 
           await refetchPlanning();
         } else if (field === 'title' || field === 'description' || field === 'budget' || field === 'external_key') {
           const taskData = {};
+          let rawNewValue = newValue;
+          let rawPrevValue = previousValue;
+
           if (field === 'budget') {
             const budgetValue = parseFloat(newValue) || 0;
-            taskData[field] = showInDays ? budgetValue * 8 : budgetValue;
+            rawNewValue = showInDays ? budgetValue * 8 : budgetValue;
+            rawPrevValue = showInDays ? (parseFloat(previousValue) || 0) * 8 : (parseFloat(previousValue) || 0);
+            taskData[field] = rawNewValue;
           } else if (field === 'external_key') {
-            taskData[field] = newValue.trim() === '' ? null : newValue;
+            rawNewValue = newValue.trim() === '' ? null : newValue;
+            rawPrevValue = previousValue || null;
+            taskData[field] = rawNewValue;
           } else {
             taskData[field] = newValue;
           }
@@ -145,6 +193,15 @@ export function useTaskEdit({
             projectId,
             taskData
           }).unwrap();
+
+          if (pushUndo) {
+            pushUndo({
+              type: 'UPDATE_TASK',
+              taskId, projectId, field,
+              previousValue: rawPrevValue,
+              newValue: rawNewValue,
+            });
+          }
 
           await refetchPlanning();
 
@@ -446,6 +503,11 @@ export function useTaskEdit({
     }
   };
 
+  const cancelEditing = () => {
+    setEditingCell(null);
+    setEditValue('');
+  };
+
   return {
     editingCell,
     editValue,
@@ -462,6 +524,7 @@ export function useTaskEdit({
     handleCellClick,
     handleCellBlur,
     handleKeyDown,
+    cancelEditing,
     handleStartAddingTask,
     handleCloseTaskModal,
     handleSaveNewTask,

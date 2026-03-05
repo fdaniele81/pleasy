@@ -11,6 +11,7 @@ import { useCapacityPlanState } from './hooks/useCapacityPlanState';
 import { exportMultiGanttAsPNG, exportFTEChartAsPNG } from '../estimator/utils/chartExport';
 import DistributionConfigModal from './components/DistributionConfigModal';
 import { addToast } from '../../store/slices/toastSlice';
+import { useCapacityPlanUndo } from './hooks/useCapacityPlanUndo';
 
 function CapacityPlanView() {
   const { t } = useTranslation(['capacityPlan', 'common']);
@@ -37,7 +38,23 @@ function CapacityPlanView() {
     aggregatedFTE,
   } = useCapacityPlanState(selectedIds);
 
+  // Undo/Redo
+  const { pushUndo } = useCapacityPlanUndo({ updateEstimateIntervals });
+
   const [configEstimateId, setConfigEstimateId] = useState(null);
+
+  // Mappa colori stabile basata sull'ordine di selezione (non cambia con il riordinamento)
+  const colorMap = useMemo(() => {
+    const ESTIMATE_COLORS = [
+      '#870c7f', '#0891b2', '#059669', '#d97706',
+      '#dc2626', '#7c3aed', '#2563eb', '#be185d',
+    ];
+    const map = {};
+    selectedIds.forEach((id, index) => {
+      map[id] = ESTIMATE_COLORS[index % ESTIMATE_COLORS.length];
+    });
+    return map;
+  }, [selectedIds]);
 
   // Legge la config comune dalla prima stima selezionata
   const initialChartConfig = useMemo(() => {
@@ -86,16 +103,26 @@ function CapacityPlanView() {
 
   const handleIntervalsChange = useCallback(
     (estimateId, newIntervals) => {
+      const currentItem = estimatesList.find((e) => e.estimateId === estimateId);
+      if (currentItem) {
+        pushUndo({
+          type: 'UPDATE_INTERVALS',
+          estimateId,
+          previousIntervals: { ...currentItem.phaseIntervals },
+          newIntervals,
+        });
+      }
       updateEstimateIntervals(estimateId, newIntervals);
     },
-    [updateEstimateIntervals]
+    [updateEstimateIntervals, estimatesList, pushUndo]
   );
 
   const handleExportGantt = useCallback(() => {
     exportMultiGanttAsPNG(estimatesList, commonTotalDays, 'capacity-plan', {
-      onError: (msg) => dispatch(addToast({ message: msg, type: 'error' }))
+      onError: (msg) => dispatch(addToast({ message: msg, type: 'error' })),
+      colorMap,
     });
-  }, [estimatesList, commonTotalDays, dispatch]);
+  }, [estimatesList, commonTotalDays, dispatch, colorMap]);
 
   const handleExportFTEChart = useCallback(({ orderedKeys, customColors } = {}) => {
     exportFTEChartAsPNG(aggregatedFTE, 'capacity-plan', commonTotalDays, orderedKeys, customColors, t);
@@ -204,6 +231,7 @@ function CapacityPlanView() {
                 onIntervalsChange={handleIntervalsChange}
                 onDistributionConfig={setConfigEstimateId}
                 isReadOnly={false}
+                colorMap={colorMap}
               />
             </div>
           </div>

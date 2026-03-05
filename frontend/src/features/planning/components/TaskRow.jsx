@@ -40,6 +40,7 @@ export const TaskRow = memo(function TaskRow({
   timelineWidth,
   todayLineOffset,
   getDateInfo,
+  pushUndo,
   refetchPlanning
 }) {
   const { t } = useTranslation(['planning', 'common']);
@@ -92,17 +93,32 @@ export const TaskRow = memo(function TaskRow({
   const clearPendingDatesRef = useRef(null);
 
   const onDateChange = useCallback(async (newStartDate, newEndDate) => {
+    const prevStartDate = task.start_date ? formatDateISO(task.start_date) : null;
+    const prevEndDate = task.end_date ? formatDateISO(task.end_date) : null;
+
     try {
       await updateTask({
         taskId: task.task_id,
         projectId: project.project_id,
         taskData: { start_date: newStartDate, end_date: newEndDate },
       }).unwrap();
+
+      if (pushUndo) {
+        pushUndo({
+          type: 'UPDATE_TASK',
+          taskId: task.task_id,
+          projectId: project.project_id,
+          field: 'start_date',
+          previousValue: { start_date: prevStartDate, end_date: prevEndDate },
+          newValue: { start_date: newStartDate, end_date: newEndDate },
+        });
+      }
+
       refetchPlanning();
     } catch (err) {
       clearPendingDatesRef.current?.();
     }
-  }, [task.task_id, project.project_id, updateTask, refetchPlanning]);
+  }, [task.task_id, task.start_date, task.end_date, project.project_id, updateTask, pushUndo, refetchPlanning]);
 
   const {
     isDragging,
@@ -517,7 +533,14 @@ export const TaskRow = memo(function TaskRow({
           <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700">
             <span
               className="cursor-pointer hover:text-cyan-600 hover:underline"
-              onClick={() => handleInitialActualClick(task)}
+              onClick={() => handleInitialActualClick({
+                ...task,
+                client_name: project.client_name,
+                client_key: project.client_key,
+                client_color: project.client_color,
+                project_key: project.project_key,
+                project_title: project.title,
+              })}
               title={t('planning:clickEditInitialActual')}
             >
               {formattedActual}{getUnitLabel(showInDays)}

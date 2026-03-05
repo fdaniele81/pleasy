@@ -200,5 +200,6 @@
   "unlockCode": "Unlock to enter a custom code",
   "lockCode": "Lock and auto-generate",
   "validateCode": "Check code availability",
-  "projectCodeValidated": "Custom code confirmed"
+  "projectCodeValidated": "Custom code confirmed",
+  "singleItemEstimate": "Single-item estimate"
 }

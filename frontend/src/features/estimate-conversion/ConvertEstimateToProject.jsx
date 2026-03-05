@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,7 @@ import PhaseTaskList from './components/PhaseTaskList';
 import AdvancedModePanel from './components/AdvancedModePanel';
 import ConversionDateModal from './components/ConversionDateModal';
 import useConversionState from './hooks/useConversionState';
+import { useConversionUndo } from './hooks/useConversionUndo';
 import { calculatePhaseTotals } from './utils/phaseMapping';
 
 function ConvertEstimateToProject() {
@@ -46,6 +47,13 @@ function ConvertEstimateToProject() {
   // Conversion state
   const conversion = useConversionState();
 
+  // Undo/redo
+  const saveDraftRef = useRef(null);
+  const { pushSnapshot, clearStacks } = useConversionUndo({
+    restoreState: conversion,
+    saveDraftFn: saveDraftRef,
+  });
+
   // Page state
   const [selectedEstimate, setSelectedEstimate] = useState(null);
   const [estimateDetails, setEstimateDetails] = useState(null);
@@ -63,6 +71,8 @@ function ConvertEstimateToProject() {
    * Handle estimate selection: load details, check for existing drafts.
    */
   const handleSelectEstimate = useCallback(async (estimateId) => {
+    clearStacks();
+
     if (!estimateId) {
       setSelectedEstimate(null);
       setEstimateDetails(null);
@@ -153,7 +163,7 @@ function ConvertEstimateToProject() {
     } finally {
       setLoading(false);
     }
-  }, [getEstimate, getDraftsByEstimate, generateProjectKey, createOrUpdateDraft, conversion, currentUser, dispatch, t]);
+  }, [getEstimate, getDraftsByEstimate, generateProjectKey, createOrUpdateDraft, conversion, currentUser, dispatch, t, clearStacks]);
 
   /**
    * Save current task rows to draft (auto-save).
@@ -199,54 +209,62 @@ function ConvertEstimateToProject() {
     }
   }, [selectedEstimate, projectDraftId, projectKey, currentUser, createOrUpdateDraft, t]);
 
+  saveDraftRef.current = saveDraft;
+
   /**
    * Merge handler: merge selected rows then save.
    */
   const handleMerge = useCallback((title) => {
+    pushSnapshot(conversion.captureSnapshot());
     const newRows = conversion.mergeRows(title);
     if (newRows) saveDraft(newRows);
-  }, [conversion, saveDraft]);
+  }, [conversion, saveDraft, pushSnapshot]);
 
   /**
    * Split handler: split selected row into N parts then save.
    */
   const handleSplit = useCallback((splitCount, budgets) => {
+    pushSnapshot(conversion.captureSnapshot());
     const newRows = conversion.splitRow(splitCount, budgets);
     if (newRows) saveDraft(newRows);
-  }, [conversion, saveDraft]);
+  }, [conversion, saveDraft, pushSnapshot]);
 
   /**
    * Title change handler — save to DB.
    */
   const handleTitleChange = useCallback((rowId, newTitle) => {
+    pushSnapshot(conversion.captureSnapshot());
     const newRows = conversion.updateRowTitle(rowId, newTitle);
     if (newRows) saveDraft(newRows);
-  }, [conversion, saveDraft]);
+  }, [conversion, saveDraft, pushSnapshot]);
 
   /**
    * Remove row handler.
    */
   const handleRemoveRow = useCallback((rowId) => {
+    pushSnapshot(conversion.captureSnapshot());
     const newRows = conversion.removeRow(rowId);
     if (newRows) saveDraft(newRows);
-  }, [conversion, saveDraft]);
+  }, [conversion, saveDraft, pushSnapshot]);
 
   /**
    * Create task from advanced mode cell selection.
    */
   const handleCreateTaskFromCells = useCallback((title, cells, budget) => {
+    pushSnapshot(conversion.captureSnapshot());
     const newRows = conversion.createTaskFromCells(title, cells, budget);
     if (newRows) saveDraft(newRows);
-  }, [conversion, saveDraft]);
+  }, [conversion, saveDraft, pushSnapshot]);
 
   /**
    * Reset: re-create initial phase rows from the estimate.
    */
   const handleReset = useCallback(() => {
     if (!estimateDetails) return;
+    pushSnapshot(conversion.captureSnapshot());
     const rows = conversion.initFromEstimate(estimateDetails, { keepMode: true });
     saveDraft(rows);
-  }, [conversion, estimateDetails, saveDraft]);
+  }, [conversion, estimateDetails, saveDraft, pushSnapshot]);
 
   /**
    * Open conversion date modal (validates first).

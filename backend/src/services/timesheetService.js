@@ -423,6 +423,44 @@ async function saveTimesheetForPM(data, user) {
   };
 }
 
+async function getTaskHistory(taskId, user, allUsers = false) {
+  const userId = user.user_id;
+  const rows = await timesheetRepository.getTaskHistory(taskId, userId, allUsers);
+
+  if (rows.length === 0) {
+    return { task: null, entries: [], totalHours: 0 };
+  }
+
+  const firstRow = rows[0];
+  const task = {
+    task_id: firstRow.task_id,
+    task_title: firstRow.task_title,
+    task_number: firstRow.task_number,
+    budget: parseFloat(firstRow.budget) || 0,
+    initial_actual: parseFloat(firstRow.initial_actual) || 0,
+    project_key: firstRow.project_key,
+    project_title: firstRow.project_title,
+    project_type_id: firstRow.project_type_id,
+    client_name: firstRow.client_name,
+    client_key: firstRow.client_key,
+    client_color: firstRow.client_color
+  };
+
+  const entries = rows.map(row => ({
+    timesheet_id: row.timesheet_id,
+    date: row.timesheet_date,
+    hours: parseFloat(row.total_hours),
+    details: row.details,
+    is_submitted: row.is_submitted,
+    user_id: row.logged_by_user_id,
+    user_name: row.logged_by_user_name,
+  }));
+
+  const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
+
+  return { task, entries, totalHours };
+}
+
 export {
   getTimesheets,
   saveTimesheet,
@@ -435,7 +473,8 @@ export {
   getPreviewSubmission,
   reopenSnapshot,
   getTMPlanning,
-  saveTimesheetForPM
+  saveTimesheetForPM,
+  getTaskHistory
 };
 
 export default {
@@ -450,5 +489,6 @@ export default {
   getPreviewSubmission,
   reopenSnapshot,
   getTMPlanning,
-  saveTimesheetForPM
+  saveTimesheetForPM,
+  getTaskHistory
 };

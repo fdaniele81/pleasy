@@ -21,6 +21,7 @@ const TaskModalTimesheet = lazy(() => import("./components/TaskModalTimesheet"))
 const TimeOffModal = lazy(() => import("./components/TimeOffModal"));
 const TimesheetDetailsModal = lazy(() => import("./components/TimesheetDetailsModal"));
 const TimeOffSummaryModal = lazy(() => import("./components/TimeOffSummaryModal"));
+const TaskHistorySummaryModal = lazy(() => import("./components/TaskHistorySummaryModal"));
 
 function Timesheet() {
   const { t } = useTranslation(['timesheet', 'common']);
@@ -247,6 +248,8 @@ function Timesheet() {
     handleTimesheetDetailsModalConfirm, handleTimesheetDetailsModalClose,
     handleCellBlur, handleKeyDown,
     handleTaskTitleClick, handleCloseTaskModal, handleUpdateTask,
+    showTaskHistoryModal, selectedTaskForHistory,
+    handleTaskHistoryClick, handleCloseTaskHistoryModal,
   } = actions;
 
   isEditingRef.current = !!(taskEditCell.editingCell || timeOffEditCell.editingCell);
@@ -307,6 +310,7 @@ function Timesheet() {
       <Suspense fallback={null}><TimeOffModal isOpen={showTimeOffModal} onClose={handleTimeOffModalClose} onConfirm={handleTimeOffModalConfirm} timeOffData={timeOffModalData} date={timeOffModalDate} /></Suspense>
       <Suspense fallback={null}><TimesheetDetailsModal isOpen={showTimesheetDetailsModal} onClose={handleTimesheetDetailsModalClose} onConfirm={handleTimesheetDetailsModalConfirm} timesheetData={timesheetDetailsModalData} date={timesheetDetailsModalDate} taskTitle={timesheetDetailsModalTask?.task_title} isSubmitted={timesheetDetailsModalIsSubmitted} /></Suspense>
       <Suspense fallback={null}><TimeOffSummaryModal isOpen={showTimeOffSummaryModal} onClose={handleCloseTimeOffSummaryModal} timeOffType={selectedTimeOffTypeForSummary} /></Suspense>
+      <Suspense fallback={null}><TaskHistorySummaryModal isOpen={showTaskHistoryModal} onClose={handleCloseTaskHistoryModal} task={selectedTaskForHistory} /></Suspense>
 
       <div className="p-4">
         <div className="max-w-full mx-auto">
@@ -353,6 +357,7 @@ function Timesheet() {
             onTimeOffCellClick={handleTimeOffCellClick} onTimeOffCellContextMenu={handleTimeOffCellContextMenu} onTimeOffCellNoteClick={handleTimeOffCellNoteClick}
             onTimeOffCellBlur={handleTimeOffCellBlur} onTimeOffKeyDown={handleTimeOffKeyDown}
             onTimeOffTotalClick={handleTimeOffTotalClick}
+            onTaskHistoryClick={handleTaskHistoryClick}
           />
         </div>
       </div>

@@ -17,6 +17,12 @@ router.post("/",
   timesheetController.saveTimesheet
 );
 
+router.get("/task-history/:task_id",
+  verifyToken,
+  checkRole(["PM", "USER"]),
+  timesheetController.getTaskHistory
+);
+
 router.delete("/:timesheet_id",
   verifyToken,
   checkRole(["PM", "USER"]),

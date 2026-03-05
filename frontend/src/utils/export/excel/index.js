@@ -3,6 +3,7 @@ export { exportTimesheetToExcel } from './exports/timesheetExport.js';
 export { exportTimeOffPlanToExcel } from './exports/timeOffExport.js';
 export { exportEstimateToExcel } from './exports/estimateExport.js';
 export { exportUserTimeOffToExcel } from './exports/userTimeOffExport.js';
+export { exportTaskHistoryToExcel } from './exports/taskHistoryExport.js';
 export { exportTMPlanningToExcel } from './exports/tmPlanningExport.js';
 
 export { formatHours } from './excelFormatter.js';

@@ -368,7 +368,22 @@ export function useCapacityPlanState(selectedIds) {
         estimateId: id,
         ...estimatesState[id],
       }))
-      .filter((item) => item.estimate);
+      .filter((item) => item.estimate)
+      .sort((a, b) => {
+        const getMinInterval = (item) => {
+          if (!item.phaseIntervals) return Infinity;
+          let min = Infinity;
+          for (const intervals of Object.values(item.phaseIntervals)) {
+            if (intervals && intervals.length > 0) {
+              for (const v of intervals) {
+                if (v < min) min = v;
+              }
+            }
+          }
+          return min;
+        };
+        return getMinInterval(a) - getMinInterval(b);
+      });
   }, [selectedIds, estimatesState]);
 
   return {

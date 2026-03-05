@@ -388,6 +388,27 @@ export default function useConversionState() {
   }, []);
 
   /**
+   * Capture a deep snapshot of the current state (for undo/redo).
+   */
+  const captureSnapshot = useCallback(() => ({
+    taskRows: taskRows.map(r => ({ ...r, phaseKeys: [...r.phaseKeys], selectedCells: [...(r.selectedCells || [])] })),
+    cellToTaskMap: new Map(cellToTaskMap),
+    usedColors: [...usedColors],
+  }), [taskRows, cellToTaskMap, usedColors]);
+
+  /**
+   * Restore state from a snapshot (for undo/redo).
+   */
+  const restoreSnapshot = useCallback((snapshot) => {
+    setTaskRows(snapshot.taskRows);
+    setCellToTaskMap(snapshot.cellToTaskMap);
+    setUsedColors(snapshot.usedColors);
+    setSelectedRowIds(new Set());
+    setSelectedCells(new Set());
+    return snapshot.taskRows;
+  }, []);
+
+  /**
    * Budget difference: sum of rows vs original total
    */
   const budgetDifference = useMemo(() => {
@@ -425,5 +446,7 @@ export default function useConversionState() {
     createTaskFromCells,
     clearCellSelection,
     resetRows,
+    captureSnapshot,
+    restoreSnapshot,
   };
 }

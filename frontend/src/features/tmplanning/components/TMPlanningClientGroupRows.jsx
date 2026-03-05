@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import { useTranslation } from "react-i18next";
+import { ExternalLink } from "lucide-react";
 import { ExpandCollapseButton } from "../../../shared/ui/table";
 import TMPlanningCell from "./TMPlanningCell";
 
@@ -17,10 +18,12 @@ const TMPlanningClientGroupRows = memo(function TMPlanningClientGroupRows({
   onCellBlur,
   onKeyDown,
   onCellContextMenu,
+  onCellNoteClick,
   onNoteTooltipHover,
   onNoteTooltipLeave,
+  onTaskHistoryClick,
 }) {
-  const { t } = useTranslation(['tmplanning']);
+  const { t } = useTranslation(['tmplanning', 'timesheet']);
 
   if (filteredClients.length === 0) {
     return (
@@ -93,9 +96,27 @@ const TMPlanningClientGroupRows = memo(function TMPlanningClientGroupRows({
                 </span>
               </td>
               <td className="px-1 py-1 text-center border-b border-r border-gray-200 bg-cyan-50">
-                <span className="text-[10px] font-medium text-cyan-700">
-                  {user.total_hours_all > 0 ? user.total_hours_all.toFixed(1) : "-"}
-                </span>
+                <div className="relative flex items-center justify-center">
+                  <span className="text-[10px] font-medium text-cyan-700">
+                    {user.total_hours_all > 0 ? user.total_hours_all.toFixed(1) : "-"}
+                  </span>
+                  {user.total_hours_all > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTaskHistoryClick && onTaskHistoryClick({
+                          ...user,
+                          client_name: client.client_name,
+                          client_color: client.client_color,
+                        });
+                      }}
+                      className="absolute right-0 p-0.5 rounded hover:bg-gray-200 transition-colors text-gray-400 hover:text-cyan-600"
+                      title={t('timesheet:taskHistory')}
+                    >
+                      <ExternalLink size={10} />
+                    </button>
+                  )}
+                </div>
               </td>
               {dateRange.map((date, idx) => (
                 <TMPlanningCell
@@ -110,6 +131,7 @@ const TMPlanningClientGroupRows = memo(function TMPlanningClientGroupRows({
                   onCellBlur={onCellBlur}
                   onKeyDown={onKeyDown}
                   onCellContextMenu={onCellContextMenu}
+                  onCellNoteClick={onCellNoteClick}
                   onNoteTooltipHover={onNoteTooltipHover}
                   onNoteTooltipLeave={onNoteTooltipLeave}
                   contextClient={{

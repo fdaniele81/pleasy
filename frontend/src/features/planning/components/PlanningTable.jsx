@@ -44,6 +44,7 @@ export const PlanningTable = memo(function PlanningTable({
   hideProjectHeaders,
   showInDays,
   showTimeline,
+  pushUndo,
   refetchPlanning,
   dateRange,
   columnWidth,
@@ -464,6 +465,7 @@ export const PlanningTable = memo(function PlanningTable({
                       timelineWidth={timelineWidth}
                       todayLineOffset={todayLineOffset}
                       getDateInfo={getDateInfo}
+                      pushUndo={pushUndo}
                       refetchPlanning={refetchPlanning}
                     />
                   ))}

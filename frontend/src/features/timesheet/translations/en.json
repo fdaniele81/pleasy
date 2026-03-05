@@ -105,5 +105,26 @@
   "startDate": "Start date",
   "undoSuccess": "Undo: {{label}}",
   "undoError": "Undo failed",
-  "undoEmpty": "Nothing to undo"
+  "undoEmpty": "Nothing to undo",
+
+  "taskHistory": "Hours History",
+  "taskHistoryChart": "Hours Over Time",
+  "taskHistoryEntries": "All Entries",
+  "taskHistoryDate": "Date",
+  "taskHistoryHours": "Hours",
+  "taskHistoryDetails": "Notes / Details",
+  "taskHistorySubmitted": "Submitted",
+  "taskHistoryNotSubmitted": "To Submit",
+  "taskHistoryStatus": "Status",
+  "taskHistoryFilterAll": "All",
+  "taskHistoryFilterSubmitted": "Submitted",
+  "taskHistoryFilterNotSubmitted": "To Submit",
+  "taskHistoryNoEntries": "No entries found",
+  "taskHistoryWeekly": "Weekly",
+  "taskHistoryMonthly": "Monthly",
+  "taskHistoryTotal": "Total",
+  "taskHistoryBudget": "Budget",
+  "timeOffEntries": "All Entries",
+  "timeOffNoEntries": "No entries found",
+  "last12months": "Last 12 months"
 }

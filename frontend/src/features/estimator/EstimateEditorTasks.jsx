@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronDown, Download, Edit2, Info } from "lucide-react";
+import { ArrowLeft, ChevronDown, Download, Edit2, FileText, Info } from "lucide-react";
 import Button from "../../shared/ui/Button";
 import useDropdownManager from "../../shared/ui/filters/useDropdownManager";
 import { useEstimateEditorState } from "./hooks/useEstimateEditorState";
 import { useEstimateEditorActions } from "./hooks/useEstimateEditorActions";
+import { useEstimateEditorUndo } from "./hooks/useEstimateEditorUndo";
 import {
   PercentagesModal,
   ActivityTableHeader,
@@ -49,7 +50,37 @@ function EstimateEditorTasks() {
 
   const { toggleDropdown, isDropdownOpen, getDropdownRef } = useDropdownManager();
 
-  const actions = useEstimateEditorActions(state);
+  const isEditingRef = useRef(false);
+  const cancelEditingRef = useRef(null);
+  const activateCellRef = useRef(null);
+  const { pushUndo } = useEstimateEditorUndo({ isEditingRef, cancelEditingRef, activateCellRef });
+
+  isEditingRef.current = editingActivityIndex !== null;
+  activateCellRef.current = (command, updatedTask) => {
+    if (command.type === 'restore' && updatedTask) {
+      // Undo delete: re-insert the task at its original position
+      const updatedActivities = [...activities];
+      const insertAt = Math.min(command.index ?? activities.length, activities.length);
+      updatedActivities.splice(insertAt, 0, updatedTask);
+      state.setActivities(updatedActivities);
+    } else if (command.type === 'remove') {
+      // Redo delete: remove the task again
+      state.setActivities(activities.filter(
+        (a) => a.estimate_task_id !== command.taskId
+      ));
+    } else if (updatedTask) {
+      const idx = activities.findIndex(
+        (a) => a.estimate_task_id === command.taskId
+      );
+      if (idx !== -1) {
+        const updatedActivities = [...activities];
+        updatedActivities[idx] = updatedTask;
+        state.setActivities(updatedActivities);
+      }
+    }
+  };
+
+  const actions = useEstimateEditorActions({ ...state, pushUndo });
   const {
     getContingencyHours,
     handleDevInputChange,
@@ -67,6 +98,12 @@ function EstimateEditorTasks() {
     handleSaveInfo,
     handleExportEstimate,
   } = actions;
+
+  cancelEditingRef.current = () => {
+    if (editingActivityIndex !== null) {
+      handleCancelEdit(editingActivityIndex);
+    }
+  };
 
   if (estimateLoading && !currentEstimate) {
     return (
@@ -137,6 +174,21 @@ function EstimateEditorTasks() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {currentEstimate?.status !== "CONVERTED" && activities.length === 0 && (
+                <Button
+                  onClick={() => setNewActivity((prev) => ({
+                    ...prev,
+                    activity_name: formData.title || '',
+                    activity_detail: formData.description || '',
+                  }))}
+                  color="gray"
+                  size="sm"
+                  icon={FileText}
+                  iconSize={14}
+                >
+                  {t('estimator:singleItemEstimate')}
+                </Button>
+              )}
               {activities.length > 0 && (
                 <Button
                   onClick={handleExportEstimate}

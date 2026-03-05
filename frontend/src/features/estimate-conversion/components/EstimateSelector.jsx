@@ -129,8 +129,8 @@ function EstimateSelector({
           </select>
         </div>
 
-        {/* Project key */}
-        {selectedEstimateId && (
+        {/* Project key — visible only after client + estimate are selected */}
+        {selectedClientId && selectedEstimateId && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('estimator:projectCodeLabel')}

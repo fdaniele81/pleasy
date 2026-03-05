@@ -1,16 +1,17 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 
 const GanttModal = lazy(() => import('./components/gantt-globale/GanttModal'));
 const TaskModal = lazy(() => import('../../shared/components/modals/TaskModal'));
 
-import InitialActualModal from './components/InitialActualModal';
+const PlanningTaskHistoryModal = lazy(() => import('./components/PlanningTaskHistoryModal'));
 
 import SimpleGanttModal from './components/gantt-selezione/SimpleGanttModal';
 
 import { usePlanningData } from './hooks/usePlanningData';
 import { useTaskEdit } from './hooks/useTaskEdit';
+import { usePlanningUndo } from './hooks/usePlanningUndo';
 import { usePlanningFilters } from './hooks/usePlanningFilters';
 import { useTimelinePeriod } from './hooks/useTimelinePeriod';
 import { useConfirmation } from '../../hooks';
@@ -240,6 +241,17 @@ function Pianificazione() {
       });
   }, [baseFilteredProjects, selectionFilters, selectedTasks]);
 
+  const isEditingRef = useRef(false);
+  const cancelEditingRef = useRef(null);
+  const activateCellRef = useRef(null);
+  const { pushUndo } = usePlanningUndo({
+    isEditingRef,
+    cancelEditingRef,
+    activateCellRef,
+    refetchPlanning,
+    fetchSyncData,
+  });
+
   const taskEdit = useTaskEdit({
     projects,
     filteredProjects,
@@ -251,7 +263,8 @@ function Pianificazione() {
     fetchAvailableUsers: planningData.fetchAvailableUsers,
     availableUsers,
     confirmFn: confirmation.confirm,
-    showInDays
+    showInDays,
+    pushUndo,
   });
 
   const {
@@ -266,6 +279,7 @@ function Pianificazione() {
     handleCellClick,
     handleCellBlur,
     handleKeyDown,
+    cancelEditing,
     handleStartAddingTask,
     handleCloseTaskModal,
     handleSaveNewTask,
@@ -276,6 +290,19 @@ function Pianificazione() {
     handleCloseTaskDetailsModal,
     handleSaveEditTask,
   } = taskEdit;
+
+  isEditingRef.current = !!editingCell;
+  cancelEditingRef.current = cancelEditing;
+  activateCellRef.current = (command, value) => {
+    if (command.field === 'start_date' || command.field === 'end_date') {
+      const dateValue = value?.[command.field] || '';
+      handleCellClick(command.taskId, command.projectId, command.field, dateValue);
+    } else if ((command.field === 'budget' || command.field === 'etc') && showInDays && value) {
+      handleCellClick(command.taskId, command.projectId, command.field, (Math.round(value / 8 * 10) / 10).toString());
+    } else {
+      handleCellClick(command.taskId, command.projectId, command.field, value != null ? String(value) : '');
+    }
+  };
 
   const allUsers = useMemo(() => {
     const usersMap = new Map();
@@ -441,17 +468,17 @@ function Pianificazione() {
         projects={projects}
       />
 
-      <InitialActualModal
-        isOpen={showInitialActualModal}
-        onClose={() => {
-          setShowInitialActualModal(false);
-          setSelectedTaskForInitialActual(null);
-        }}
-        onConfirm={(initialActual) => handleInitialActualConfirm(initialActual, selectedTaskForInitialActual?.task_id)}
-        taskTitle={selectedTaskForInitialActual?.title || ''}
-        currentValue={selectedTaskForInitialActual?.initial_actual || 0}
-        actualTotal={selectedTaskForInitialActual?.actual || 0}
-      />
+      <Suspense fallback={null}>
+        <PlanningTaskHistoryModal
+          isOpen={showInitialActualModal}
+          onClose={() => {
+            setShowInitialActualModal(false);
+            setSelectedTaskForInitialActual(null);
+          }}
+          task={selectedTaskForInitialActual}
+          onConfirmInitialActual={(initialActual) => handleInitialActualConfirm(initialActual, selectedTaskForInitialActual?.task_id)}
+        />
+      </Suspense>
 
       <Suspense fallback={null}>
         {(() => {
@@ -557,6 +584,7 @@ function Pianificazione() {
             hideProjectHeaders={hideProjectHeaders}
             showInDays={showInDays}
             showTimeline={showTimeline}
+            pushUndo={pushUndo}
             refetchPlanning={refetchPlanning}
             dateRange={timelinePeriod.dateRange}
             columnWidth={timelinePeriod.columnWidth}

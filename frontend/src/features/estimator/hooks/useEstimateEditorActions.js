@@ -35,6 +35,7 @@ export function useEstimateEditorActions({
   projectKey,
   setProjectKey,
   EMPTY_NEW_ACTIVITY,
+  pushUndo,
 }) {
   const { t } = useTranslation(['estimator', 'common']);
   const dispatch = useDispatch();
@@ -126,6 +127,15 @@ export function useEstimateEditorActions({
           estimateId: savedEstimateId,
           taskId: task.estimate_task_id
         }).unwrap();
+
+        pushUndo({
+          type: 'delete',
+          estimateId: savedEstimateId,
+          taskId: task.estimate_task_id,
+          taskData: extractTaskFields(task),
+          index,
+        });
+
         setActivities(activities.filter((_, i) => i !== index));
         dispatch(addToast({ message: t('estimator:estimateItemDeleted'), type: "success" }));
       } catch (error) {
@@ -140,6 +150,21 @@ export function useEstimateEditorActions({
     setEditingActivityIndex(index);
   };
 
+  const extractTaskFields = (task) => ({
+    activity_name: task.activity_name,
+    activity_detail: task.activity_detail,
+    hours_development_input: task.hours_development_input,
+    hours_analysis: task.hours_analysis,
+    hours_development: task.hours_development,
+    hours_internal_test: task.hours_internal_test,
+    hours_uat: task.hours_uat,
+    hours_release: task.hours_release,
+    hours_pm: task.hours_pm,
+    hours_startup: task.hours_startup,
+    hours_documentation: task.hours_documentation,
+    hours_contingency: task.hours_contingency,
+  });
+
   const handleRecalculateActivity = async (index) => {
     const activity = activities[index];
     const hoursDev = parseFloat(activity.hours_development) || 0;
@@ -148,6 +173,8 @@ export function useEstimateEditorActions({
       dispatch(addToast({ message: t('estimator:hoursGreaterThanZero'), type: "error" }));
       return;
     }
+
+    const previousFields = extractTaskFields(activity);
 
     const newInputHours = hoursDev / (formData.pct_development / 100);
     const hours_analysis = roundTo1((newInputHours * formData.pct_analysis) / 100);
@@ -171,6 +198,8 @@ export function useEstimateEditorActions({
       hours_documentation, hours_contingency,
     };
 
+    const newFields = extractTaskFields(recalculatedActivity);
+
     if (activity.estimate_task_id && savedEstimateId) {
       try {
         const updated = await updateEstimateTask({
@@ -193,6 +222,18 @@ export function useEstimateEditorActions({
         const updatedActivities = [...activities];
         updatedActivities[index] = updated;
         setActivities(updatedActivities);
+
+        if (pushUndo) {
+          pushUndo({
+            type: 'UPDATE_ESTIMATE_TASK',
+            estimateId: savedEstimateId,
+            taskId: activity.estimate_task_id,
+            activityIndex: index,
+            previousFields,
+            newFields,
+          });
+        }
+
         dispatch(addToast({ message: t('estimator:estimateItemRecalculated'), type: "success" }));
       } catch (error) {
         dispatch(addToast({ message: t('estimator:errorPrefix', { message: error.message }), type: "error" }));
@@ -209,6 +250,12 @@ export function useEstimateEditorActions({
     const activity = activities[index];
 
     if (activity.estimate_task_id && savedEstimateId) {
+      const originalTask = currentEstimate?.tasks?.find(
+        (t) => t.estimate_task_id === activity.estimate_task_id
+      );
+      const previousFields = originalTask ? extractTaskFields(originalTask) : extractTaskFields(activity);
+      const newFields = extractTaskFields(activity);
+
       try {
         const updated = await updateEstimateTask({
           estimateId: savedEstimateId,
@@ -232,6 +279,18 @@ export function useEstimateEditorActions({
         const updatedActivities = [...activities];
         updatedActivities[index] = updated;
         setActivities(updatedActivities);
+
+        if (pushUndo) {
+          pushUndo({
+            type: 'UPDATE_ESTIMATE_TASK',
+            estimateId: savedEstimateId,
+            taskId: activity.estimate_task_id,
+            activityIndex: index,
+            previousFields,
+            newFields,
+          });
+        }
+
         dispatch(addToast({ message: t('estimator:estimateItemUpdated'), type: "success" }));
       } catch (error) {
         dispatch(addToast({ message: t('estimator:errorPrefix', { message: error.message }), type: "error" }));

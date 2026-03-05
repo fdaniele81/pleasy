@@ -63,8 +63,9 @@ function TimeOffPlan() {
   const { data: holidays = [] } = useGetHolidaysQuery();
   const [getCompanyTimeOffPlanForExport] = useLazyGetCompanyTimeOffPlanQuery();
 
-  const [selectedUsers, setSelectedUsers] = useState({ VACATION: {}, OTHER: {} });
+  const [selectedUsers, setSelectedUsers] = useState({ VACATION: {} });
   const [selectionFilters, setSelectionFilters] = useState([]);
+  const [filterUserIds, setFilterUserIds] = useState([]);
 
   const calculations = useTimeOffPlanCalculations(startDate, endDate, viewMode, users);
   const {
@@ -165,18 +166,12 @@ function TimeOffPlan() {
       const usersWithTimeOffs = await getCompanyTimeOffPlanForExport({ startDate: exportStartDate, endDate: exportEndDate }).unwrap();
 
       const hasVacationSelection = Object.keys(selectedUsers.VACATION).some(userId => selectedUsers.VACATION[userId]);
-      const hasOtherSelection = Object.keys(selectedUsers.OTHER).some(userId => selectedUsers.OTHER[userId]);
-      const hasAnySelection = hasVacationSelection || hasOtherSelection;
 
-      const vacationUsers = hasAnySelection
+      const vacationUsers = hasVacationSelection
         ? usersWithTimeOffs.filter(u => selectedUsers.VACATION[u.user_id])
         : usersWithTimeOffs;
 
-      const otherUsers = hasAnySelection
-        ? usersWithTimeOffs.filter(u => selectedUsers.OTHER[u.user_id])
-        : usersWithTimeOffs;
-
-      await exportTimeOffPlanToExcel(vacationUsers, otherUsers, exportStartDate, exportEndDate, holidays);
+      await exportTimeOffPlanToExcel(vacationUsers, [], exportStartDate, exportEndDate, holidays);
 
       setShowExportModal(false);
     } catch (error) {
@@ -232,8 +227,15 @@ function TimeOffPlan() {
 
   const { getDateInfo } = useTableDateHelpers(dateRange, holidays);
 
+  const uniqueUsers = useMemo(() =>
+    [...users].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')),
+    [users]
+  );
+
   const getFilteredUsersForSection = (timeOffTypeId) => {
     return users.filter(user => {
+      if (filterUserIds.length > 0 && !filterUserIds.includes(user.user_id)) return false;
+
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
         const matchesSearch = (
@@ -258,13 +260,7 @@ function TimeOffPlan() {
   };
 
   const filteredUsersVacation = getFilteredUsersForSection('VACATION');
-  const filteredUsersOther = getFilteredUsersForSection('OTHER');
-
-  const allFilteredUserIds = new Set([
-    ...filteredUsersVacation.map(u => u.user_id),
-    ...filteredUsersOther.map(u => u.user_id)
-  ]);
-  const filteredUsers = users.filter(u => allFilteredUserIds.has(u.user_id));
+  const filteredUsers = filteredUsersVacation;
 
   if (loading) {
     return (
@@ -298,6 +294,9 @@ function TimeOffPlan() {
             onViewModeChange={setViewMode}
             selectionFilters={selectionFilters}
             onSelectionFiltersChange={setSelectionFilters}
+            filterUserIds={filterUserIds}
+            onFilterUserIdsChange={setFilterUserIds}
+            uniqueUsers={uniqueUsers}
             onExportClick={() => setShowExportModal(true)}
             onPrevious={goToPreviousPeriod}
             onNext={goToNextPeriod}
@@ -405,94 +404,6 @@ function TimeOffPlan() {
                   />
                 ))}
 
-                <tr className="h-4">
-                  <td colSpan={(viewMode === 'daily' ? dateRange.length : weekRanges.length) + 3} className="bg-gray-200"></td>
-                </tr>
-
-                <tr className="bg-cyan-700 font-bold">
-                  <th className="border border-gray-300 px-1 py-1 text-center sticky left-0 bg-cyan-700 z-20 w-8 min-w-8 max-w-8">
-                    <SelectionCheckbox
-                      checked={
-                        filteredUsersOther.length > 0 &&
-                        filteredUsersOther.every((u) => selectedUsers.OTHER?.[u.user_id])
-                      }
-                      onChange={(e) => {
-                        const allUserIds = filteredUsersOther.map((u) => u.user_id);
-                        setSelectedUsers((prev) => {
-                          const newOther = { ...prev.OTHER };
-                          if (e.target.checked) {
-                            allUserIds.forEach((id) => (newOther[id] = true));
-                          } else {
-                            allUserIds.forEach((id) => delete newOther[id]);
-                          }
-                          return { ...prev, OTHER: newOther };
-                        });
-                      }}
-                    />
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left sticky left-8 bg-cyan-700 z-20 w-64 min-w-64 max-w-64 shadow-[2px_0_0_0_rgb(79,70,229)] text-white">
-                    <div className="flex items-center gap-2">
-                      <TimeOffIcon.OTHER size={18} className="text-white" />
-                      <span>{t('timeoffplan:other')}</span>
-                    </div>
-                  </th>
-                  <th className="border border-gray-300 px-1 py-1 text-center bg-cyan-700 sticky left-72 z-20 w-20 min-w-20 max-w-20 shadow-[4px_0_0_0_rgb(79,70,229)] text-white text-xs font-bold">
-                    {getGrandTotal('OTHER', filteredUsersOther).toFixed(1)}
-                  </th>
-
-                  {viewMode === 'daily' ? (
-                    dateRange.map((date, idx) => {
-                      const dateInfo = getDateInfo(date);
-                      const total = getTotalHoursForDate(date, 'OTHER', filteredUsersOther);
-
-                      return (
-                        <th
-                          key={idx}
-                          className={`border border-gray-300 px-1 py-1 text-center text-xs ${
-                            dateInfo.isToday
-                              ? 'bg-cyan-600 text-white'
-                              : dateInfo.isNonWorking
-                              ? 'bg-gray-600 text-white'
-                              : 'bg-cyan-700 text-white'
-                          }`}
-                        >
-                          {total > 0 ? total.toFixed(1) : '-'}
-                        </th>
-                      );
-                    })
-                  ) : (
-                    weekRanges.map((week, idx) => {
-                      const total = getTotalHoursForWeek(week.dates, 'OTHER', filteredUsersOther);
-
-                      return (
-                        <th
-                          key={idx}
-                          className="border border-gray-300 px-1 py-1 text-center bg-cyan-700 text-white text-xs"
-                        >
-                          {total > 0 ? total.toFixed(1) : '-'}
-                        </th>
-                      );
-                    })
-                  )}
-                </tr>
-
-                {filteredUsersOther.map((user) => (
-                  <TimeOffPlanUserRow
-                    key={`${user.user_id}-OTHER`}
-                    user={user}
-                    timeOffTypeId="OTHER"
-                    isSelected={!!selectedUsers.OTHER?.[user.user_id]}
-                    onToggleSelection={toggleUserSelection}
-                    viewMode={viewMode}
-                    dateRange={dateRange}
-                    weekRanges={weekRanges}
-                    holidays={holidays}
-                    getTimeOffForDate={getTimeOffForDate}
-                    getTimeOffForWeek={getTimeOffForWeek}
-                    getTotalHoursForUserAndType={getTotalHoursForUserAndType}
-                    bgColor="bg-cyan-50"
-                  />
-                ))}
               </tbody>
             </table>
           </TableContainer>

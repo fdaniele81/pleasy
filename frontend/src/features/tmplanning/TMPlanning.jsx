@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import Button from "../../shared/ui/Button";
 import ContextMenu from "../../shared/ui/ContextMenu";
@@ -10,6 +10,7 @@ import {
   SearchInput,
   PeriodNavigator,
   FilterDropdown,
+  SavedFiltersDropdown,
 } from "../../shared/ui/filters";
 import { getRouteIcon } from "../../constants/routeIcons";
 import { ROUTES } from "../../constants/routes";
@@ -17,6 +18,7 @@ import { Gauge, FileText, X, User, Building2, Download } from "lucide-react";
 import { useTMPlanningState } from "./hooks/useTMPlanningState";
 import { useTMPlanningData } from "./hooks/useTMPlanningData";
 import { useTMPlanningActions } from "./hooks/useTMPlanningActions";
+import { useTMPlanningUndo } from "./hooks/useTMPlanningUndo";
 import TMPlanningUserGroupRows from "./components/TMPlanningUserGroupRows";
 import TMPlanningClientGroupRows from "./components/TMPlanningClientGroupRows";
 
@@ -28,6 +30,9 @@ const TimesheetDetailsModal = lazy(() =>
 );
 const ExportModal = lazy(() =>
   import("../../shared/components/modals/ExportModal")
+);
+const TaskHistorySummaryModal = lazy(() =>
+  import("../timesheet/components/TaskHistorySummaryModal")
 );
 
 function TMPlanning() {
@@ -53,8 +58,11 @@ function TMPlanning() {
     detailsModalIsSubmitted,
     hoveredNoteCell,
     noteTooltipPosition,
+    showTaskHistoryModal,
+    selectedTaskForHistory,
     tmUsers,
     hoursEditCell,
+    pushUndoRef,
     dateRange,
     getDateInfo,
     isAtToday,
@@ -63,6 +71,18 @@ function TMPlanning() {
     DAYS_LARGE_SCREEN, DAYS_XLARGE_SCREEN,
     locale,
   } = state;
+
+  const isEditingRef = useRef(false);
+  const cancelEditingRef = useRef(null);
+  const activateCellRef = useRef(null);
+  const { pushUndo } = useTMPlanningUndo({ isEditingRef, cancelEditingRef, activateCellRef });
+
+  pushUndoRef.current = pushUndo;
+  isEditingRef.current = !!hoursEditCell.editingCell;
+  cancelEditingRef.current = () => hoursEditCell.cancelEditing();
+  activateCellRef.current = (cmd) => {
+    hoursEditCell.handleCellClick(cmd.taskId, cmd.workDate, cmd.previousHours);
+  };
 
   const dataHelpers = useTMPlanningData({
     tmUsers,
@@ -95,6 +115,7 @@ function TMPlanning() {
     ...state,
     filteredUsers, tmUsers, allClients, dateRange, getTimesheetForDate,
     groupBy,
+    pushUndo,
   });
 
   const {
@@ -102,11 +123,25 @@ function TMPlanning() {
     clearAllFilters,
     handleCellClick, handleCellContextMenu,
     handleContextMenuInsertNotes,
+    handleCellNoteClick,
     handleCellBlur, handleKeyDown,
     handleNoteTooltipHover, handleNoteTooltipLeave,
     handleDetailsModalConfirm, handleDetailsModalClose,
+    handleTaskHistoryClick, handleCloseTaskHistoryModal,
     handleExport,
   } = actions;
+
+  const currentFilters = useMemo(() => ({
+    selectedUserIds,
+    selectedClientIds,
+    groupBy,
+  }), [selectedUserIds, selectedClientIds, groupBy]);
+
+  const applySavedFilter = useCallback((filters) => {
+    setSelectedUserIds(filters.selectedUserIds || []);
+    setSelectedClientIds(filters.selectedClientIds || []);
+    if (filters.groupBy) setGroupBy(filters.groupBy);
+  }, [setSelectedUserIds, setSelectedClientIds, setGroupBy]);
 
   if (isLoading) {
     return (
@@ -178,6 +213,13 @@ function TMPlanning() {
               <FilterDropdown options={userOptions} selectedValues={selectedUserIds} onChange={setSelectedUserIds} placeholder={t('tmplanning:allUsers')} selectedLabel={(count) => t('tmplanning:usersCount', { count })} title={t('tmplanning:selectUsers')} size="sm" minWidth="90px" />
               <FilterDropdown options={clientOptions} selectedValues={selectedClientIds} onChange={setSelectedClientIds} placeholder={t('tmplanning:allClients')} selectedLabel={(count) => t('tmplanning:clientsCount', { count })} title={t('tmplanning:selectClients')} size="sm" minWidth="90px" />
 
+              <SavedFiltersDropdown
+                section="tmplanning"
+                currentFilters={currentFilters}
+                onApplyFilter={applySavedFilter}
+                size="sm"
+              />
+
               {hasActiveFilters && (
                 <Button onClick={clearAllFilters} variant="outline" color="red" size="sm" icon={X} iconSize={14} title={t('tmplanning:clearAllFiltersTitle')}>
                   <span className="hidden xl:inline whitespace-nowrap">{t('common:clearFilters')}</span>
@@ -214,7 +256,7 @@ function TMPlanning() {
               </colgroup>
               <thead className="sticky top-0 z-20 bg-gray-50">
                 <tr>
-                  <th className="sticky left-0 z-30 px-1 py-2 border-b border-gray-200 bg-cyan-700">
+                  <th className="sticky left-0 z-30 px-1 py-1 border-b border-gray-200 bg-cyan-700">
                     <ExpandCollapseButton
                       onClick={groupBy === "user" ? toggleAllUsers : toggleAllClients}
                       isExpanded={groupBy === "user" ? isAllUsersExpanded : isAllClientsExpanded}
@@ -224,10 +266,10 @@ function TMPlanning() {
                       size="sm"
                     />
                   </th>
-                  <th className="sticky z-30 px-2 py-2 text-left text-base font-semibold text-white border-b border-gray-200 bg-cyan-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
+                  <th className="sticky z-30 px-2 py-1 text-left text-xs font-semibold text-white border-b border-gray-200 bg-cyan-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
                     {groupBy === "user" ? t('tmplanning:userClient') : t('tmplanning:clientUser')}
                   </th>
-                  <th className="px-1 py-2 text-center text-sm font-semibold text-white border-b border-r border-gray-200 bg-cyan-800">
+                  <th className="px-1 py-1 text-center text-xs font-semibold text-white border-b border-r border-gray-200 bg-cyan-800">
                     {t('common:total')}
                   </th>
                   {dateRange.map((date, idx) => {
@@ -236,13 +278,13 @@ function TMPlanning() {
                     return (
                       <th
                         key={idx}
-                        className={`px-0 py-2 text-center border-b border-r border-gray-200 ${
+                        className={`px-0 py-1 text-center border-b border-r border-gray-200 ${
                           dateInfo.isNonWorking ? "bg-gray-600" : dateInfo.isToday ? "bg-violet-600" : "bg-cyan-700"
                         } text-white`}
                         title={dateInfo.holidayName || undefined}
                       >
                         <div className="flex flex-col items-center">
-                          <span className="text-sm font-semibold text-white">{dayMonth}</span>
+                          <span className="text-xs font-semibold text-white">{dayMonth}</span>
                           <span className={`text-[10px] ${dateInfo.isNonWorking ? "text-gray-200" : "text-cyan-100"}`}>
                             {weekday}
                           </span>
@@ -268,8 +310,10 @@ function TMPlanning() {
                     onCellBlur={handleCellBlur}
                     onKeyDown={handleKeyDown}
                     onCellContextMenu={handleCellContextMenu}
+                    onCellNoteClick={handleCellNoteClick}
                     onNoteTooltipHover={handleNoteTooltipHover}
                     onNoteTooltipLeave={handleNoteTooltipLeave}
+                    onTaskHistoryClick={handleTaskHistoryClick}
                   />
                 )}
                 {groupBy === "client" && (
@@ -287,8 +331,10 @@ function TMPlanning() {
                     onCellBlur={handleCellBlur}
                     onKeyDown={handleKeyDown}
                     onCellContextMenu={handleCellContextMenu}
+                    onCellNoteClick={handleCellNoteClick}
                     onNoteTooltipHover={handleNoteTooltipHover}
                     onNoteTooltipLeave={handleNoteTooltipLeave}
+                    onTaskHistoryClick={handleTaskHistoryClick}
                   />
                 )}
               </tbody>
@@ -323,6 +369,14 @@ function TMPlanning() {
           isSubmitted={detailsModalIsSubmitted}
           showExternalKey={true}
           defaultExternalKey={detailsModalTask?.project_key}
+        />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <TaskHistorySummaryModal
+          isOpen={showTaskHistoryModal}
+          onClose={handleCloseTaskHistoryModal}
+          task={selectedTaskForHistory}
         />
       </Suspense>
 

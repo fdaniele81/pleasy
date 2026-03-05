@@ -25,11 +25,10 @@ const TimeOffPlanTableHeader = ({
           <SelectionCheckbox
             onChange={(e) => {
               const allUserIds = filteredUsers.map((u) => u.user_id);
-              const newSelected = { VACATION: {}, OTHER: {} };
+              const newSelected = { VACATION: {} };
               if (e.target.checked) {
                 allUserIds.forEach((id) => {
                   newSelected.VACATION[id] = true;
-                  newSelected.OTHER[id] = true;
                 });
               }
               onSelectAll(newSelected);
@@ -37,7 +36,7 @@ const TimeOffPlanTableHeader = ({
             checked={
               filteredUsers.length > 0 &&
               filteredUsers.every((u) =>
-                selectedUsers.VACATION?.[u.user_id] && selectedUsers.OTHER?.[u.user_id]
+                selectedUsers.VACATION?.[u.user_id]
               )
             }
           />

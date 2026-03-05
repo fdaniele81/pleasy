@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { FileText } from "lucide-react";
 import { formatDateISO } from "../../../utils/date/dateUtils";
 
 const TMPlanningCell = memo(function TMPlanningCell({
@@ -12,6 +13,7 @@ const TMPlanningCell = memo(function TMPlanningCell({
   onCellBlur,
   onKeyDown,
   onCellContextMenu,
+  onCellNoteClick,
   onNoteTooltipHover,
   onNoteTooltipLeave,
   contextClient,
@@ -41,19 +43,32 @@ const TMPlanningCell = memo(function TMPlanningCell({
       }
     >
       {isEditing ? (
-        <input
-          type="number"
-          step="0.5"
-          min="0"
-          max="24"
-          value={hoursEditCell.editValue}
-          onChange={(e) => hoursEditCell.handleCellChange(e.target.value)}
-          onBlur={() => onCellBlur(taskId, date, hours, details)}
-          onKeyDown={(e) => onKeyDown(e, taskId, date, dateIdx, hours, details)}
-          onWheel={(e) => e.target.blur()}
-          className="w-full h-full px-0.5 py-0.5 text-center text-xs border border-cyan-500 rounded focus:outline-none focus:ring-1 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          autoFocus
-        />
+        <div className="flex items-center gap-0.5">
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            max="24"
+            value={hoursEditCell.editValue}
+            onChange={(e) => hoursEditCell.handleCellChange(e.target.value)}
+            onBlur={() => onCellBlur(taskId, date, hours, details)}
+            onKeyDown={(e) => onKeyDown(e, taskId, date, dateIdx, hours, details)}
+            onWheel={(e) => e.target.blur()}
+            className="w-full h-full px-0.5 py-0.5 text-center text-xs border border-cyan-500 rounded focus:outline-none focus:ring-1 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            autoFocus
+          />
+          {onCellNoteClick && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => onCellNoteClick(taskId, date, hoursEditCell.editValue, isSubmitted)}
+              className="shrink-0 p-0.5 rounded hover:bg-blue-100 text-blue-500 transition-colors"
+              title="Note"
+            >
+              <FileText size={14} />
+            </button>
+          )}
+        </div>
       ) : (
         <div
           className={`relative flex items-center justify-center py-1 rounded ${

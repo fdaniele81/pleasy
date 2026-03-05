@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import userRepository from "../repositories/userRepository.js";
 import { serviceError } from "../utils/errorHandler.js";
 
-const VALID_SECTIONS = ["timesheet", "planning"];
+const VALID_SECTIONS = ["timesheet", "planning", "tmplanning"];
 const MAX_FILTERS_PER_SECTION = 20;
 
 async function getFilters(userId) {

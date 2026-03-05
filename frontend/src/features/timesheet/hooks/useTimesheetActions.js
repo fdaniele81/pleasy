@@ -74,17 +74,22 @@ export function useTimesheetActions({
   const [showTimeOffSummaryModal, setShowTimeOffSummaryModal] = useState(false);
   const [selectedTimeOffTypeForSummary, setSelectedTimeOffTypeForSummary] = useState(null);
 
+  const [showTaskHistoryModal, setShowTaskHistoryModal] = useState(false);
+  const [selectedTaskForHistory, setSelectedTaskForHistory] = useState(null);
+
   const taskEditCell = useInlineEditCell({
     onSave: useCallback(async (taskId, dateStr, hours, _previousValue, { timesheetId }) => {
       const task = allTasksFlat.find(t => t.task_id === taskId);
       const projectKey = task?.project_key || null;
       const previousHours = parseFloat(_previousValue) || 0;
+      const existingTimesheet = task?.timesheets?.find(ts => ts.work_date.split('T')[0] === dateStr);
+      const previousDetails = existingTimesheet?.details || null;
       try {
         if (hours === 0 && timesheetId) {
           await deleteTimesheet(timesheetId).unwrap();
           pushUndo({
             type: 'DELETE_TASK', label: `${task?.task_title || taskId} — ${dateStr}`,
-            taskId, workDate: dateStr, previousHours, previousDetails: null,
+            taskId, workDate: dateStr, previousHours, previousDetails,
             newHours: 0, newDetails: null, externalKey: projectKey,
           });
         } else if (hours > 0) {
@@ -94,7 +99,7 @@ export function useTimesheetActions({
           pushUndo({
             type: 'SAVE_TASK', label: `${task?.task_title || taskId} — ${dateStr}`,
             taskId, workDate: dateStr, previousHours, previousTimesheetId: timesheetId,
-            previousDetails: null, newHours: hours, newDetails: null, externalKey: projectKey,
+            previousDetails, newHours: hours, newDetails: null, externalKey: projectKey,
           });
         }
       } catch (error) {}
@@ -362,6 +367,16 @@ export function useTimesheetActions({
     setSelectedTimeOffTypeForSummary(null);
   }, []);
 
+  const handleTaskHistoryClick = useCallback((task) => {
+    setSelectedTaskForHistory(task);
+    setShowTaskHistoryModal(true);
+  }, []);
+
+  const handleCloseTaskHistoryModal = useCallback(() => {
+    setShowTaskHistoryModal(false);
+    setSelectedTaskForHistory(null);
+  }, []);
+
   const handleTimesheetDetailsModalConfirm = useCallback(async (data) => {
     if (!timesheetDetailsModalDate || !timesheetDetailsModalTask) return;
     const dateStr = formatDateLocal(timesheetDetailsModalDate);
@@ -499,6 +514,8 @@ export function useTimesheetActions({
     handleTimesheetDetailsModalConfirm, handleTimesheetDetailsModalClose,
     handleCellBlur, handleKeyDown,
     handleTaskTitleClick, handleCloseTaskModal, handleUpdateTask,
+    showTaskHistoryModal, selectedTaskForHistory,
+    handleTaskHistoryClick, handleCloseTaskHistoryModal,
   };
 }
 

@@ -5,6 +5,7 @@ import Button from '../../../shared/ui/Button';
 import {
   SearchInput,
   SelectionFilter,
+  FilterDropdown,
   PeriodNavigator,
 } from '../../../shared/ui/filters';
 import { getRouteIcon } from '../../../constants/routeIcons';
@@ -16,6 +17,9 @@ const TimeOffPlanHeader = ({
   onViewModeChange,
   selectionFilters,
   onSelectionFiltersChange,
+  filterUserIds,
+  onFilterUserIdsChange,
+  uniqueUsers,
   onExportClick,
   onPrevious,
   onNext,
@@ -82,6 +86,20 @@ const TimeOffPlanHeader = ({
             value={selectionFilters}
             onChange={onSelectionFiltersChange}
             variant="dropdown"
+            size="md"
+            accentColor="cyan"
+          />
+
+          <FilterDropdown
+            options={uniqueUsers.map(user => ({
+              value: user.user_id,
+              label: user.full_name,
+            }))}
+            selectedValues={filterUserIds}
+            onChange={onFilterUserIdsChange}
+            placeholder={t('timeoffplan:allUsers')}
+            selectedLabel={(count) => t('timeoffplan:usersCount', { count })}
+            title={t('timeoffplan:selectUsers')}
             size="md"
             accentColor="cyan"
           />

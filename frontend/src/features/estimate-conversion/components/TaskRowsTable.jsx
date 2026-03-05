@@ -75,7 +75,26 @@ function TaskRowsTable({
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              {showCheckboxes && <th className="w-10 px-3 py-2"></th>}
+              {showCheckboxes && (
+                <th className="w-10 px-3 py-2 text-center">
+                  <input
+                    type="checkbox"
+                    checked={taskRows.length > 0 && selectedRowIds?.size === taskRows.length}
+                    ref={el => { if (el) el.indeterminate = selectedRowIds?.size > 0 && selectedRowIds.size < taskRows.length; }}
+                    onChange={() => {
+                      if (!onToggleRow) return;
+                      const allSelected = selectedRowIds?.size === taskRows.length;
+                      taskRows.forEach(row => {
+                        const isSelected = selectedRowIds?.has(row.id);
+                        if (allSelected ? isSelected : !isSelected) {
+                          onToggleRow(row.id);
+                        }
+                      });
+                    }}
+                    className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500"
+                  />
+                </th>
+              )}
               <th className="w-6 px-3 py-2"></th>
               <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
                 {t('estimateConversion:taskName')}

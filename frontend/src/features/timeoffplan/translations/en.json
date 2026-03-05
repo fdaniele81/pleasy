@@ -17,5 +17,9 @@
   "excelUser": "User",
   "excelTotal": "Total",
   "excelVacation": "Vacation / Leave",
-  "excelOther": "Other"
+  "excelOther": "Other",
+
+  "allUsers": "All users",
+  "usersCount": "{{count}} users",
+  "selectUsers": "Select users"
 }

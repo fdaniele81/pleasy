@@ -32,6 +32,7 @@ const MultiGanttContainer = ({
   onIntervalsChange,
   onDistributionConfig,
   isReadOnly = false,
+  colorMap,
 }) => {
   const { t } = useTranslation(['capacityPlan', 'common']);
   const totalIntervals = 10;
@@ -177,7 +178,7 @@ const MultiGanttContainer = ({
       {/* Righe per ogni stima */}
       {estimatesList.map((estimateItem, estimateIndex) => {
         const { estimateId, phaseIntervals } = estimateItem;
-        const color = ESTIMATE_COLORS[estimateIndex % ESTIMATE_COLORS.length];
+        const color = (colorMap && colorMap[estimateId]) || ESTIMATE_COLORS[estimateIndex % ESTIMATE_COLORS.length];
         const isExpanded = expandedEstimates.has(estimateId);
         const range = getEstimateRange(phaseIntervals);
         const isBlockActive = draggedPhase === `block-${estimateId}`;

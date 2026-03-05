@@ -132,14 +132,13 @@ const Button = ({
           ) : (
             Icon && <Icon size={iconSize} />
           )}
-          {(loading || Icon) && children && <span className="ml-2">{children}</span>}
-          {!loading && !Icon && children}
+          {children}
         </>
       )}
 
       {iconPosition === 'right' && (
         <>
-          {children && <span className={loading || Icon ? 'mr-2' : ''}>{children}</span>}
+          {children}
           {loading ? (
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
           ) : (

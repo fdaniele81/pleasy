@@ -28,7 +28,8 @@ export function useTaskEdit({
   setSelectedTaskForInitialActual,
   fetchAvailableUsers,
   availableUsers,
-  confirmFn
+  confirmFn,
+  showInDays
 }) {
   const dispatch = useDispatch();
 
@@ -121,16 +122,18 @@ export function useTaskEdit({
 
           await refetchPlanning();
         } else if (field === 'etc') {
+          const etcValue = parseFloat(newValue) || 0;
           await updateTaskETC({
             taskId,
-            etc: parseFloat(newValue) || 0
+            etc: showInDays ? etcValue * 8 : etcValue
           }).unwrap();
 
           await refetchPlanning();
         } else if (field === 'title' || field === 'description' || field === 'budget' || field === 'external_key') {
           const taskData = {};
           if (field === 'budget') {
-            taskData[field] = parseFloat(newValue) || 0;
+            const budgetValue = parseFloat(newValue) || 0;
+            taskData[field] = showInDays ? budgetValue * 8 : budgetValue;
           } else if (field === 'external_key') {
             taskData[field] = newValue.trim() === '' ? null : newValue;
           } else {
@@ -234,10 +237,14 @@ export function useTaskEdit({
                 currentValue = task.owner_id || '';
                 break;
               case 'budget':
-                currentValue = task.budget?.toString() || '0';
+                currentValue = showInDays
+                  ? (Math.round((task.budget || 0) / 8 * 10) / 10).toString()
+                  : (task.budget?.toString() || '0');
                 break;
               case 'etc':
-                currentValue = task.etc?.toString() || '0';
+                currentValue = showInDays
+                  ? (Math.round((task.etc || 0) / 8 * 10) / 10).toString()
+                  : (task.etc?.toString() || '0');
                 break;
               case 'start_date':
                 currentValue = task.start_date ? formatDateISO(task.start_date) : '';

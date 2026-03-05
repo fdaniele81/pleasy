@@ -10,6 +10,7 @@ import { generateDateRange, formatDateISO } from "../../../utils/date/dateUtils"
 import { useInlineEditCell } from "../../../hooks/useInlineEditCell";
 import { useTableDateHelpers } from "../../../shared/ui/table";
 import { useLocale } from "../../../hooks/useLocale";
+import { useTMPlanningFilters } from "./useTMPlanningFilters";
 import logger from "../../../utils/logger";
 
 const DAYS_DEFAULT = 14;
@@ -31,16 +32,27 @@ export function useTMPlanningState() {
     if (window.innerWidth > LARGE_SCREEN_BREAKPOINT) return DAYS_LARGE_SCREEN;
     return DAYS_DEFAULT;
   });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [groupBy, setGroupBy] = useState(clientIdFromUrl ? "client" : "user");
-  const [expandedUsers, setExpandedUsers] = useState({});
-  const [expandedClients, setExpandedClients] = useState(() =>
-    clientIdFromUrl ? { [clientIdFromUrl]: true } : {}
-  );
-  const [selectedUserIds, setSelectedUserIds] = useState([]);
-  const [selectedClientIds, setSelectedClientIds] = useState(() =>
-    clientIdFromUrl ? [clientIdFromUrl] : []
-  );
+  const {
+    searchTerm, setSearchTerm,
+    groupBy, setGroupBy,
+    selectedUserIds, setSelectedUserIds,
+    selectedClientIds, setSelectedClientIds,
+    expandedUsers, setExpandedUsers, toggleExpandedUser,
+    expandedClients, setExpandedClients, toggleExpandedClient,
+  } = useTMPlanningFilters();
+
+  useEffect(() => {
+    if (clientIdFromUrl) {
+      setGroupBy("client");
+      if (!selectedClientIds.includes(clientIdFromUrl)) {
+        setSelectedClientIds([clientIdFromUrl]);
+      }
+      if (!expandedClients[clientIdFromUrl]) {
+        setExpandedClients({ ...expandedClients, [clientIdFromUrl]: true });
+      }
+    }
+  }, [clientIdFromUrl]);
+
   const [showGanttModal, setShowGanttModal] = useState(false);
   const [ganttRefreshTrigger, setGanttRefreshTrigger] = useState(0);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -132,10 +144,6 @@ export function useTMPlanningState() {
       setStartDate(formatDateISO(today));
     }
     setEndDate(formatDateISO(endDay));
-
-    if (!startDate) {
-      setExpandedUsers({});
-    }
   }, [today, daysToShow, startDate]);
 
   useEffect(() => {
@@ -168,8 +176,8 @@ export function useTMPlanningState() {
     daysToShow,
     searchTerm, setSearchTerm,
     groupBy, setGroupBy,
-    expandedUsers, setExpandedUsers,
-    expandedClients, setExpandedClients,
+    expandedUsers, setExpandedUsers, toggleExpandedUser,
+    expandedClients, setExpandedClients, toggleExpandedClient,
     selectedUserIds, setSelectedUserIds,
     selectedClientIds, setSelectedClientIds,
     showGanttModal, setShowGanttModal,

@@ -19,6 +19,35 @@ function getDefaultPercentages(config) {
   };
 }
 
+function ensurePhaseConfigValues(config) {
+  if (!isValidConfig(config)) {
+    return { ...DEFAULT_PROJECT_PHASES_CONFIG };
+  }
+
+  const phaseKeys = ['analysis', 'development', 'internal_test', 'uat', 'release', 'pm', 'startup', 'documentation'];
+  const hasAnyValues = phaseKeys.some(
+    (key) => Array.isArray(config[key]?.values) && config[key].values.length > 0
+  );
+
+  if (hasAnyValues) {
+    return config;
+  }
+
+  // Config exists but no phase has values — merge defaults
+  const result = { ...config };
+  for (const key of phaseKeys) {
+    result[key] = {
+      ...DEFAULT_PROJECT_PHASES_CONFIG[key],
+      ...(config[key] || {}),
+      values: DEFAULT_PROJECT_PHASES_CONFIG[key].values,
+    };
+  }
+  if (!result.elapsed_days) {
+    result.elapsed_days = 10;
+  }
+  return result;
+}
+
 async function createEstimate(data, user) {
   const client = await estimateRepository.findClientById(data.client_id);
   if (!client) {
@@ -80,6 +109,9 @@ async function getEstimateById(estimateId, user) {
   }
 
   checkCompanyAccess(user, estimate.company_id);
+
+  // Ensure effective_phase_config has valid phase values, falling back to defaults
+  estimate.effective_phase_config = ensurePhaseConfigValues(estimate.effective_phase_config);
 
   const tasks = await estimateRepository.findTasksByEstimateId(estimateId);
 
@@ -172,14 +204,15 @@ async function createTask(estimateId, data, user) {
 
   checkCompanyAccess(user, estimate.company_id);
 
-  const hours_analysis = Math.round((data.hours_development_input * parseFloat(estimate.pct_analysis)) / 100);
-  const hours_development = Math.round((data.hours_development_input * parseFloat(estimate.pct_development)) / 100);
-  const hours_internal_test = Math.round((data.hours_development_input * parseFloat(estimate.pct_internal_test)) / 100);
-  const hours_uat = Math.round((data.hours_development_input * parseFloat(estimate.pct_uat)) / 100);
-  const hours_release = Math.round((data.hours_development_input * parseFloat(estimate.pct_release)) / 100);
-  const hours_pm = Math.round((data.hours_development_input * parseFloat(estimate.pct_pm)) / 100);
-  const hours_startup = Math.round((data.hours_development_input * parseFloat(estimate.pct_startup)) / 100);
-  const hours_documentation = Math.round((data.hours_development_input * parseFloat(estimate.pct_documentation)) / 100);
+  const roundTo1 = (v) => Math.round(v * 10) / 10;
+  const hours_analysis = roundTo1((data.hours_development_input * parseFloat(estimate.pct_analysis)) / 100);
+  const hours_development = roundTo1((data.hours_development_input * parseFloat(estimate.pct_development)) / 100);
+  const hours_internal_test = roundTo1((data.hours_development_input * parseFloat(estimate.pct_internal_test)) / 100);
+  const hours_uat = roundTo1((data.hours_development_input * parseFloat(estimate.pct_uat)) / 100);
+  const hours_release = roundTo1((data.hours_development_input * parseFloat(estimate.pct_release)) / 100);
+  const hours_pm = roundTo1((data.hours_development_input * parseFloat(estimate.pct_pm)) / 100);
+  const hours_startup = roundTo1((data.hours_development_input * parseFloat(estimate.pct_startup)) / 100);
+  const hours_documentation = roundTo1((data.hours_development_input * parseFloat(estimate.pct_documentation)) / 100);
 
   const taskData = {
     estimate_id: estimateId,

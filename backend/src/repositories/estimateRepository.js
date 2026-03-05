@@ -139,7 +139,13 @@ async function findById(estimateId) {
       c.client_name,
       c.company_id,
       c.project_phases_config,
-      COALESCE(e.estimate_phase_config, c.project_phases_config, '{}'::jsonb) as effective_phase_config,
+      CASE
+        WHEN e.estimate_phase_config IS NOT NULL AND e.estimate_phase_config != '{}'::jsonb
+          THEN e.estimate_phase_config
+        WHEN c.project_phases_config IS NOT NULL AND c.project_phases_config != '{}'::jsonb
+          THEN c.project_phases_config
+        ELSE '{}'::jsonb
+      END as effective_phase_config,
       p.title as project_title,
       u.full_name as created_by_name,
       u.email as created_by_email

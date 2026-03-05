@@ -91,11 +91,6 @@ CREATE TABLE public.estimate_status (
     description character varying(255)
 );
 
-CREATE TABLE public.project_status (
-    project_status_id character varying(50) NOT NULL,
-    description character varying(255)
-);
-
 CREATE TABLE public.project_type (
     project_type_id character varying(50) NOT NULL,
     description character varying(255),
@@ -135,7 +130,8 @@ CREATE TABLE public.users (
     last_access_at timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    full_name character varying
+    full_name character varying,
+    saved_filters jsonb DEFAULT '{}'::jsonb
 );
 
 COMMENT ON TABLE public.users IS 'User accounts associated with companies';
@@ -481,7 +477,6 @@ ALTER TABLE ONLY public.status ADD CONSTRAINT status_pkey PRIMARY KEY (status_id
 ALTER TABLE ONLY public.task_status ADD CONSTRAINT task_status_pkey PRIMARY KEY (task_status_id);
 ALTER TABLE ONLY public.time_off_type ADD CONSTRAINT time_off_type_pkey PRIMARY KEY (time_off_type_id);
 ALTER TABLE ONLY public.estimate_status ADD CONSTRAINT estimate_status_pkey PRIMARY KEY (estimate_status_id);
-ALTER TABLE ONLY public.project_status ADD CONSTRAINT project_status_pkey PRIMARY KEY (project_status_id);
 ALTER TABLE ONLY public.project_type ADD CONSTRAINT project_type_pkey PRIMARY KEY (project_type_id);
 ALTER TABLE ONLY public.company ADD CONSTRAINT company_pkey PRIMARY KEY (company_id);
 ALTER TABLE ONLY public.users ADD CONSTRAINT user_pkey PRIMARY KEY (user_id);
@@ -672,11 +667,11 @@ ON CONFLICT (role_id) DO NOTHING;
 
 INSERT INTO public.status (status_id, description) VALUES
   ('ACTIVE', 'Attivo'),
+  ('INACTIVE', 'Non Attivo'),
   ('DELETED', 'Cancellato')
 ON CONFLICT (status_id) DO NOTHING;
 
 INSERT INTO public.task_status (task_status_id, description) VALUES
-  ('TODO', 'Da fare'),
   ('IN PROGRESS', 'In corso'),
   ('DONE', 'Completato'),
   ('NEW', 'Nuovo'),
@@ -684,10 +679,8 @@ INSERT INTO public.task_status (task_status_id, description) VALUES
 ON CONFLICT (task_status_id) DO NOTHING;
 
 INSERT INTO public.time_off_type (time_off_type_id, description) VALUES
-  ('FERIE', 'Ferie'),
-  ('PERMESSO', 'Permesso'),
-  ('MALATTIA', 'Malattia'),
-  ('ROL', 'Riduzione Orario Lavoro')
+  ('VACATION', 'Ferie e Permessi'),
+  ('OTHER', 'Other Activities')
 ON CONFLICT (time_off_type_id) DO NOTHING;
 
 INSERT INTO public.estimate_status (estimate_status_id, description) VALUES
@@ -700,12 +693,6 @@ INSERT INTO public.project_type (project_type_id, description) VALUES
   ('PROJECT', 'Progetto a corpo'),
   ('TM', 'Time & Material')
 ON CONFLICT (project_type_id) DO NOTHING;
-
-INSERT INTO public.project_status (project_status_id, description) VALUES
-  ('ACTIVE', 'Attivo'),
-  ('CLOSED', 'Chiuso'),
-  ('DELETED', 'Cancellato')
-ON CONFLICT (project_status_id) DO NOTHING;
 
 -- ============================================================================
 -- SEED: DEFAULT COMPANY & ADMIN USER
@@ -728,3 +715,17 @@ VALUES (
   'Admin'
 )
 ON CONFLICT (email) DO NOTHING;
+
+-- ============================================================================
+-- MIGRATIONS TRACKING
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.schema_migrations (
+    filename character varying(255) NOT NULL PRIMARY KEY,
+    applied_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed: mark all migrations included in this schema as already applied
+INSERT INTO public.schema_migrations (filename) VALUES
+    ('001_add_saved_filters.sql')
+ON CONFLICT DO NOTHING;

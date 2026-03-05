@@ -29,6 +29,7 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
   onTaskTitleClick,
   onCellClick,
   onCellContextMenu,
+  onCellNoteClick,
   onCellBlur,
   onKeyDown,
   onEditValueChange,
@@ -107,6 +108,7 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
       </td>
 
       <td
+        colSpan={isTMTask ? 2 : undefined}
         className={`xl:hidden border-b border-r border-gray-300 py-1 sticky left-8 z-10 w-24 min-w-24 max-w-24 shadow-[2px_0_0_0_rgb(255,255,255)] ${
           isEditing ? "bg-yellow-50" : "bg-white"
         } ${topBorderClass}`}
@@ -116,16 +118,23 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
             className="w-1 h-5 rounded-sm shrink-0"
             style={{ backgroundColor: task.client_color || "#6366F1" }}
           />
-          <span className="text-xs text-gray-700 font-medium truncate" title={`${task.client_key}.${task.project_key}.${task.task_number} (${task.client_name} - ${task.project_title})`}>
-            {task.client_key}.{task.project_key}.{task.task_number}
-          </span>
+          {isTMTask ? (
+            <span className="text-xs text-gray-600 truncate" title={task.client_name}>
+              {task.client_name}
+            </span>
+          ) : (
+            <span className="text-xs text-gray-700 font-medium truncate" title={`${task.client_key}.${task.project_key}.${task.task_number} (${task.client_name} - ${task.project_title})`}>
+              {task.client_key}.{task.project_key}.{task.task_number}
+            </span>
+          )}
         </div>
       </td>
 
       <td
+        colSpan={isTMTask ? 3 : undefined}
         className={`hidden xl:table-cell border-b border-r border-gray-300 py-1 sticky left-8 z-10 xl:w-24 xl:min-w-24 xl:max-w-24 ${
-          isEditing ? "bg-yellow-50" : "bg-white"
-        } ${topBorderClass}`}
+          isTMTask ? "shadow-[2px_0_0_0_rgb(255,255,255)]" : ""
+        } ${isEditing ? "bg-yellow-50" : "bg-white"} ${topBorderClass}`}
       >
         <div className="flex items-center gap-1.5">
           <div
@@ -138,29 +147,33 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
         </div>
       </td>
 
-      <td
-        className={`hidden xl:table-cell border-b border-r border-gray-300 px-2 py-1 sticky left-32 z-10 xl:w-24 xl:min-w-24 xl:max-w-24 shadow-[2px_0_0_0_rgb(255,255,255)] ${
-          isEditing ? "bg-yellow-50" : "bg-white"
-        } ${topBorderClass}`}
-      >
-        <span className="text-xs font-semibold text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap block" title={task.project_title}>
-          {task.project_title}
-        </span>
-      </td>
+      {!isTMTask && (
+        <>
+          <td
+            className={`hidden xl:table-cell border-b border-r border-gray-300 px-2 py-1 sticky left-32 z-10 xl:w-24 xl:min-w-24 xl:max-w-24 shadow-[2px_0_0_0_rgb(255,255,255)] ${
+              isEditing ? "bg-yellow-50" : "bg-white"
+            } ${topBorderClass}`}
+          >
+            <span className="text-xs font-semibold text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap block" title={task.project_title}>
+              {task.project_title}
+            </span>
+          </td>
 
-      <td
-        className={`border-b border-r border-gray-300 px-2 py-1 sticky left-32 xl:left-56 z-10 w-36 min-w-36 max-w-36 xl:w-56 xl:min-w-56 xl:max-w-56 shadow-[2px_0_0_0_rgb(255,255,255)] ${
-          isEditing ? "bg-yellow-50" : "bg-white"
-        } ${topBorderClass}`}
-      >
-        <div
-          className="font-medium text-xs overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:text-cyan-600 transition-colors"
-          onClick={() => onTaskTitleClick && onTaskTitleClick(task)}
-          title={t('timesheet:clickToViewDetails')}
-        >
-          {task.task_title}
-        </div>
-      </td>
+          <td
+            className={`border-b border-r border-gray-300 px-2 py-1 sticky left-32 xl:left-56 z-10 w-36 min-w-36 max-w-36 xl:w-56 xl:min-w-56 xl:max-w-56 shadow-[2px_0_0_0_rgb(255,255,255)] ${
+              isEditing ? "bg-yellow-50" : "bg-white"
+            } ${topBorderClass}`}
+          >
+            <div
+              className="font-medium text-xs overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:text-cyan-600 transition-colors"
+              onClick={() => onTaskTitleClick && onTaskTitleClick(task)}
+              title={t('timesheet:clickToViewDetails')}
+            >
+              {task.task_title}
+            </div>
+          </td>
+        </>
+      )}
 
       <td
         className={`border-b border-r border-gray-300 px-1 py-1 text-center font-bold sticky left-68 xl:left-112 w-20 min-w-20 max-w-20 text-xs z-10 ${
@@ -219,6 +232,7 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
             topBorderClass={topBorderClass}
             onCellClick={onCellClick}
             onCellContextMenu={onCellContextMenu}
+            onCellNoteClick={onCellNoteClick}
             onCellBlur={onCellBlur}
             onKeyDown={onKeyDown}
             onEditValueChange={onEditValueChange}

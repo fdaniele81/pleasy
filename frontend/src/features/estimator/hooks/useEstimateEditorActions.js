@@ -46,8 +46,10 @@ export function useEstimateEditorActions({
 
   const getPhaseHours = (inputHours) => calculatePhaseHours(inputHours, formData);
 
+  const roundTo1 = (v) => Math.round(v * 10) / 10;
+
   const getContingencyHours = (totalHours) =>
-    Math.round(calculateContingencyHours(totalHours, formData.contingency_percentage));
+    roundTo1(calculateContingencyHours(totalHours, formData.contingency_percentage));
 
   const focusNewActivityInput = () => {
     requestAnimationFrame(() => {
@@ -60,7 +62,7 @@ export function useEstimateEditorActions({
   };
 
   const handleDevInputChange = (devHours) => {
-    const dev = Math.round(parseFloat(devHours) || 0);
+    const dev = parseFloat(devHours) || 0;
 
     if (dev === 0 || formData.pct_development === 0) {
       setNewActivity({ ...newActivity, ...EMPTY_NEW_ACTIVITY, activity_name: newActivity.activity_name, activity_detail: newActivity.activity_detail });
@@ -148,22 +150,22 @@ export function useEstimateEditorActions({
     }
 
     const newInputHours = hoursDev / (formData.pct_development / 100);
-    const hours_analysis = Math.round((newInputHours * formData.pct_analysis) / 100);
-    const hours_development = Math.round((newInputHours * formData.pct_development) / 100);
-    const hours_internal_test = Math.round((newInputHours * formData.pct_internal_test) / 100);
-    const hours_uat = Math.round((newInputHours * formData.pct_uat) / 100);
-    const hours_release = Math.round((newInputHours * formData.pct_release) / 100);
-    const hours_pm = Math.round((newInputHours * formData.pct_pm) / 100);
-    const hours_startup = Math.round((newInputHours * formData.pct_startup) / 100);
-    const hours_documentation = Math.round((newInputHours * formData.pct_documentation) / 100);
+    const hours_analysis = roundTo1((newInputHours * formData.pct_analysis) / 100);
+    const hours_development = roundTo1((newInputHours * formData.pct_development) / 100);
+    const hours_internal_test = roundTo1((newInputHours * formData.pct_internal_test) / 100);
+    const hours_uat = roundTo1((newInputHours * formData.pct_uat) / 100);
+    const hours_release = roundTo1((newInputHours * formData.pct_release) / 100);
+    const hours_pm = roundTo1((newInputHours * formData.pct_pm) / 100);
+    const hours_startup = roundTo1((newInputHours * formData.pct_startup) / 100);
+    const hours_documentation = roundTo1((newInputHours * formData.pct_documentation) / 100);
 
     const totalPhaseHours = hours_analysis + hours_development + hours_internal_test +
       hours_uat + hours_release + hours_pm + hours_startup + hours_documentation;
-    const hours_contingency = Math.round((totalPhaseHours * formData.contingency_percentage) / 100);
+    const hours_contingency = roundTo1((totalPhaseHours * formData.contingency_percentage) / 100);
 
     const recalculatedActivity = {
       ...activity,
-      hours_development_input: Math.round(newInputHours),
+      hours_development_input: roundTo1(newInputHours),
       hours_analysis, hours_development, hours_internal_test,
       hours_uat, hours_release, hours_pm, hours_startup,
       hours_documentation, hours_contingency,
@@ -272,8 +274,8 @@ export function useEstimateEditorActions({
   };
 
   const handleHoursBlur = (index, field, value) => {
-    const rounded = Math.round(parseFloat(value) || 0);
-    handleActivityFieldChange(index, field, rounded);
+    const parsed = parseFloat(value) || 0;
+    handleActivityFieldChange(index, field, parsed);
   };
 
   const handleSaveAndRecalculate = async (percentages) => {
@@ -293,7 +295,7 @@ export function useEstimateEditorActions({
           (calculated.hours_internal_test || 0) + (calculated.hours_uat || 0) +
           (calculated.hours_release || 0) + (calculated.hours_pm || 0) +
           (calculated.hours_startup || 0) + (calculated.hours_documentation || 0);
-        const hours_contingency = Math.round(
+        const hours_contingency = roundTo1(
           (totalPhaseHours * (percentages.contingency_percentage || formData.contingency_percentage)) / 100
         );
         return { ...activity, ...calculated, hours_contingency };

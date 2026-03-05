@@ -12,19 +12,22 @@ const phases = [
 ];
 
 // Aggiorna posizione di un handle (sinistro o destro) nel DOM
-function updateHandle(handleElement, x, y, offsets) {
+function updateHandle(handleElement, x) {
   if (!handleElement) return;
-  const hitRect = handleElement.querySelector('rect');
-  if (hitRect) hitRect.setAttribute('x', x - 6);
-  const lines = handleElement.querySelectorAll('line');
-  lines.forEach((line, idx) => {
-    line.setAttribute('x1', x + offsets[idx]);
-    line.setAttribute('x2', x + offsets[idx]);
-  });
+  handleElement.setAttribute('x', x - 4);
 }
 
-const LEFT_OFFSETS = [2, 5, 8];
-const RIGHT_OFFSETS = [-8, -5, -2];
+// Aggiorna posizione dell'etichetta giorni in base al bordo destro della barra
+function updateDaysLabel(daysElement, barRightX) {
+  if (!daysElement) return;
+  const position = daysElement.getAttribute('data-days-position');
+  if (position === 'inside') {
+    const width = parseFloat(daysElement.getAttribute('width')) || 0;
+    daysElement.setAttribute('x', barRightX - width - 4);
+  } else {
+    daysElement.setAttribute('x', barRightX + 3);
+  }
+}
 
 const INITIAL_DRAG_STATE = {
   isDragging: false,
@@ -43,6 +46,7 @@ const INITIAL_DRAG_STATE = {
   handleLeftElement: null,
   handleRightElement: null,
   phaseLabelElement: null,
+  phaseDaysElement: null,
   summaryBarElement: null,
   summaryGroupElement: null,
   summaryTextElement: null,
@@ -229,6 +233,9 @@ export function useMultiGanttDrag({
       const phaseLabelElement = svgRef.current.querySelector(
         `[data-phase-label="${estimateId}-${phaseKey}"]`
       );
+      const phaseDaysElement = svgRef.current.querySelector(
+        `[data-phase-days="${estimateId}-${phaseKey}"]`
+      );
 
       if (!barElement) return;
 
@@ -248,6 +255,7 @@ export function useMultiGanttDrag({
         handleLeftElement,
         handleRightElement,
         phaseLabelElement,
+        phaseDaysElement,
       };
 
       setDraggedPhase(`${estimateId}-${phaseKey}`);
@@ -283,6 +291,9 @@ export function useMultiGanttDrag({
       const phaseLabelElement = svgRef.current.querySelector(
         `[data-phase-label="${estimateId}-${phaseKey}"]`
       );
+      const phaseDaysElement = svgRef.current.querySelector(
+        `[data-phase-days="${estimateId}-${phaseKey}"]`
+      );
 
       if (!barElement) return;
 
@@ -302,6 +313,7 @@ export function useMultiGanttDrag({
         handleLeftElement,
         handleRightElement,
         phaseLabelElement,
+        phaseDaysElement,
       };
 
       setDraggedPhase(`${estimateId}-${phaseKey}`);
@@ -350,8 +362,9 @@ export function useMultiGanttDrag({
           state.phaseLabelElement.setAttribute('x', newX + 6);
         }
 
-        updateHandle(state.handleLeftElement, newX, null, LEFT_OFFSETS);
-        updateHandle(state.handleRightElement, newX + state.baseWidth, null, RIGHT_OFFSETS);
+        updateHandle(state.handleLeftElement, newX);
+        updateHandle(state.handleRightElement, newX + state.baseWidth);
+        updateDaysLabel(state.phaseDaysElement, newX + state.baseWidth);
       } else if (state.isResizing) {
         const deltaIntervals = deltaX / intervalWidth;
 
@@ -371,8 +384,9 @@ export function useMultiGanttDrag({
             state.phaseLabelElement.setAttribute('width', newWidth - 12);
           }
 
-          updateHandle(state.handleLeftElement, newX, null, LEFT_OFFSETS);
-          updateHandle(state.handleRightElement, newX + newWidth, null, RIGHT_OFFSETS);
+          updateHandle(state.handleLeftElement, newX);
+          updateHandle(state.handleRightElement, newX + newWidth);
+          updateDaysLabel(state.phaseDaysElement, newX + newWidth);
         } else if (state.resizeEdge === 'right') {
           let newEnd = state.initialEnd + Math.round(deltaIntervals);
           newEnd = Math.max(state.initialStart, Math.min(totalIntervals, newEnd));
@@ -386,7 +400,8 @@ export function useMultiGanttDrag({
             state.phaseLabelElement.setAttribute('width', newWidth - 12);
           }
 
-          updateHandle(state.handleRightElement, state.baseX + newWidth, null, RIGHT_OFFSETS);
+          updateHandle(state.handleRightElement, state.baseX + newWidth);
+          updateDaysLabel(state.phaseDaysElement, state.baseX + newWidth);
         }
       }
     },
@@ -455,8 +470,9 @@ export function useMultiGanttDrag({
       state.phaseLabelElement.setAttribute('width', snappedWidth - 12);
     }
 
-    updateHandle(state.handleLeftElement, snappedX, null, LEFT_OFFSETS);
-    updateHandle(state.handleRightElement, snappedX + snappedWidth, null, RIGHT_OFFSETS);
+    updateHandle(state.handleLeftElement, snappedX);
+    updateHandle(state.handleRightElement, snappedX + snappedWidth);
+    updateDaysLabel(state.phaseDaysElement, snappedX + snappedWidth);
 
     // Trova la stima e aggiorna i suoi intervalli
     const estimateItem = estimatesList.find((e) => e.estimateId === state.estimateId);

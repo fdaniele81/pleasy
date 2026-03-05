@@ -18,13 +18,21 @@ function SelectableCellsTable({
   contingencyPercentage,
   selectedCells,
   cellToTaskMap = new Map(),
-  onCellClick
+  onCellClick,
+  showInDays = false
 }) {
   const { t } = useTranslation(['estimator', 'common']);
   const formatHours = (hours) => {
     const num = parseFloat(hours);
-    return isNaN(num) ? '0.0' : num.toFixed(1);
+    if (isNaN(num)) return '0.0';
+    if (showInDays) {
+      const days = num / 8;
+      return (Math.round(days * 10) / 10).toString();
+    }
+    return num.toFixed(1);
   };
+
+  const unitLabel = showInDays ? 'gg' : 'h';
 
   const calculateTotalHours = (task) => {
     return PHASES.slice(0, 8).reduce((sum, phase) => {
@@ -283,10 +291,10 @@ function SelectableCellsTable({
                           borderColor: assignedColor
                         } : {}}
                         title={isAssigned
-                          ? t('estimator:cellTitleAssigned', { phase: t('estimator:' + phase.labelKey), hours: formatHours(hours) })
-                          : t('estimator:cellTitle', { phase: t('estimator:' + phase.labelKey), hours: formatHours(hours) })}
+                          ? t('estimator:cellTitleAssigned', { phase: t('estimator:' + phase.labelKey), hours: formatHours(hours) + unitLabel })
+                          : t('estimator:cellTitle', { phase: t('estimator:' + phase.labelKey), hours: formatHours(hours) + unitLabel })}
                       >
-                        {Math.round(hours)}
+                        {formatHours(hours)}
                       </td>
                     );
                   })}
@@ -318,16 +326,16 @@ function SelectableCellsTable({
                           borderColor: assignedColor
                         } : {}}
                         title={isAssigned
-                          ? t('estimator:cellTitleAssigned', { phase: t('estimator:phaseContingency'), hours: formatHours(hours) })
-                          : t('estimator:cellTitle', { phase: t('estimator:phaseContingency'), hours: formatHours(hours) })}
+                          ? t('estimator:cellTitleAssigned', { phase: t('estimator:phaseContingency'), hours: formatHours(hours) + unitLabel })
+                          : t('estimator:cellTitle', { phase: t('estimator:phaseContingency'), hours: formatHours(hours) + unitLabel })}
                       >
-                        {Math.round(hours)}
+                        {formatHours(hours)}
                       </td>
                     );
                   })()}
 
                   <td className="px-0 lg:px-1 py-1.5 text-center text-xs lg:text-sm font-medium text-cyan-600 border border-gray-200">
-                    {Math.round(totalWithContingency)}
+                    {formatHours(totalWithContingency)}
                   </td>
                 </tr>
               );
@@ -341,11 +349,11 @@ function SelectableCellsTable({
               </td>
               {columnTotals.map((total, idx) => (
                 <td key={idx} className="px-0 lg:px-1 py-4 text-center text-xs lg:text-sm border border-gray-300">
-                  {Math.round(total)}
+                  {formatHours(total)}
                 </td>
               ))}
               <td className="px-0 lg:px-1 py-4 text-center text-xs lg:text-sm text-cyan-700 border border-gray-300">
-                {Math.round(grandTotalWithContingency)}
+                {formatHours(grandTotalWithContingency)}
               </td>
             </tr>
           </tfoot>

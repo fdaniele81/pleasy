@@ -30,7 +30,7 @@ function ContextMenu({ x, y, options, onClose }) {
   return (
     <div
       ref={menuRef}
-      className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[180px]"
+      className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[180px] z-50"
       style={{
         left: `${x}px`,
         top: `${y}px`,

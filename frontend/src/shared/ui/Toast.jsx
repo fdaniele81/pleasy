@@ -33,7 +33,7 @@ const Toast = memo(function Toast({ message, type = 'error', onClose, duration }
   const style = styles[type] || styles.error;
 
   return (
-    <div className={`fixed top-4 right-4 max-w-md w-full ${style.bg} border-l-4 p-4 rounded shadow-lg z-9999 animate-slideIn`}>
+    <div className={`${style.bg} border-l-4 p-4 rounded shadow-lg`}>
       <div className="flex items-start gap-3">
         <div className="">
           {style.icon}

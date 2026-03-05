@@ -140,7 +140,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       )}
 
       {!previewLoading && previewTasks.length > 0 && (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3 h-full min-h-0">
           <div className="bg-cyan-50 rounded-lg px-4 py-3 border border-cyan-100 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-cyan-600 shrink-0" />
@@ -200,6 +200,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
               onSelectionChange={setSelectedTimesheetIds}
               filterStartDate={filterStartDate}
               filterEndDate={filterEndDate}
+              fill
             />
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded flex items-center gap-3">

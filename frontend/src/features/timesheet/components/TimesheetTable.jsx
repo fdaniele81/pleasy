@@ -42,11 +42,13 @@ function TimesheetTable({
   onTaskTitleClick,
   onCellClick,
   onCellContextMenu,
+  onCellNoteClick,
   onCellBlur,
   onKeyDown,
   onEditValueChange,
   onTimeOffCellClick,
   onTimeOffCellContextMenu,
+  onTimeOffCellNoteClick,
   onTimeOffCellBlur,
   onTimeOffKeyDown,
   onTimeOffTotalClick,
@@ -256,6 +258,7 @@ function TimesheetTable({
                       onTaskTitleClick={onTaskTitleClick}
                       onCellClick={onCellClick}
                       onCellContextMenu={onCellContextMenu}
+                      onCellNoteClick={onCellNoteClick}
                       onCellBlur={onCellBlur}
                       onKeyDown={onKeyDown}
                       onEditValueChange={onEditValueChange}
@@ -309,6 +312,7 @@ function TimesheetTable({
                       onTaskTitleClick={onTaskTitleClick}
                       onCellClick={onCellClick}
                       onCellContextMenu={onCellContextMenu}
+                      onCellNoteClick={onCellNoteClick}
                       onCellBlur={onCellBlur}
                       onKeyDown={onKeyDown}
                       onEditValueChange={onEditValueChange}
@@ -368,6 +372,7 @@ function TimesheetTable({
                     onTaskSelection={onTaskSelection}
                     onTimeOffCellClick={onTimeOffCellClick}
                     onTimeOffCellContextMenu={onTimeOffCellContextMenu}
+                    onTimeOffCellNoteClick={onTimeOffCellNoteClick}
                     onTimeOffCellBlur={onTimeOffCellBlur}
                     onTimeOffKeyDown={onTimeOffKeyDown}
                     onEditValueChange={onEditValueChange}
@@ -395,6 +400,7 @@ function TimesheetTable({
                     onTaskSelection={onTaskSelection}
                     onTimeOffCellClick={onTimeOffCellClick}
                     onTimeOffCellContextMenu={onTimeOffCellContextMenu}
+                    onTimeOffCellNoteClick={onTimeOffCellNoteClick}
                     onTimeOffCellBlur={onTimeOffCellBlur}
                     onTimeOffKeyDown={onTimeOffKeyDown}
                     onEditValueChange={onEditValueChange}

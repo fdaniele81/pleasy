@@ -1,13 +1,16 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useGetDashboardProjectsQuery } from '../api/dashboardEndpoints';
 import { selectIsAuthenticated } from '../../../store/selectors/authSelectors';
+import { useDashboardFilters } from './useDashboardFilters';
 
 export function useProjectsPivot() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  const [statusFilter, setStatusFilter] = useState('ACTIVE');
-  const [groupBy, setGroupBy] = useState('client');
-  const [selectedOwners, setSelectedOwners] = useState([]);
+  const {
+    statusFilter, setStatusFilter,
+    groupBy, setGroupBy,
+    selectedOwners, setSelectedOwners,
+  } = useDashboardFilters();
 
   const {
     data: dashboardData = { projects: [], owners: [] },

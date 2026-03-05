@@ -232,16 +232,17 @@ async function upsertTaskSequence(projectId, taskNumber) {
   );
 }
 
-async function createTask(taskId, taskNumber, projectId, title, description, budget, initialActual) {
+async function createTask(taskId, taskNumber, projectId, title, description, budget, initialActual, startDate, endDate) {
   const result = await pool.query(
     `INSERT INTO task (
       task_id, task_number, project_id, title,
       description, task_status_id, budget, initial_actual,
+      start_date, end_date,
       created_at, updated_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
      RETURNING *`,
-    [taskId, taskNumber, projectId, title, description || '', 'NEW', budget || 0, initialActual || 0]
+    [taskId, taskNumber, projectId, title, description || '', 'NEW', budget || 0, initialActual || 0, startDate || null, endDate || null]
   );
   return result.rows[0];
 }

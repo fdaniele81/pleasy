@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { useTranslation } from 'react-i18next';
-import { Pencil, ExternalLink } from "lucide-react";
+import { Pencil, ExternalLink, FileText } from "lucide-react";
 import { SelectionCheckbox } from "../../../shared/ui/table";
 import { getTotalHoursForTimeOffType } from "../../../utils/budget/budgetUtils";
 import { getTimeOffForDate, formatDateLocal } from "../../../utils/table/tableUtils";
@@ -19,6 +19,7 @@ const TimesheetTimeOffRow = memo(function TimesheetTimeOffRow({
   onTaskSelection,
   onTimeOffCellClick,
   onTimeOffCellContextMenu,
+  onTimeOffCellNoteClick,
   onTimeOffCellBlur,
   onTimeOffKeyDown,
   onEditValueChange,
@@ -113,32 +114,45 @@ const TimesheetTimeOffRow = memo(function TimesheetTimeOffRow({
             }
           >
             {isEditing ? (
-              <input
-                type="number"
-                step="0.5"
-                min="0"
-                value={editValue}
-                onChange={(e) => onEditValueChange(e.target.value)}
-                onBlur={() =>
-                  onTimeOffCellBlur(
-                    timeOffType,
-                    date,
-                    hours
-                  )
-                }
-                onKeyDown={(e) =>
-                  onTimeOffKeyDown(
-                    e,
-                    timeOffType,
-                    date,
-                    dateIdx,
-                    hours
-                  )
-                }
-                onWheel={(e) => e.target.blur()}
-                className={`w-full text-center border-2 ${inputBorderColor} rounded px-1 py-1 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                autoFocus
-              />
+              <div className="flex items-center gap-0.5">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={editValue}
+                  onChange={(e) => onEditValueChange(e.target.value)}
+                  onBlur={() =>
+                    onTimeOffCellBlur(
+                      timeOffType,
+                      date,
+                      hours
+                    )
+                  }
+                  onKeyDown={(e) =>
+                    onTimeOffKeyDown(
+                      e,
+                      timeOffType,
+                      date,
+                      dateIdx,
+                      hours
+                    )
+                  }
+                  onWheel={(e) => e.target.blur()}
+                  className={`w-full text-center border-2 ${inputBorderColor} rounded px-1 py-1 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                  autoFocus
+                />
+                {onTimeOffCellNoteClick && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => onTimeOffCellNoteClick(timeOffType, date, editValue)}
+                    className={`shrink-0 p-0.5 rounded hover:bg-opacity-20 ${textColor} transition-colors`}
+                    title="Note"
+                  >
+                    <FileText size={14} />
+                  </button>
+                )}
+              </div>
             ) : (
               <div
                 className={`relative flex items-center justify-center ${

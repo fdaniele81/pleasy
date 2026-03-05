@@ -72,7 +72,7 @@
   "noItemsAvailable": "Nessun elemento",
   "selected": "Selezionati",
   "notSelected": "Non selezionati",
-  "allActivities": "Tutte le attività",
+  "allActivities": "Attività",
   "filterActivities": "Filtra attività",
   "goToDate": "Vai a data:",
   "go": "Vai",
@@ -151,5 +151,9 @@
   "preset_custom": "Personalizza...",
   "weekShort": "S",
   "excelPeriod": "Periodo:",
-  "excelExportDate": "Data export:"
+  "excelExportDate": "Data export:",
+  "savedFilters": "Filtri salvati",
+  "saveCurrentFilters": "Salva filtri correnti",
+  "filterNamePlaceholder": "Nome del filtro...",
+  "noSavedFilters": "Nessun filtro salvato"
 }

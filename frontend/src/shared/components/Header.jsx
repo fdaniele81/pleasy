@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Settings, FileBarChart, LogOut, KeyRound } from 'lucide-react';
+import { Menu, X, Settings, FileBarChart, LogOut, KeyRound, ChevronRight } from 'lucide-react';
 import { routeIcons } from "../../constants/routeIcons";
 import { ROLES, ROUTES, CONFIG_MENU_ROUTES, PM_FEATURES_MENU_ROUTES, REPORT_MENU_ROUTES } from "../../constants";
 import { useAuth } from "../../hooks";
@@ -35,15 +35,28 @@ const MobileNavLink = memo(function MobileNavLink({ to, icon, label, isActive, o
   );
 });
 
-const MobileNavGroup = memo(function MobileNavGroup({ icon, label, children }) {
+const MobileNavGroup = memo(function MobileNavGroup({ icon, label, isOpen, onToggle, isActive, children }) {
   return (
     <div className="mb-1">
-      <div className="flex items-center gap-2 px-3 py-2 mt-2">
-        <span className="text-gray-400">{icon}</span>
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</span>
-      </div>
-      <div className="space-y-0.5">
-        {children}
+      <button
+        onClick={onToggle}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${
+          isActive
+            ? 'bg-blue-50 text-blue-700 font-medium'
+            : 'text-gray-700 hover:bg-gray-50'
+        }`}
+      >
+        <span className={isActive ? 'text-blue-600' : 'text-gray-400'}>{icon}</span>
+        <span className="flex-1 text-left">{label}</span>
+        <ChevronRight
+          size={16}
+          className={`transition-transform duration-200 ${isActive ? 'text-blue-600' : 'text-gray-400'} ${isOpen ? 'rotate-90' : ''}`}
+        />
+      </button>
+      <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="space-y-0.5 pl-4 mt-0.5">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -60,6 +73,7 @@ const Header = memo(function Header() {
   const [isPmFeaturesMenuOpen, setIsPmFeaturesMenuOpen] = useState(false);
   const [isReportMenuOpen, setIsReportMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileOpenGroup, setMobileOpenGroup] = useState(null);
   const menuRef = useRef(null);
   const configMenuRef = useRef(null);
   const pmFeaturesMenuRef = useRef(null);
@@ -139,6 +153,11 @@ const Header = memo(function Header() {
 
   const closeMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
+    setMobileOpenGroup(null);
+  }, []);
+
+  const toggleMobileGroup = useCallback((group) => {
+    setMobileOpenGroup(prev => prev === group ? null : group);
   }, []);
 
   const isActive = (path) => location.pathname === path;
@@ -329,7 +348,7 @@ const Header = memo(function Header() {
                   </div>
 
                   {/* Configurations group */}
-                  <MobileNavGroup icon={<Settings size={14} />} label={t('navigation:configurations')}>
+                  <MobileNavGroup icon={<Settings size={16} />} label={t('navigation:configurations')} isOpen={mobileOpenGroup === 'config'} onToggle={() => toggleMobileGroup('config')} isActive={isConfigMenuActive}>
                     <MobileNavLink to={ROUTES.HOLIDAYS} icon={routeIcons[ROUTES.HOLIDAYS]} label={t('navigation:holidayManagement')} isActive={isActive(ROUTES.HOLIDAYS)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.USERS} icon={routeIcons[ROUTES.USERS]} label={t('navigation:userDirectory')} isActive={isActive(ROUTES.USERS)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.CLIENTS} icon={routeIcons[ROUTES.CLIENTS]} label={t('navigation:clientDirectory')} isActive={isActive(ROUTES.CLIENTS)} onClick={closeMobileMenu} />
@@ -338,7 +357,7 @@ const Header = memo(function Header() {
                   </MobileNavGroup>
 
                   {/* PM Features group */}
-                  <MobileNavGroup icon={React.createElement(routeIcons[ROUTES.PLANNING], { size: 14 })} label={t('navigation:pmFeatures')}>
+                  <MobileNavGroup icon={React.createElement(routeIcons[ROUTES.PLANNING], { size: 16 })} label={t('navigation:pmFeatures')} isOpen={mobileOpenGroup === 'pmFeatures'} onToggle={() => toggleMobileGroup('pmFeatures')} isActive={isPmFeaturesMenuActive}>
                     <MobileNavLink to={ROUTES.ESTIMATOR} icon={routeIcons[ROUTES.ESTIMATOR]} label={t('navigation:projectEstimation')} isActive={isActive(ROUTES.ESTIMATOR)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.CAPACITY_PLAN} icon={routeIcons[ROUTES.CAPACITY_PLAN]} label={t('navigation:macroPlanning')} isActive={isActive(ROUTES.CAPACITY_PLAN)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.CONVERT_ESTIMATE_TO_PROJECT} icon={routeIcons[ROUTES.CONVERT_ESTIMATE_TO_PROJECT]} label={t('navigation:convertEstimate')} isActive={isActive(ROUTES.CONVERT_ESTIMATE_TO_PROJECT)} onClick={closeMobileMenu} />
@@ -347,7 +366,7 @@ const Header = memo(function Header() {
                   </MobileNavGroup>
 
                   {/* Report group */}
-                  <MobileNavGroup icon={<FileBarChart size={14} />} label={t('navigation:report')}>
+                  <MobileNavGroup icon={<FileBarChart size={16} />} label={t('navigation:report')} isOpen={mobileOpenGroup === 'report'} onToggle={() => toggleMobileGroup('report')} isActive={isReportMenuActive}>
                     <MobileNavLink to={ROUTES.TIMEOFF_PLAN} icon={routeIcons[ROUTES.TIMEOFF_PLAN]} label={t('navigation:timeOffPlan')} isActive={isActive(ROUTES.TIMEOFF_PLAN)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.TIMESHEET_SNAPSHOTS} icon={routeIcons[ROUTES.TIMESHEET_SNAPSHOTS]} label={t('navigation:submittedTimesheets')} isActive={isActive(ROUTES.TIMESHEET_SNAPSHOTS)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.RECONCILIATION} icon={routeIcons[ROUTES.RECONCILIATION]} label={t('navigation:timesheetReconciliation')} isActive={isActive(ROUTES.RECONCILIATION)} onClick={closeMobileMenu} />

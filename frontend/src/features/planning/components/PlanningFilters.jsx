@@ -7,6 +7,7 @@ import {
   SearchInput,
   FilterDropdown,
   SelectionFilter,
+  SavedFiltersDropdown,
   useDropdownManager,
 } from '../../../shared/ui/filters';
 
@@ -44,6 +45,7 @@ function PlanningFilters({
   allProjects,
   totalTaskCount,
   filteredTaskCount,
+  onApplySavedFilter,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const { toggleDropdown, isDropdownOpen, getDropdownRef } = useDropdownManager();
@@ -64,7 +66,10 @@ function PlanningFilters({
     setFilterStartDate('');
     setFilterEndDate('');
     setDateFilterMode('intersect');
-  }, [setFilterUserIds, setFilterStatuses, setFilterClientIds, setFilterProjectIds, setSelectionFilters, setEtcFilters, setFilterStartDate, setFilterEndDate, setDateFilterMode]);
+    setHideProjectHeaders(false);
+    setShowInDays(false);
+    setShowTimeline(false);
+  }, [setFilterUserIds, setFilterStatuses, setFilterClientIds, setFilterProjectIds, setSelectionFilters, setEtcFilters, setFilterStartDate, setFilterEndDate, setDateFilterMode, setHideProjectHeaders, setShowInDays, setShowTimeline]);
 
   return (
     <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-3 relative">
@@ -365,7 +370,7 @@ function PlanningFilters({
           icon={hideProjectHeaders ? EyeOff : Eye}
           iconSize={14}
           title={hideProjectHeaders ? t('planning:showHeadersTitle') : t('planning:hideHeadersTitle')}
-          className="text-xs"
+          className="py-1.5! px-3! text-xs"
         >
           <span className="hidden xl:inline whitespace-nowrap">
             {hideProjectHeaders ? t('planning:headersHidden') : t('planning:hideHeaders')}
@@ -380,15 +385,24 @@ function PlanningFilters({
           icon={CalendarRange}
           iconSize={14}
           title={showTimeline ? t('planning:hideTimelineTitle') : t('planning:showTimelineTitle')}
-          className="text-xs"
+          className="py-1.5! px-3! text-xs"
         >
           <span className="hidden xl:inline whitespace-nowrap">
             {showTimeline ? t('planning:timelineActive') : t('planning:timeline')}
           </span>
         </Button>
 
+        <SavedFiltersDropdown
+          section="planning"
+          currentFilters={{ filterUserIds, filterStatuses, filterClientIds, filterProjectIds, etcFilters, filterStartDate, filterEndDate, dateFilterMode, hideProjectHeaders, showInDays, showTimeline }}
+          onApplyFilter={onApplySavedFilter}
+          accentColor="cyan"
+          size="md"
+        />
+
         {(filterUserIds.length > 0 || filterStatuses.length > 0 || filterClientIds.length > 0 || filterProjectIds.length > 0 ||
-          selectionFilters.length > 0 || etcFilters.length > 0 || filterStartDate || filterEndDate) && (
+          selectionFilters.length > 0 || etcFilters.length > 0 || filterStartDate || filterEndDate ||
+          hideProjectHeaders || showInDays || showTimeline) && (
           <Button
             onClick={clearAllFilters}
             variant="outline"
@@ -397,7 +411,7 @@ function PlanningFilters({
             icon={X}
             iconSize={14}
             title={t('planning:clearAllFiltersTitle')}
-            className="text-xs hover:bg-red-50"
+            className="py-1.5! px-3! text-xs hover:bg-red-50"
           >
             <span className="hidden xl:inline whitespace-nowrap">{t('common:clearFilters')}</span>
           </Button>

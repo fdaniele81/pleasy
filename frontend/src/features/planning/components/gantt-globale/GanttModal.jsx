@@ -61,6 +61,9 @@ const GanttModal = ({ isOpen, onClose, projects, filterUserIds = [], refreshTrig
     // Drag handlers
     handleMouseDown,
     handleTouchStart,
+
+    // Refetch
+    refetchFteReport,
   } = useGanttModalData({ isOpen, projects, filterUserIds, refreshTrigger });
 
   if (!isOpen || !projects || projects.length === 0) return null;
@@ -95,6 +98,7 @@ const GanttModal = ({ isOpen, onClose, projects, filterUserIds = [], refreshTrig
           periodLabel={periodLabel}
           etcReferenceDate={etcReferenceDate}
           onEtcReferenceDateChange={setEtcReferenceDate}
+          onRefresh={refetchFteReport}
           t={t}
         />
       </div>

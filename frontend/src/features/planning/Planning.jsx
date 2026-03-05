@@ -11,7 +11,7 @@ import SimpleGanttModal from './components/gantt-selezione/SimpleGanttModal';
 
 import { usePlanningData } from './hooks/usePlanningData';
 import { useTaskEdit } from './hooks/useTaskEdit';
-import { useFiltersReducer } from './hooks/useFiltersReducer';
+import { usePlanningFilters } from './hooks/usePlanningFilters';
 import { useTimelinePeriod } from './hooks/useTimelinePeriod';
 import { useConfirmation } from '../../hooks';
 import ConfirmationModal from '../../shared/ui/ConfirmationModal';
@@ -74,13 +74,14 @@ function Pianificazione() {
     setHideProjectHeaders,
     setShowInDays,
     setShowTimeline,
-  } = useFiltersReducer();
+    expandedProjects,
+    toggleExpandedProject,
+    mergeExpandedProjects,
+  } = usePlanningFilters();
 
   const [ganttRefreshTrigger, setGanttRefreshTrigger] = useState(0);
 
   const [showSelectionGanttModal, setShowSelectionGanttModal] = useState(false);
-
-  const [expandedProjects, setExpandedProjects] = useState({});
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -97,7 +98,7 @@ function Pianificazione() {
         }
       });
       if (Object.keys(allExpanded).length > 0) {
-        setExpandedProjects(prev => ({ ...prev, ...allExpanded }));
+        mergeExpandedProjects(allExpanded);
       }
     }
   }, [projects]);
@@ -118,7 +119,7 @@ function Pianificazione() {
       const projectExists = projects.some(p => p.project_id === projectIdFromUrl);
       if (projectExists && !filterProjectIds.includes(projectIdFromUrl)) {
         setFilterProjectIds([projectIdFromUrl]);
-        setExpandedProjects(prev => ({ ...prev, [projectIdFromUrl]: true }));
+        mergeExpandedProjects({ [projectIdFromUrl]: true });
       }
     }
   }, [searchParams, projects]);
@@ -249,7 +250,8 @@ function Pianificazione() {
     setSelectedTaskForInitialActual,
     fetchAvailableUsers: planningData.fetchAvailableUsers,
     availableUsers,
-    confirmFn: confirmation.confirm
+    confirmFn: confirmation.confirm,
+    showInDays
   });
 
   const {
@@ -356,12 +358,26 @@ function Pianificazione() {
     }
   }, [selectedTasks, filteredProjects]);
 
+  const applySavedFilter = useCallback((filters) => {
+    setFilterUserIds(filters.filterUserIds || []);
+    setFilterStatuses(filters.filterStatuses || []);
+    setFilterClientIds(filters.filterClientIds || []);
+    setFilterProjectIds(filters.filterProjectIds || []);
+    setEtcFilters(filters.etcFilters || []);
+    setFilterStartDate(filters.filterStartDate || '');
+    setFilterEndDate(filters.filterEndDate || '');
+    setDateFilterMode(filters.dateFilterMode || 'intersect');
+    if (filters.hideProjectHeaders !== undefined) setHideProjectHeaders(filters.hideProjectHeaders);
+    if (filters.showInDays !== undefined) setShowInDays(filters.showInDays);
+    if (filters.showTimeline !== undefined) setShowTimeline(filters.showTimeline);
+  }, []);
+
   const toggleTaskSelection = useCallback((taskId) => {
     setSelectedTasks(prev => ({ ...prev, [taskId]: !prev[taskId] }));
   }, []);
 
   const toggleProjectExpansion = useCallback((projectId) => {
-    setExpandedProjects(prev => ({ ...prev, [projectId]: !prev[projectId] }));
+    toggleExpandedProject(projectId);
   }, []);
 
   const toggleAllProjects = useCallback(() => {
@@ -370,7 +386,7 @@ function Pianificazione() {
     filteredProjects.forEach(project => {
       newState[project.project_id] = !allExpanded;
     });
-    setExpandedProjects(prev => ({ ...prev, ...newState }));
+    mergeExpandedProjects(newState);
   }, [filteredProjects, expandedProjects]);
 
   const toggleProjectSelection = useCallback((project) => {
@@ -514,6 +530,7 @@ function Pianificazione() {
             allProjects={allProjects}
             totalTaskCount={totalTaskCount}
             filteredTaskCount={filteredTaskCount}
+            onApplySavedFilter={applySavedFilter}
           />
 
           <PlanningTable
@@ -552,7 +569,7 @@ function Pianificazione() {
             goToPrevious={timelinePeriod.goToPrevious}
             goToNext={timelinePeriod.goToNext}
             goToToday={timelinePeriod.goToToday}
-            isAtStart={timelinePeriod.isAtStart}
+            isAtToday={timelinePeriod.isAtToday}
             periodLabel={timelinePeriod.periodLabel}
           />
         </div>

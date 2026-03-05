@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Download, Edit2, Info } from "lucide-react";
+import { ArrowLeft, ChevronDown, Download, Edit2, Info } from "lucide-react";
 import Button from "../../shared/ui/Button";
+import useDropdownManager from "../../shared/ui/filters/useDropdownManager";
 import { useEstimateEditorState } from "./hooks/useEstimateEditorState";
 import { useEstimateEditorActions } from "./hooks/useEstimateEditorActions";
 import {
@@ -40,9 +41,13 @@ function EstimateEditorTasks() {
     handleTooltipEnter,
     handleTooltipLeave,
     isReadOnly,
+    showInDays,
+    setShowInDays,
     totals,
     formatHours,
   } = state;
+
+  const { toggleDropdown, isDropdownOpen, getDropdownRef } = useDropdownManager();
 
   const actions = useEstimateEditorActions(state);
   const {
@@ -89,8 +94,47 @@ function EstimateEditorTasks() {
                 {t('estimator:estimateItems')}
               </h2>
               <span className="text-xs text-gray-500">
-                {t('estimator:valuesInHours')}
+                {showInDays ? t('estimator:valuesInDays') : t('estimator:valuesInHours')}
               </span>
+              <div className="relative">
+                <button
+                  onClick={() => toggleDropdown('unit-dropdown')}
+                  className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium border border-gray-300 rounded bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-cyan-500 min-w-[75px] justify-between"
+                >
+                  <span className="truncate">{showInDays ? t('estimator:unitDays') : t('estimator:unitHours')}</span>
+                  <ChevronDown size={14} className="shrink-0" />
+                </button>
+                <div
+                  ref={getDropdownRef('unit-dropdown')}
+                  className={`${isDropdownOpen('unit-dropdown') ? '' : 'hidden'} absolute top-full left-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg z-50`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setShowInDays(false);
+                        toggleDropdown('unit-dropdown');
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${
+                        !showInDays ? 'bg-cyan-50 text-cyan-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      {t('estimator:unitHours')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowInDays(true);
+                        toggleDropdown('unit-dropdown');
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${
+                        showInDays ? 'bg-cyan-50 text-cyan-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      {t('estimator:unitDays')}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {activities.length > 0 && (
@@ -136,7 +180,7 @@ function EstimateEditorTasks() {
                 <col className="w-[6%]" />
                 <col className="w-[7%] lg:w-[9%]" />
               </colgroup>
-              <ActivityTableHeader formData={formData} />
+              <ActivityTableHeader formData={formData} showInDays={showInDays} />
               <tbody className="bg-white divide-y divide-gray-200">
                 {activities.map((activity, index) => (
                   <EstimateActivityRow
@@ -158,6 +202,7 @@ function EstimateEditorTasks() {
                     onTooltipEnter={handleTooltipEnter}
                     onTooltipLeave={handleTooltipLeave}
                     newActivityNameInputRef={newActivityNameInputRef}
+                    showInDays={showInDays}
                   />
                 ))}
 
@@ -171,6 +216,7 @@ function EstimateEditorTasks() {
                     onAdd={handleAddActivity}
                     onCancel={handleCancelNewActivity}
                     nameInputRef={newActivityNameInputRef}
+                    showInDays={showInDays}
                   />
                 )}
 

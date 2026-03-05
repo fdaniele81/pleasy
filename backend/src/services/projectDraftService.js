@@ -212,6 +212,7 @@ async function convert(projectDraftId, user) {
     if (existingProjectId) {
       projectId = existingProjectId;
       isExistingProject = true;
+      project = { project_id: projectId, project_key: draft.project_key };
     } else {
       projectId = uuidv4();
       project = await projectDraftRepository.createProject(
@@ -241,7 +242,8 @@ async function convert(projectDraftId, user) {
       const task = await projectDraftRepository.createTask(
         taskId, actualTaskNumber, projectId,
         taskDraft.title, taskDraft.description,
-        taskDraft.budget, taskDraft.initial_actual
+        taskDraft.budget, taskDraft.initial_actual,
+        taskDraft.start_date, taskDraft.end_date
       );
 
       if (taskDraft.budget && parseFloat(taskDraft.budget) > 0) {

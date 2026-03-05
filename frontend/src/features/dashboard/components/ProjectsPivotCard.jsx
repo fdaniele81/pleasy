@@ -1,9 +1,10 @@
-import React, { useState, useMemo, memo } from "react";
+import React, { useMemo, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, ChevronsUpDown, LayoutGrid } from "lucide-react";
 import DashboardCard from "./DashboardCard";
 import { useProjectsPivot } from "../hooks/useProjectsPivot";
+import { useDashboardFilters } from "../hooks/useDashboardFilters";
 import { FilterDropdown } from "../../../shared/ui/filters";
 import { SkeletonLine } from "../../../shared/components/skeletons";
 
@@ -68,7 +69,11 @@ const ProjectsPivotCard = () => {
     owners,
   } = useProjectsPivot();
 
-  const [expandedClients, setExpandedClients] = useState({});
+  const {
+    expandedClients,
+    setExpandedClients,
+    toggleExpandedClient,
+  } = useDashboardFilters();
 
   const ownerOptions = useMemo(() => {
     return owners.map((owner) => ({
@@ -78,10 +83,7 @@ const ProjectsPivotCard = () => {
   }, [owners]);
 
   const toggleClientExpand = (clientId) => {
-    setExpandedClients((prev) => ({
-      ...prev,
-      [clientId]: !prev[clientId],
-    }));
+    toggleExpandedClient(clientId);
   };
 
   const allExpanded = clientPivotData.length > 0 &&
@@ -91,11 +93,11 @@ const ProjectsPivotCard = () => {
     if (allExpanded) {
       setExpandedClients({});
     } else {
-      const allExpanded = {};
+      const newExpanded = {};
       clientPivotData.forEach((client) => {
-        allExpanded[client.client_id] = true;
+        newExpanded[client.client_id] = true;
       });
-      setExpandedClients(allExpanded);
+      setExpandedClients(newExpanded);
     }
   };
 

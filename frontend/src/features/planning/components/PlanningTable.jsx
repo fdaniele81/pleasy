@@ -56,7 +56,7 @@ export const PlanningTable = memo(function PlanningTable({
   goToPrevious,
   goToNext,
   goToToday,
-  isAtStart,
+  isAtToday,
   periodLabel,
 }) {
   const { t } = useTranslation(['planning', 'common']);
@@ -196,21 +196,16 @@ export const PlanningTable = memo(function PlanningTable({
                       <button
                         type="button"
                         onClick={goToPrevious}
-                        disabled={isAtStart}
-                        className={`p-0.5 rounded border border-cyan-500 transition-colors ${
-                          isAtStart
-                            ? 'text-cyan-300 cursor-not-allowed'
-                            : 'text-white hover:bg-cyan-600'
-                        }`}
+                        className="p-0.5 rounded border border-cyan-500 text-white hover:bg-cyan-600 transition-colors"
                       >
                         <ChevronLeft size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={goToToday}
-                        disabled={isAtStart}
+                        disabled={isAtToday}
                         className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                          isAtStart
+                          isAtToday
                             ? 'bg-cyan-500 text-cyan-200 cursor-not-allowed'
                             : 'bg-white text-cyan-700 hover:bg-cyan-100'
                         }`}

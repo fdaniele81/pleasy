@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, FileText } from "lucide-react";
 import { formatDateLocal } from "../../../utils/table/tableUtils";
 
 const TimesheetCell = memo(function TimesheetCell({
@@ -18,6 +18,7 @@ const TimesheetCell = memo(function TimesheetCell({
   topBorderClass = "",
   onCellClick,
   onCellContextMenu,
+  onCellNoteClick,
   onCellBlur,
   onKeyDown,
   onEditValueChange,
@@ -59,27 +60,40 @@ const TimesheetCell = memo(function TimesheetCell({
       }
     >
       {isEditing ? (
-        <input
-          type="number"
-          step="0.5"
-          min="0"
-          value={editValue}
-          onChange={(e) => onEditValueChange(e.target.value)}
-          onBlur={() => onCellBlur(taskId, date, hours, timesheetId)}
-          onKeyDown={(e) =>
-            onKeyDown(
-              e,
-              taskId,
-              date,
-              dateIdx,
-              hours,
-              timesheetId
-            )
-          }
-          onWheel={(e) => e.target.blur()}
-          className="w-full text-center border-2 border-blue-500 rounded px-1 py-1 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          autoFocus
-        />
+        <div className="flex items-center gap-0.5">
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            value={editValue}
+            onChange={(e) => onEditValueChange(e.target.value)}
+            onBlur={() => onCellBlur(taskId, date, hours, timesheetId)}
+            onKeyDown={(e) =>
+              onKeyDown(
+                e,
+                taskId,
+                date,
+                dateIdx,
+                hours,
+                timesheetId
+              )
+            }
+            onWheel={(e) => e.target.blur()}
+            className="w-full text-center border-2 border-blue-500 rounded px-1 py-1 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            autoFocus
+          />
+          {onCellNoteClick && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => onCellNoteClick(taskId, date, editValue, isSubmitted)}
+              className="shrink-0 p-0.5 rounded hover:bg-blue-100 text-blue-500 transition-colors"
+              title="Note"
+            >
+              <FileText size={14} />
+            </button>
+          )}
+        </div>
       ) : (
         <div
           className={`relative flex items-center justify-center cursor-pointer group`}

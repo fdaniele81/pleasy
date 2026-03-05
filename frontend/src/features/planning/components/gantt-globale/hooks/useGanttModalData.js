@@ -67,7 +67,7 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
     return { startDate: formatDateISO(startDate), endDate: formatDateISO(endDate) };
   }, [timeInterval, dateOffset]);
 
-  const { data: fteReportData = { tasks: [], intervals: [], period: {} } } = useGetFteReportQuery(
+  const { data: fteReportData = { tasks: [], intervals: [], period: {} }, refetch: refetchFteReport } = useGetFteReportQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate, etcReferenceDate },
     { skip: !isOpen }
   );
@@ -140,11 +140,22 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
           }
         });
       }
+      const taskEtc = parseFloat(task.etc_hours) || 0;
+      const allFteZero = taskPeriodFTE.every(fte => fte === 0);
+      const periodStart = fteReportData.period?.start_date ? new Date(fteReportData.period.start_date) : null;
+      const periodEnd = fteReportData.period?.end_date ? new Date(fteReportData.period.end_date) : null;
+      const taskStart = task.task_start_date ? new Date(task.task_start_date) : null;
+      const taskEnd = task.task_end_date ? new Date(task.task_end_date) : null;
+      const bothDatesInPeriod = periodStart && periodEnd && taskStart && taskEnd
+        && taskStart >= periodStart && taskEnd <= periodEnd;
+      const hasUnspreadETC = taskEtc > 0 && allFteZero && bothDatesInPeriod;
+
       userAllocation.tasks.push({
         ...task,
         allocation_percentage: task.allocation_percentage || 0,
         periodFTE: taskPeriodFTE,
-        periodPlannedHours: taskPeriodPlannedHours
+        periodPlannedHours: taskPeriodPlannedHours,
+        hasUnspreadETC
       });
       if (!excludedTasks[task.task_id]) {
         taskPeriodFTE.forEach((fte, idx) => { userAllocation.periodFTE[idx] += fte; });
@@ -329,5 +340,6 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
     handleToggleUser, handleToggleTaskExclusion,
     handleTooltipHover, handleTooltipLeave,
     handleMouseDown, handleTouchStart,
+    refetchFteReport,
   };
 }

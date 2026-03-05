@@ -26,7 +26,7 @@ export const GHOST_COLORS = {
 
 export const OUTLINE_CLASSES = 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500';
 
-export const BASE_CLASSES = 'inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+export const BASE_CLASSES = 'inline-flex items-center justify-center gap-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
 
 export const DISABLED_CLASSES = 'disabled:opacity-50 disabled:cursor-not-allowed';
 

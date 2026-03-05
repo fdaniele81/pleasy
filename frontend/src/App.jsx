@@ -24,7 +24,7 @@ const TimesheetSnapshots = lazy(() => import("./features/timesheetsnapshots/Time
 const Estimator = lazy(() => import("./features/estimator/Estimator"));
 const EstimateEditorInfo = lazy(() => import("./features/estimator/EstimateEditorInfo"));
 const EstimateEditorTasks = lazy(() => import("./features/estimator/EstimateEditorTasks"));
-const ConvertEstimateToProject = lazy(() => import("./features/estimator/ConvertEstimateToProject"));
+const ConvertEstimateToProject = lazy(() => import("./features/estimate-conversion/ConvertEstimateToProject"));
 const Reconciliation = lazy(() => import("./features/reconciliation/Reconciliation"));
 const MySubmissions = lazy(() => import("./features/mysubmissions/MySubmissions"));
 const TMPlanning = lazy(() => import("./features/tmplanning/TMPlanning"));

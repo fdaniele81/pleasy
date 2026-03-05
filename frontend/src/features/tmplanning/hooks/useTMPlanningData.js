@@ -8,8 +8,10 @@ export function useTMPlanningData({
   selectedClientIds,
   expandedUsers,
   setExpandedUsers,
+  toggleExpandedUser,
   expandedClients,
   setExpandedClients,
+  toggleExpandedClient,
   locale,
   startDate,
   endDate,
@@ -133,8 +135,8 @@ export function useTMPlanningData({
   }, [filteredUsers]);
 
   const toggleUserExpanded = useCallback((userId) => {
-    setExpandedUsers((prev) => ({ ...prev, [userId]: !prev[userId] }));
-  }, [setExpandedUsers]);
+    toggleExpandedUser(userId);
+  }, [toggleExpandedUser]);
 
   const isAllUsersExpanded = useMemo(() => {
     return (
@@ -154,8 +156,8 @@ export function useTMPlanningData({
   }, [isAllUsersExpanded, filteredUsers, setExpandedUsers]);
 
   const toggleClientExpanded = useCallback((clientId) => {
-    setExpandedClients((prev) => ({ ...prev, [clientId]: !prev[clientId] }));
-  }, [setExpandedClients]);
+    toggleExpandedClient(clientId);
+  }, [toggleExpandedClient]);
 
   const isAllClientsExpanded = useMemo(() => {
     return (

@@ -26,6 +26,7 @@ import reconciliationRoutes from "./routes/reconciliation.routes.js";
 import estimateRoutes from "./routes/estimate.routes.js";
 import projectDraftRoutes from "./routes/projectDraft.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import savedFiltersRoutes from "./routes/savedFilters.routes.js";
 
 const requiredEnvVars = ["PORT", "PGHOST", "PGDATABASE", "PGUSER", "PGPASSWORD", "JWT_SECRET"];
 const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
@@ -100,6 +101,7 @@ app.use("/api/reconciliation", reconciliationRoutes);
 app.use("/api/estimate", estimateRoutes);
 app.use("/api/project-draft", projectDraftRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/saved-filters", savedFiltersRoutes);
 
 app.listen(port, () => {
   logger.info("Server started", { port, env: process.env.NODE_ENV || "development" });

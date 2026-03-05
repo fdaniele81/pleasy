@@ -34,7 +34,9 @@ export function useTimelinePeriod() {
     [startDate, endDate]
   );
 
-  const isAtStart = useMemo(() => dateOffset === 0, [dateOffset]);
+  const isAtToday = useMemo(() => dateOffset === 0, [dateOffset]);
+
+  const stepDays = useMemo(() => Math.max(7, Math.ceil(numDays / 4)), [numDays]);
 
   const periodLabel = useMemo(() => {
     if (!startDate || !endDate) return '';
@@ -56,12 +58,12 @@ export function useTimelinePeriod() {
   }, []);
 
   const goToPrevious = useCallback(() => {
-    setDateOffset(prev => Math.max(0, prev - numDays));
-  }, [numDays]);
+    setDateOffset(prev => prev - stepDays);
+  }, [stepDays]);
 
   const goToNext = useCallback(() => {
-    setDateOffset(prev => prev + numDays);
-  }, [numDays]);
+    setDateOffset(prev => prev + stepDays);
+  }, [stepDays]);
 
   const goToToday = useCallback(() => {
     setDateOffset(0);
@@ -95,6 +97,6 @@ export function useTimelinePeriod() {
     goToPrevious,
     goToNext,
     goToToday,
-    isAtStart,
+    isAtToday,
   };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { DEFAULT_PERCENTAGES } from "../../../constants/estimator";
 import {
@@ -48,6 +48,7 @@ export function useEstimateEditorState() {
   const [editingActivityIndex, setEditingActivityIndex] = useState(null);
   const [showPercentagesModal, setShowPercentagesModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showInDays, setShowInDays] = useState(false);
   const newActivityNameInputRef = useRef(null);
 
   const { hoveredCell, handleTooltipEnter, handleTooltipLeave, setHoveredCell } = useTooltipDelay(500);
@@ -174,7 +175,14 @@ export function useEstimateEditorState() {
     [activities, formData.contingency_percentage]
   );
 
-  const formatHours = (hours) => formatHoursUtil(hours, true);
+  const formatHours = useCallback((hours) => {
+    const num = parseFloat(hours) || 0;
+    if (showInDays) {
+      const days = num / 8;
+      return (Math.round(days * 10) / 10).toString();
+    }
+    return (Math.round(num * 10) / 10).toString();
+  }, [showInDays]);
 
   return {
     estimateId,
@@ -203,6 +211,8 @@ export function useEstimateEditorState() {
     handleTooltipLeave,
     setHoveredCell,
     isReadOnly,
+    showInDays,
+    setShowInDays,
     totals,
     formatHours,
     EMPTY_NEW_ACTIVITY,

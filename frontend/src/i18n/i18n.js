@@ -29,6 +29,7 @@ import dashboardIt from '@/features/dashboard/translations/it.json';
 import timesheetsnapshotsIt from '@/features/timesheetsnapshots/translations/it.json';
 import timeoffplanIt from '@/features/timeoffplan/translations/it.json';
 import mysubmissionsIt from '@/features/mysubmissions/translations/it.json';
+import estimateConversionIt from '@/features/estimate-conversion/translations/it.json';
 
 // Feature translations - EN
 import holidaysEn from '@/features/holidays/translations/en.json';
@@ -47,6 +48,7 @@ import dashboardEn from '@/features/dashboard/translations/en.json';
 import timesheetsnapshotsEn from '@/features/timesheetsnapshots/translations/en.json';
 import timeoffplanEn from '@/features/timeoffplan/translations/en.json';
 import mysubmissionsEn from '@/features/mysubmissions/translations/en.json';
+import estimateConversionEn from '@/features/estimate-conversion/translations/en.json';
 
 const urlLng = new URLSearchParams(window.location.search).get('lng');
 const savedLanguage = urlLng || localStorage.getItem('i18nextLng') || 'it';
@@ -74,6 +76,7 @@ i18n.use(initReactI18next).init({
       timesheetsnapshots: timesheetsnapshotsIt,
       timeoffplan: timeoffplanIt,
       mysubmissions: mysubmissionsIt,
+      estimateConversion: estimateConversionIt,
     },
     en: {
       common: commonEn,
@@ -96,6 +99,7 @@ i18n.use(initReactI18next).init({
       timesheetsnapshots: timesheetsnapshotsEn,
       timeoffplan: timeoffplanEn,
       mysubmissions: mysubmissionsEn,
+      estimateConversion: estimateConversionEn,
     },
   },
   lng: savedLanguage,

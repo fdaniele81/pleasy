@@ -14,6 +14,8 @@ const TimesheetGridTable = ({
   onSelectionChange,
   filterStartDate,
   filterEndDate,
+  maxHeight = 'calc(100vh - 320px)',
+  fill = false,
 }) => {
   const { t } = useTranslation(['planning', 'common']);
   const locale = useLocale();
@@ -92,29 +94,8 @@ const TimesheetGridTable = ({
 
     if (rangeDates.length === 0) return allAvailableDates;
 
-    if (rangeDates.length < NUM_COLUMNS) {
-      const padLeft = Math.floor((NUM_COLUMNS - rangeDates.length) / 2);
-      const padRight = NUM_COLUMNS - rangeDates.length - padLeft;
-
-      const result = [];
-      const startDate = new Date(effectiveStart + 'T00:00:00');
-      for (let i = padLeft; i > 0; i--) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() - i);
-        result.push(formatDateKey(d));
-      }
-      result.push(...rangeDates);
-      const endDate2 = new Date(effectiveEnd + 'T00:00:00');
-      for (let i = 1; i <= padRight; i++) {
-        const d = new Date(endDate2);
-        d.setDate(d.getDate() + i);
-        result.push(formatDateKey(d));
-      }
-      return result;
-    }
-
     return rangeDates;
-  }, [hasActiveFilter, filterStartDate, filterEndDate, allAvailableDates, NUM_COLUMNS]);
+  }, [hasActiveFilter, filterStartDate, filterEndDate, allAvailableDates]);
 
   const totalPages = useMemo(() => {
     return Math.ceil(displayDates.length / NUM_COLUMNS) || 1;
@@ -126,17 +107,7 @@ const TimesheetGridTable = ({
     const startIdx = weekOffset * NUM_COLUMNS;
     const endIdx = startIdx + NUM_COLUMNS;
 
-    const pageDates = displayDates.slice(startIdx, endIdx);
-
-    if (pageDates.length < NUM_COLUMNS && pageDates.length > 0) {
-      const lastDate = new Date(pageDates[pageDates.length - 1] + 'T00:00:00');
-      while (pageDates.length < NUM_COLUMNS) {
-        lastDate.setDate(lastDate.getDate() + 1);
-        pageDates.push(formatDateKey(lastDate));
-      }
-    }
-
-    return pageDates;
+    return displayDates.slice(startIdx, endIdx);
   }, [displayDates, weekOffset, NUM_COLUMNS]);
 
   const firstInRangeIdx = useMemo(() => {
@@ -751,7 +722,7 @@ const TimesheetGridTable = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className={fill ? 'flex flex-col gap-4 min-h-0 flex-1' : 'space-y-4'}>
       <div className="flex items-center justify-between px-2">
         {selectable ? (
           <button
@@ -779,8 +750,8 @@ const TimesheetGridTable = ({
         )}
       </div>
 
-      <div ref={containerRef} className="bg-white rounded-lg shadow border border-gray-200 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-320px)]">
-        <table className="border-collapse text-sm w-full table-fixed">
+      <div ref={containerRef} className={`bg-white rounded-lg shadow border border-gray-200 overflow-y-auto overflow-x-hidden overscroll-y-contain ${fill ? 'flex-1 min-h-0' : ''}`} style={fill ? undefined : { maxHeight }}>
+        <table className="border-separate border-spacing-0 text-sm w-full table-fixed">
           <colgroup>
             <col className="w-8" />
             <col className="w-[200px]" />

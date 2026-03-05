@@ -60,7 +60,7 @@ const BaseModal = ({
       role="presentation"
     >
       <div
-        className={`bg-white rounded-lg shadow-xl w-full ${maxWidthClass} p-6 max-h-[90vh] flex flex-col`}
+        className={`bg-white rounded-lg shadow-xl w-full ${maxWidthClass} p-6 max-h-[95vh] flex flex-col`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={modalTitleId}
@@ -89,7 +89,7 @@ const BaseModal = ({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto mb-6 p-0.5">
+        <div className="flex-1 overflow-y-auto mb-6 p-0.5 flex flex-col min-h-0">
           {children}
         </div>
 

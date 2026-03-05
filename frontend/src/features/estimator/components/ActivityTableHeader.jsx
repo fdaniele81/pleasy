@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-const ActivityTableHeader = ({ formData }) => {
+const ActivityTableHeader = ({ formData, showInDays }) => {
+  const unitLabel = showInDays ? "(d)" : "(h)";
   const { t } = useTranslation(['estimator', 'common']);
   return (
     <thead className="bg-cyan-700 border-b border-cyan-800">
@@ -18,7 +19,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('estimator:phaseAnalysis')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_analysis || 0).toFixed(1)}%
@@ -31,7 +32,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('estimator:phaseDevelopment')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_development || 0).toFixed(1)}%
@@ -44,7 +45,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('estimator:phaseInternalTest')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_internal_test || 0).toFixed(1)}%
@@ -57,7 +58,7 @@ const ActivityTableHeader = ({ formData }) => {
               UAT
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_uat || 0).toFixed(1)}%
@@ -70,7 +71,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('estimator:phaseRelease')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_release || 0).toFixed(1)}%
@@ -83,7 +84,7 @@ const ActivityTableHeader = ({ formData }) => {
               PM
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_pm || 0).toFixed(1)}%
@@ -96,7 +97,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('estimator:phaseStartup')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_startup || 0).toFixed(1)}%
@@ -109,7 +110,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('estimator:phaseDocumentation')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.pct_documentation || 0).toFixed(1)}%
@@ -122,7 +123,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('estimator:phaseContingency')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200 mb-0.5">
-              (h)
+              {unitLabel}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
               {parseFloat(formData?.contingency_percentage || 0).toFixed(1)}%
@@ -135,7 +136,7 @@ const ActivityTableHeader = ({ formData }) => {
               {t('common:total')}
             </div>
             <div className="text-[10px] lg:text-xs font-normal text-cyan-200">
-              (h)
+              {unitLabel}
             </div>
           </div>
         </th>

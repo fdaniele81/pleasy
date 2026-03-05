@@ -19,6 +19,12 @@ const TaskRow = ({ task, user, columnWidth, columnWidths, isExcluded, onToggleEx
         >
           {isExcluded ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
+        {task.hasUnspreadETC && (
+          <span
+            className="text-amber-500 font-bold text-sm shrink-0 cursor-help"
+            title={t('ganttUnspreadEtcWarning')}
+          >!</span>
+        )}
         <div
           className={`font-medium truncate ${isExcluded ? 'line-through text-gray-400' : ''}`}
           title={`${task.project_key} - ${task.task_title} (${task.client_name})`}
@@ -100,7 +106,7 @@ const GanttChart = ({ userAllocations, columnWidth, columnWidths = [], expandedU
       {userAllocations.map((user) => {
         const isExpanded = expandedUsers[user.user_id] || false;
         const visibleTasks = user.tasks && user.tasks.length > 0
-          ? user.tasks.filter(task => task.periodFTE.some(fte => fte > 0))
+          ? user.tasks.filter(task => task.periodFTE.some(fte => fte > 0) || task.hasUnspreadETC)
           : [];
         const hasTasks = visibleTasks.length > 0;
 

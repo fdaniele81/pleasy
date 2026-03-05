@@ -21,6 +21,7 @@ const EstimateNewActivityRow = memo(function EstimateNewActivityRow({
   onAdd,
   onCancel,
   nameInputRef,
+  showInDays,
 }) {
   const { t } = useTranslation(['estimator', 'common']);
 
@@ -110,11 +111,22 @@ const EstimateNewActivityRow = memo(function EstimateNewActivityRow({
       <td className="px-0 lg:px-1 py-1.5">
         <input
           type="number"
-          step="0.1"
-          value={newActivity.hours_development || ""}
-          onChange={(e) => setNewActivity({ ...newActivity, hours_development: e.target.value })}
-          onBlur={(e) => onDevInputChange(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") onDevInputChange(e.target.value); }}
+          step={showInDays ? "0.5" : "0.1"}
+          value={showInDays && newActivity.hours_development ? (parseFloat(newActivity.hours_development) / 8) : (newActivity.hours_development || "")}
+          onChange={(e) => {
+            const raw = e.target.value;
+            setNewActivity({ ...newActivity, hours_development: showInDays && raw !== "" ? parseFloat(raw) * 8 : raw });
+          }}
+          onBlur={(e) => {
+            const raw = e.target.value;
+            onDevInputChange(showInDays && raw !== "" ? parseFloat(raw) * 8 : raw);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const raw = e.target.value;
+              onDevInputChange(showInDays && raw !== "" ? parseFloat(raw) * 8 : raw);
+            }
+          }}
           onWheel={(e) => e.target.blur()}
           className="w-full px-1 py-1 border border-cyan-400 rounded text-right text-xs lg:text-sm bg-cyan-50 focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           placeholder="0"

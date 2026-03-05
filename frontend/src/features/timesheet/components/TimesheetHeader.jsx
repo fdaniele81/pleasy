@@ -8,7 +8,9 @@ import {
   SelectionFilter,
   FilterDropdown,
   FilterBar,
+  DateFilterDropdown,
   PeriodNavigator,
+  SavedFiltersDropdown,
 } from "../../../shared/ui/filters";
 
 function TimesheetHeader({
@@ -25,9 +27,14 @@ function TimesheetHeader({
   uniqueClients,
   uniqueProjects,
   onClearAllFilters,
+  onApplySavedFilter,
   onExport,
   onSubmit,
   loading,
+  startDate,
+  onStartDateChange,
+  onClearDates,
+  isDefaultDateRange,
   onPreviousPeriod,
   onNextPeriod,
   onToday,
@@ -79,12 +86,12 @@ function TimesheetHeader({
           />
         </div>
 
-        <FilterBar layout="wrap" gap="md" withBackground={false} withPadding={false}>
+        <FilterBar layout="wrap" gap="sm" withBackground={false} withPadding={false}>
           <SelectionFilter
             value={selectionFilters}
             onChange={onSelectionFiltersChange}
             variant="dropdown"
-            size="md"
+            size="sm"
           />
 
           <FilterDropdown
@@ -97,8 +104,7 @@ function TimesheetHeader({
             placeholder={t('timesheet:allTypes')}
             selectedLabel={(count) => count === 1 ? (filterProjectType[0] === 'PROJECT' ? t('timesheet:planned') : t('timesheet:calendar')) : t('timesheet:typesCount', { count })}
             title={t('timesheet:activityType')}
-            size="md"
-            minWidth="120px"
+            size="sm"
           />
 
           <FilterDropdown
@@ -112,8 +118,7 @@ function TimesheetHeader({
             placeholder={t('timesheet:allClients')}
             selectedLabel={(count) => t('timesheet:clientsCount', { count })}
             title={t('timesheet:selectClients')}
-            size="md"
-            minWidth="120px"
+            size="sm"
           />
 
           <FilterDropdown
@@ -127,8 +132,22 @@ function TimesheetHeader({
             placeholder={t('timesheet:allProjects')}
             selectedLabel={(count) => t('timesheet:projectsCount', { count })}
             title={t('timesheet:selectProjects')}
-            size="md"
-            minWidth="120px"
+            size="sm"
+          />
+
+          <DateFilterDropdown
+            startDate={startDate}
+            onStartDateChange={onStartDateChange}
+            onClear={onClearDates}
+            isDefault={isDefaultDateRange}
+            size="sm"
+          />
+
+          <SavedFiltersDropdown
+            section="timesheet"
+            currentFilters={{ filterClientIds, filterProjectIds, filterProjectType }}
+            onApplyFilter={onApplySavedFilter}
+            size="sm"
           />
 
           {(filterClientIds.length > 0 ||
@@ -143,7 +162,7 @@ function TimesheetHeader({
               icon={X}
               iconSize={14}
               title={t('timesheet:clearAllFilters')}
-              className="text-xs hover:bg-red-50"
+              className="py-1.5! px-3! text-xs hover:bg-red-50"
             >
               <span className="hidden xl:inline whitespace-nowrap">{t('timesheet:clearFilters')}</span>
             </Button>

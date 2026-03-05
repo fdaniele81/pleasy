@@ -495,8 +495,8 @@ export const TaskRow = memo(function TaskRow({
                 type="number"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                onBlur={() => handleCellBlur(task.task_id, project.project_id, 'budget', task.budget?.toString() || '0')}
-                onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'budget', task.budget?.toString() || '0')}
+                onBlur={() => handleCellBlur(task.task_id, project.project_id, 'budget', formattedBudget.toString())}
+                onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'budget', formattedBudget.toString())}
                 onWheel={(e) => e.target.blur()}
                 autoFocus
                 className="w-full px-1 py-1 border border-blue-300 rounded text-xs text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -506,7 +506,7 @@ export const TaskRow = memo(function TaskRow({
             ) : (
               <span
                 className="cursor-pointer hover:text-blue-600"
-                onClick={() => handleCellClick(task.task_id, project.project_id, 'budget', task.budget?.toString() || '0')}
+                onClick={() => handleCellClick(task.task_id, project.project_id, 'budget', formattedBudget.toString())}
               >
                 {formattedBudget}{getUnitLabel(showInDays)}
               </span>
@@ -531,8 +531,8 @@ export const TaskRow = memo(function TaskRow({
                 type="number"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                onBlur={() => handleCellBlur(task.task_id, project.project_id, 'etc', task.etc?.toString() || '0')}
-                onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'etc', task.etc?.toString() || '0')}
+                onBlur={() => handleCellBlur(task.task_id, project.project_id, 'etc', formattedEtc.toString())}
+                onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'etc', formattedEtc.toString())}
                 onWheel={(e) => e.target.blur()}
                 autoFocus
                 className="w-full px-1 py-1 border border-blue-300 rounded text-xs text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -542,7 +542,7 @@ export const TaskRow = memo(function TaskRow({
             ) : (
               <span
                 className="cursor-pointer hover:text-blue-600"
-                onClick={() => handleCellClick(task.task_id, project.project_id, 'etc', task.etc?.toString() || '0')}
+                onClick={() => handleCellClick(task.task_id, project.project_id, 'etc', formattedEtc.toString())}
               >
                 {formattedEtc}{getUnitLabel(showInDays)}
               </span>

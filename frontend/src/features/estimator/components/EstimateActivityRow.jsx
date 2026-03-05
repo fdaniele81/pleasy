@@ -33,6 +33,7 @@ const EstimateActivityRow = memo(function EstimateActivityRow({
   onTooltipEnter,
   onTooltipLeave,
   newActivityNameInputRef,
+  showInDays,
 }) {
   const { t } = useTranslation(['estimator', 'common']);
 
@@ -105,13 +106,22 @@ const EstimateActivityRow = memo(function EstimateActivityRow({
     const value = parseFloat(activity[field] || 0);
 
     if (isEditing) {
+      const displayValue = showInDays
+        ? (Math.round((value / 8) * 10) / 10)
+        : (Math.round(value * 10) / 10);
       return (
         <input
           type="number"
-          step="1"
-          value={Math.round(value)}
-          onChange={(e) => onFieldChange(index, field, parseFloat(e.target.value) || 0)}
-          onBlur={(e) => onHoursBlur(index, field, e.target.value)}
+          step={showInDays ? "0.5" : "0.1"}
+          value={displayValue}
+          onChange={(e) => {
+            const val = parseFloat(e.target.value) || 0;
+            onFieldChange(index, field, showInDays ? val * 8 : val);
+          }}
+          onBlur={(e) => {
+            const val = parseFloat(e.target.value) || 0;
+            onHoursBlur(index, field, showInDays ? val * 8 : val);
+          }}
           onWheel={(e) => e.target.blur()}
           className="w-full px-1 py-1 border border-cyan-300 rounded text-right text-xs lg:text-sm bg-cyan-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
@@ -123,13 +133,23 @@ const EstimateActivityRow = memo(function EstimateActivityRow({
 
   const renderContingencyCell = () => {
     if (isEditing) {
+      const contValue = parseFloat(actualContingency || 0);
+      const displayContingency = showInDays
+        ? (Math.round((contValue / 8) * 10) / 10)
+        : (Math.round(contValue * 10) / 10);
       return (
         <input
           type="number"
-          step="1"
-          value={Math.round(parseFloat(actualContingency || 0))}
-          onChange={(e) => onFieldChange(index, "hours_contingency", parseFloat(e.target.value) || 0)}
-          onBlur={(e) => onHoursBlur(index, "hours_contingency", e.target.value)}
+          step={showInDays ? "0.5" : "0.1"}
+          value={displayContingency}
+          onChange={(e) => {
+            const val = parseFloat(e.target.value) || 0;
+            onFieldChange(index, "hours_contingency", showInDays ? val * 8 : val);
+          }}
+          onBlur={(e) => {
+            const val = parseFloat(e.target.value) || 0;
+            onHoursBlur(index, "hours_contingency", showInDays ? val * 8 : val);
+          }}
           onWheel={(e) => e.target.blur()}
           className="w-full px-1 py-1 border border-cyan-300 rounded text-right text-xs lg:text-sm bg-cyan-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />

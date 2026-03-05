@@ -1,6 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import toastReducer from './slices/toastSlice';
+import planningFiltersReducer from './slices/planningFiltersSlice';
+import timesheetFiltersReducer from './slices/timesheetFiltersSlice';
+import tmPlanningFiltersReducer from './slices/tmPlanningFiltersSlice';
+import dashboardFiltersReducer from './slices/dashboardFiltersSlice';
 import { toastMiddleware } from './middleware/toastMiddleware';
 import { apiSlice } from '../api/apiSlice';
 
@@ -22,6 +26,10 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     toast: toastReducer,
+    planningFilters: planningFiltersReducer,
+    timesheetFilters: timesheetFiltersReducer,
+    tmPlanningFilters: tmPlanningFiltersReducer,
+    dashboardFilters: dashboardFiltersReducer,
 
     [apiSlice.reducerPath]: apiSlice.reducer,
   },

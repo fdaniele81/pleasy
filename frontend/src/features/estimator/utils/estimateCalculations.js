@@ -1,14 +1,18 @@
+function roundTo1(value) {
+  return Math.round(value * 10) / 10;
+}
+
 export function calculatePhaseHours(inputHours, percentages) {
   const input = parseFloat(inputHours) || 0;
   return {
-    hours_analysis: Math.round((input * (percentages.pct_analysis || 0)) / 100),
-    hours_development: Math.round((input * (percentages.pct_development || 0)) / 100),
-    hours_internal_test: Math.round((input * (percentages.pct_internal_test || 0)) / 100),
-    hours_uat: Math.round((input * (percentages.pct_uat || 0)) / 100),
-    hours_release: Math.round((input * (percentages.pct_release || 0)) / 100),
-    hours_pm: Math.round((input * (percentages.pct_pm || 0)) / 100),
-    hours_startup: Math.round((input * (percentages.pct_startup || 0)) / 100),
-    hours_documentation: Math.round((input * (percentages.pct_documentation || 0)) / 100),
+    hours_analysis: roundTo1((input * (percentages.pct_analysis || 0)) / 100),
+    hours_development: roundTo1((input * (percentages.pct_development || 0)) / 100),
+    hours_internal_test: roundTo1((input * (percentages.pct_internal_test || 0)) / 100),
+    hours_uat: roundTo1((input * (percentages.pct_uat || 0)) / 100),
+    hours_release: roundTo1((input * (percentages.pct_release || 0)) / 100),
+    hours_pm: roundTo1((input * (percentages.pct_pm || 0)) / 100),
+    hours_startup: roundTo1((input * (percentages.pct_startup || 0)) / 100),
+    hours_documentation: roundTo1((input * (percentages.pct_documentation || 0)) / 100),
   };
 }
 
@@ -24,7 +28,7 @@ export function calculateContingencyHours(totalHours, contingencyPercentage) {
 }
 
 export function calculateAllFromDev(devHours, percentages) {
-  const dev = Math.round(parseFloat(devHours) || 0);
+  const dev = roundTo1(parseFloat(devHours) || 0);
 
   if (dev === 0 || !percentages.pct_development || percentages.pct_development === 0) {
     return {
@@ -43,7 +47,7 @@ export function calculateAllFromDev(devHours, percentages) {
   const inputHours = dev / (percentages.pct_development / 100);
 
   return {
-    hours_development_input: Math.round(inputHours),
+    hours_development_input: roundTo1(inputHours),
     ...calculatePhaseHours(inputHours, percentages),
   };
 }
@@ -105,7 +109,7 @@ export function calculateActivityTotals(activities, contingencyPercentage) {
 
     contingencyHours += activity.hours_contingency != null
       ? parseFloat(activity.hours_contingency) || 0
-      : Math.round(calculateContingencyHours(activityTotal, contingencyPercentage));
+      : roundTo1(calculateContingencyHours(activityTotal, contingencyPercentage));
   });
 
   const totalHours =

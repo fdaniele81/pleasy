@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../constants";
@@ -7,11 +7,13 @@ import { useTimesheetData } from "./hooks/useTimesheetData";
 import { useTimesheetCalculations } from "./hooks/useTimesheetCalculations";
 import { useTimesheetModals } from "./hooks/useTimesheetModals";
 import { useTimesheetActions } from "./hooks/useTimesheetActions";
+import { useTimesheetFilters } from "./hooks/useTimesheetFilters";
 import { formatDateLocal, generateDateRange } from "../../utils/table/tableUtils";
 import { getColumnCountForWidth } from "../../constants/breakpoints";
 import TimesheetHeader from "./components/TimesheetHeader";
 import TimesheetTable from "./components/TimesheetTable";
 import { useLocale } from "../../hooks/useLocale";
+import { useTimesheetUndo } from "./hooks/useTimesheetUndo";
 
 const ExportModal = lazy(() => import("../../shared/components/modals/ExportModal"));
 const SubmissionPreviewModal = lazy(() => import("./components/SubmissionPreviewModal"));
@@ -26,8 +28,6 @@ function Timesheet() {
   const navigate = useNavigate();
 
   const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
 
   const today = useMemo(() => {
     const d = new Date();
@@ -59,11 +59,30 @@ function Timesheet() {
   } = modals;
 
   const [selectedTasks, setSelectedTasks] = useState({});
-  const [selectionFilters, setSelectionFilters] = useState([]);
-  const [showTimeOff, setShowTimeOff] = useState(true);
-  const [filterClientIds, setFilterClientIds] = useState([]);
-  const [filterProjectIds, setFilterProjectIds] = useState([]);
-  const [filterProjectType, setFilterProjectType] = useState([]);
+
+  const {
+    searchTerm, setSearchTerm,
+    selectionFilters, setSelectionFilters,
+    showTimeOff, setShowTimeOff,
+    filterClientIds, setFilterClientIds,
+    filterProjectIds, setFilterProjectIds,
+    filterProjectType, setFilterProjectType,
+  } = useTimesheetFilters();
+
+  const numDays = useMemo(() => getColumnCountForWidth(), []);
+
+  const defaultStartDate = useMemo(() => formatDateLocal(mondayOfCurrentWeek), [mondayOfCurrentWeek]);
+
+  useEffect(() => {
+    setStartDate(defaultStartDate);
+  }, [defaultStartDate]);
+
+  const endDate = useMemo(() => {
+    if (!startDate) return '';
+    const end = new Date(startDate);
+    end.setDate(end.getDate() + numDays - 1);
+    return formatDateLocal(end);
+  }, [startDate, numDays]);
 
   const { projects, loading, timeOffs, timeOffHistoricalTotals, holidays } = useTimesheetData(startDate, endDate);
 
@@ -86,15 +105,13 @@ function Timesheet() {
     [projects]
   );
 
-  const numDays = useMemo(() => getColumnCountForWidth(), []);
+  const isDefaultDateRange = startDate === defaultStartDate;
 
-  useEffect(() => {
-    const startDay = new Date(mondayOfCurrentWeek);
-    const endDay = new Date(startDay);
-    endDay.setDate(endDay.getDate() + numDays - 1);
-    setStartDate(formatDateLocal(startDay));
-    setEndDate(formatDateLocal(endDay));
-  }, [mondayOfCurrentWeek, numDays]);
+  const resetToDefaultDates = useCallback(() => {
+    setStartDate(defaultStartDate);
+  }, [defaultStartDate]);
+
+  const dateRange = generateDateRange(startDate, endDate);
 
   const isAtStart = useMemo(() => {
     if (!startDate) return true;
@@ -106,28 +123,18 @@ function Timesheet() {
   const goToPreviousPeriod = useCallback(() => {
     const newStart = new Date(startDate);
     newStart.setDate(newStart.getDate() - 7);
-    const newEnd = new Date(newStart);
-    newEnd.setDate(newEnd.getDate() + numDays - 1);
     setStartDate(formatDateLocal(newStart));
-    setEndDate(formatDateLocal(newEnd));
-  }, [startDate, numDays]);
+  }, [startDate]);
 
   const goToNextPeriod = useCallback(() => {
     const newStart = new Date(startDate);
     newStart.setDate(newStart.getDate() + 7);
-    const newEnd = new Date(newStart);
-    newEnd.setDate(newEnd.getDate() + numDays - 1);
     setStartDate(formatDateLocal(newStart));
-    setEndDate(formatDateLocal(newEnd));
-  }, [startDate, numDays]);
+  }, [startDate]);
 
   const goToToday = useCallback(() => {
-    const startDay = new Date(mondayOfCurrentWeek);
-    const endDay = new Date(startDay);
-    endDay.setDate(endDay.getDate() + numDays - 1);
-    setStartDate(formatDateLocal(startDay));
-    setEndDate(formatDateLocal(endDay));
-  }, [mondayOfCurrentWeek, numDays]);
+    setStartDate(defaultStartDate);
+  }, [defaultStartDate]);
 
   const getPeriodLabel = useCallback(() => {
     if (!startDate || !endDate) return '';
@@ -138,8 +145,6 @@ function Timesheet() {
     const endStr = end.toLocaleDateString(locale, { ...formatOptions, year: 'numeric' });
     return `${startStr} - ${endStr}`;
   }, [startDate, endDate, locale]);
-
-  const dateRange = generateDateRange(startDate, endDate);
 
   const baseFilteredTasks = useMemo(() => {
     return allTasksFlat
@@ -210,6 +215,11 @@ function Timesheet() {
     [projects, filterClientIds]
   );
 
+  const isEditingRef = useRef(false);
+  const cancelEditingRef = useRef(null);
+  const activateCellRef = useRef(null);
+  const { pushUndo } = useTimesheetUndo({ isEditingRef, cancelEditingRef, activateCellRef });
+
   const actions = useTimesheetActions({
     startDate, endDate, dateRange, projects, holidays, timeOffs, allTasksFlat, filteredTasks,
     selectedTasks, setSelectedTasks,
@@ -218,6 +228,7 @@ function Timesheet() {
     openTimeOffModal, closeTimeOffModal, timeOffModalDate, timeOffModalType,
     openTimesheetDetailsModal, closeTimesheetDetailsModal,
     timesheetDetailsModalDate, timesheetDetailsModalTask, timesheetDetailsModalIsSubmitted,
+    pushUndo, timeOffModalData,
   });
 
   const {
@@ -228,8 +239,8 @@ function Timesheet() {
     toggleTaskSelection, handleTooltipHover, handleTooltipLeave,
     handleNoteTooltipHover, handleNoteTooltipLeave,
     handleSubmitTimesheets, handleConfirmSubmission, handleExport,
-    handleCellClick, handleCellContextMenu, handleContextMenuInsertNotes,
-    handleTimeOffCellClick, handleTimeOffCellContextMenu, handleTimeOffContextMenuInsertNotes,
+    handleCellClick, handleCellContextMenu, handleContextMenuInsertNotes, handleCellNoteClick,
+    handleTimeOffCellClick, handleTimeOffCellContextMenu, handleTimeOffCellNoteClick, handleTimeOffContextMenuInsertNotes,
     handleTimeOffCellBlur, handleTimeOffKeyDown,
     handleTimeOffModalConfirm, handleTimeOffModalClose,
     handleTimeOffTotalClick, handleCloseTimeOffSummaryModal,
@@ -238,11 +249,31 @@ function Timesheet() {
     handleTaskTitleClick, handleCloseTaskModal, handleUpdateTask,
   } = actions;
 
+  isEditingRef.current = !!(taskEditCell.editingCell || timeOffEditCell.editingCell);
+  cancelEditingRef.current = () => {
+    taskEditCell.cancelEditing();
+    timeOffEditCell.cancelEditing();
+  };
+  activateCellRef.current = (command) => {
+    if (command.type === 'SAVE_TASK' || command.type === 'DELETE_TASK') {
+      taskEditCell.handleCellClick(command.taskId, command.workDate, command.previousHours);
+    } else if (command.type === 'SAVE_TIMEOFF') {
+      timeOffEditCell.handleCellClick(command.timeOffTypeId, command.date, command.previousHours);
+    }
+  };
+
   const clearAllFilters = useCallback(() => {
     setFilterClientIds([]);
     setFilterProjectIds([]);
     setFilterProjectType([]);
     setSelectionFilters([]);
+    setStartDate(defaultStartDate);
+  }, [defaultStartDate]);
+
+  const applySavedFilter = useCallback((filters) => {
+    setFilterClientIds(filters.filterClientIds || []);
+    setFilterProjectIds(filters.filterProjectIds || []);
+    setFilterProjectType(filters.filterProjectType || []);
   }, []);
 
   if (loading && !taskEditCell.editingCell && !timeOffEditCell.editingCell) {
@@ -288,8 +319,11 @@ function Timesheet() {
             filterProjectIds={filterProjectIds} onFilterProjectIdsChange={setFilterProjectIds}
             filterProjectType={filterProjectType} onFilterProjectTypeChange={setFilterProjectType}
             uniqueClients={uniqueClients} uniqueProjects={uniqueProjects}
-            onClearAllFilters={clearAllFilters} onExport={openExportModal}
+            onClearAllFilters={clearAllFilters} onApplySavedFilter={applySavedFilter} onExport={openExportModal}
             onSubmit={() => navigate(ROUTES.MY_SUBMISSIONS)} loading={loading}
+            startDate={startDate}
+            onStartDateChange={setStartDate}
+            onClearDates={resetToDefaultDates} isDefaultDateRange={isDefaultDateRange}
             onPreviousPeriod={goToPreviousPeriod} onNextPeriod={goToNextPeriod} onToday={goToToday}
             isPreviousDisabled={false} isTodayDisabled={isAtStart} periodLabel={getPeriodLabel()}
           />
@@ -310,12 +344,13 @@ function Timesheet() {
             onNoteTooltipHover={handleNoteTooltipHover} onNoteTooltipLeave={handleNoteTooltipLeave}
             onTaskTitleClick={handleTaskTitleClick}
             onCellClick={handleCellClick} onCellContextMenu={handleCellContextMenu}
+            onCellNoteClick={handleCellNoteClick}
             onCellBlur={handleCellBlur} onKeyDown={handleKeyDown}
             onEditValueChange={(value) => {
               if (taskEditCell.editingCell) taskEditCell.handleCellChange(value);
               else if (timeOffEditCell.editingCell) timeOffEditCell.handleCellChange(value);
             }}
-            onTimeOffCellClick={handleTimeOffCellClick} onTimeOffCellContextMenu={handleTimeOffCellContextMenu}
+            onTimeOffCellClick={handleTimeOffCellClick} onTimeOffCellContextMenu={handleTimeOffCellContextMenu} onTimeOffCellNoteClick={handleTimeOffCellNoteClick}
             onTimeOffCellBlur={handleTimeOffCellBlur} onTimeOffKeyDown={handleTimeOffKeyDown}
             onTimeOffTotalClick={handleTimeOffTotalClick}
           />

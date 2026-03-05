@@ -83,6 +83,8 @@ const MultiGanttPhaseBar = ({
       {/* Ore stimate dentro la barra (a destra) */}
       {daysInfo?.fitsInside && (
         <foreignObject
+          data-phase-days={`${estimateId}-${phase.key}`}
+          data-days-position="inside"
           data-no-export="true"
           x={barPosition.x + barPosition.width - daysInfo.textWidth - 4}
           y={yStart}
@@ -111,6 +113,8 @@ const MultiGanttPhaseBar = ({
       {/* Ore stimate fuori dalla barra (a destra) */}
       {daysInfo && !daysInfo.fitsInside && (
         <foreignObject
+          data-phase-days={`${estimateId}-${phase.key}`}
+          data-days-position="outside"
           data-no-export="true"
           x={barPosition.x + barPosition.width + 3}
           y={yStart}
@@ -137,61 +141,31 @@ const MultiGanttPhaseBar = ({
 
       {!isReadOnly && (
         <>
-          <g
+          <rect
             data-handle-left={`${estimateId}-${phase.key}`}
-            style={{ cursor: 'ew-resize', opacity: isActive ? 1 : 0 }}
+            x={barPosition.x - 4}
+            y={yStart}
+            width={8}
+            height={barHeight}
+            fill="transparent"
+            style={{ cursor: 'ew-resize' }}
             onMouseDown={(e) =>
               onResizeStart(e, estimateId, phase.key, 'left')
             }
-          >
-            <rect
-              x={barPosition.x - 4}
-              y={yStart}
-              width={8}
-              height={barHeight}
-              fill="transparent"
-            />
-            {[2, 5].map((offset) => (
-              <line
-                key={offset}
-                x1={barPosition.x + offset}
-                y1={yStart + 4}
-                x2={barPosition.x + offset}
-                y2={yStart + barHeight - 4}
-                stroke="white"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-              />
-            ))}
-          </g>
+          />
 
-          <g
+          <rect
             data-handle-right={`${estimateId}-${phase.key}`}
-            style={{ cursor: 'ew-resize', opacity: isActive ? 1 : 0 }}
+            x={barPosition.x + barPosition.width - 4}
+            y={yStart}
+            width={8}
+            height={barHeight}
+            fill="transparent"
+            style={{ cursor: 'ew-resize' }}
             onMouseDown={(e) =>
               onResizeStart(e, estimateId, phase.key, 'right')
             }
-          >
-            <rect
-              x={barPosition.x + barPosition.width - 4}
-              y={yStart}
-              width={8}
-              height={barHeight}
-              fill="transparent"
-            />
-            {[-5, -2].map((offset) => (
-              <line
-                key={offset}
-                x1={barPosition.x + barPosition.width + offset}
-                y1={yStart + 4}
-                x2={barPosition.x + barPosition.width + offset}
-                y2={yStart + barHeight - 4}
-                stroke="white"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-              />
-            ))}
-          </g>
+          />
         </>
       )}
     </g>

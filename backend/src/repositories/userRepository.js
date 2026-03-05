@@ -55,12 +55,33 @@ async function deleteUser(userId) {
   return result.rows[0];
 }
 
+async function getSavedFilters(userId) {
+  const result = await pool.query(
+    "SELECT saved_filters FROM users WHERE user_id = $1",
+    [userId]
+  );
+  return result.rows[0]?.saved_filters || {};
+}
+
+async function updateSavedFilters(userId, savedFilters) {
+  const result = await pool.query(
+    `UPDATE users
+     SET saved_filters = $1, updated_at = NOW()
+     WHERE user_id = $2
+     RETURNING saved_filters`,
+    [JSON.stringify(savedFilters), userId]
+  );
+  return result.rows[0]?.saved_filters;
+}
+
 export {
   createUser,
   getUserById,
   updateUser,
   updatePassword,
   deleteUser,
+  getSavedFilters,
+  updateSavedFilters,
 };
 
 export default {
@@ -69,4 +90,6 @@ export default {
   updateUser,
   updatePassword,
   deleteUser,
+  getSavedFilters,
+  updateSavedFilters,
 };

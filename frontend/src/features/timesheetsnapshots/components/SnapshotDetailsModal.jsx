@@ -82,7 +82,7 @@ const SnapshotDetailsModal = ({ isOpen, onClose, snapshotId }) => {
       )}
 
       {!detailsLoading && !detailsError && snapshotDetails && snapshotDetails.tasks?.length > 0 && (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 h-full min-h-0">
           <div className="bg-cyan-50 rounded-lg p-4 border border-cyan-100">
             <div className="flex items-center gap-6 text-sm text-gray-700 flex-wrap">
               <div className="flex items-center gap-2">
@@ -107,6 +107,7 @@ const SnapshotDetailsModal = ({ isOpen, onClose, snapshotId }) => {
             tasks={snapshotDetails.tasks}
             holidays={holidays}
             selectable={false}
+            fill
           />
         </div>
       )}

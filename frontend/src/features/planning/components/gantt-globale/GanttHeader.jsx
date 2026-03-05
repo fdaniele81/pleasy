@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Calendar, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 const GanttHeader = ({
   onClose,
@@ -13,6 +13,7 @@ const GanttHeader = ({
   periodLabel = '',
   etcReferenceDate,
   onEtcReferenceDateChange,
+  onRefresh,
   t
 }) => {
   return (
@@ -91,13 +92,22 @@ const GanttHeader = ({
         </div>
       </div>
 
-      <button
-        onClick={onClose}
-        className="text-white hover:text-gray-200 transition-colors p-1"
-        title={t('ganttClose')}
-      >
-        <X size={18} />
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={onRefresh}
+          className="text-white hover:text-gray-200 transition-colors p-1"
+          title={t('ganttRefresh')}
+        >
+          <RefreshCw size={16} />
+        </button>
+        <button
+          onClick={onClose}
+          className="text-white hover:text-gray-200 transition-colors p-1"
+          title={t('ganttClose')}
+        >
+          <X size={18} />
+        </button>
+      </div>
     </div>
   );
 };

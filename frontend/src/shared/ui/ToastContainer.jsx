@@ -14,12 +14,11 @@ function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 space-y-2 z-100">
-      {toasts.map((toast, index) => (
+    <div className="fixed top-4 right-4 z-9999 w-full max-w-md space-y-2">
+      {toasts.map((toast) => (
         <div
           key={toast.id}
           className="animate-slideIn"
-          style={{ marginTop: index > 0 ? '8px' : '0' }}
         >
           <Toast
             message={toast.message}

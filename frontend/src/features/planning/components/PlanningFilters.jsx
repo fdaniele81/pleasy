@@ -1,6 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, X, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, X, Eye, EyeOff, CalendarRange } from 'lucide-react';
 import Button from '../../../shared/ui/Button';
 import DateInput from '../../../shared/ui/DateInput';
 import {
@@ -37,9 +37,13 @@ function PlanningFilters({
   setHideProjectHeaders,
   showInDays,
   setShowInDays,
+  showTimeline,
+  setShowTimeline,
   allUsers,
   allClients,
   allProjects,
+  totalTaskCount,
+  filteredTaskCount,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const { toggleDropdown, isDropdownOpen, getDropdownRef } = useDropdownManager();
@@ -63,7 +67,7 @@ function PlanningFilters({
   }, [setFilterUserIds, setFilterStatuses, setFilterClientIds, setFilterProjectIds, setSelectionFilters, setEtcFilters, setFilterStartDate, setFilterEndDate, setDateFilterMode]);
 
   return (
-    <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+    <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-3 relative">
       <div className="mb-3">
         <SearchInput
           value={searchTerm}
@@ -368,6 +372,21 @@ function PlanningFilters({
           </span>
         </Button>
 
+        <Button
+          onClick={() => setShowTimeline(!showTimeline)}
+          color={showTimeline ? "cyan" : "gray"}
+          variant={showTimeline ? "solid" : "outline"}
+          size="sm"
+          icon={CalendarRange}
+          iconSize={14}
+          title={showTimeline ? t('planning:hideTimelineTitle') : t('planning:showTimelineTitle')}
+          className="text-xs"
+        >
+          <span className="hidden xl:inline whitespace-nowrap">
+            {showTimeline ? t('planning:timelineActive') : t('planning:timeline')}
+          </span>
+        </Button>
+
         {(filterUserIds.length > 0 || filterStatuses.length > 0 || filterClientIds.length > 0 || filterProjectIds.length > 0 ||
           selectionFilters.length > 0 || etcFilters.length > 0 || filterStartDate || filterEndDate) && (
           <Button
@@ -383,7 +402,15 @@ function PlanningFilters({
             <span className="hidden xl:inline whitespace-nowrap">{t('common:clearFilters')}</span>
           </Button>
         )}
+
+        <span className="ml-auto text-[11px] text-gray-400 tabular-nums self-end whitespace-nowrap">
+          {filteredTaskCount !== totalTaskCount
+            ? `${filteredTaskCount} / ${totalTaskCount}`
+            : totalTaskCount}
+          {' '}{t('planning:tasks', { count: filteredTaskCount })}
+        </span>
       </div>
+
     </div>
   );
 }

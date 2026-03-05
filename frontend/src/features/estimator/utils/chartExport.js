@@ -1,53 +1,251 @@
 import { calculatePeriodLabels } from './periodCalculations';
 import { getCategoryColorMap } from '../../capacity-plan/utils/categoryConfig';
 
+const NS = 'http://www.w3.org/2000/svg';
+
+// --- Helpers SVG ---
+
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS(NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, String(v)));
+  return el;
+}
+
+function svgText(x, y, text, attrs = {}) {
+  const el = svgEl('text', { x, y, ...attrs });
+  el.textContent = text;
+  return el;
+}
+
+function svgRect(x, y, w, h, attrs = {}) {
+  return svgEl('rect', { x, y, width: w, height: h, ...attrs });
+}
+
+function svgLine(x1, y1, x2, y2, attrs = {}) {
+  return svgEl('line', { x1, y1, x2, y2, ...attrs });
+}
+
+/** Tronca il testo per adattarlo a maxWidth (approx 6.5px per char a 11px) */
+function truncateLabel(text, maxWidthPx, charWidth = 6.5) {
+  const maxChars = Math.floor(maxWidthPx / charWidth);
+  if (maxChars < 3) return '';
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars - 1) + '\u2026';
+}
+
+// --- Colori stime (stessi del componente React) ---
+
+const ESTIMATE_COLORS = [
+  '#870c7f', '#0891b2', '#059669', '#d97706',
+  '#dc2626', '#7c3aed', '#2563eb', '#be185d',
+];
+
+const PHASES = [
+  { key: 'intervals_analysis', label: 'Analisi' },
+  { key: 'intervals_development', label: 'Sviluppo' },
+  { key: 'intervals_internal_test', label: 'Test Interno' },
+  { key: 'intervals_uat', label: 'UAT' },
+  { key: 'intervals_release', label: 'Release' },
+  { key: 'intervals_documentation', label: 'Documentazione' },
+  { key: 'intervals_startup', label: 'Startup' },
+  { key: 'intervals_pm', label: 'PM' },
+];
+
+// --- Calcolo range intervalli ---
+
+function getEstimateRange(phaseIntervals, totalIntervals = 10) {
+  let minStart = totalIntervals;
+  let maxEnd = 1;
+  let hasIntervals = false;
+
+  PHASES.forEach((phase) => {
+    const intervals = phaseIntervals[phase.key];
+    if (intervals && intervals.length > 0) {
+      hasIntervals = true;
+      const sorted = [...intervals].sort((a, b) => a - b);
+      minStart = Math.min(minStart, sorted[0]);
+      maxEnd = Math.max(maxEnd, sorted[sorted.length - 1]);
+    }
+  });
+
+  return hasIntervals ? { start: minStart, end: maxEnd } : null;
+}
+
+function getPhaseRange(intervals) {
+  if (!intervals || intervals.length === 0) return null;
+  const sorted = [...intervals].sort((a, b) => a - b);
+  return { start: sorted[0], end: sorted[sorted.length - 1] };
+}
+
+// --- Export Gantt SVG programmatico → PNG ---
+
 /**
- * Export del Gantt multi-stima come PNG.
- * Approccio: serializzazione diretta dell'SVG → Canvas → PNG download.
- * L'SVG usa attributi espliciti (fill, stroke, etc.), quindi non serve
- * inlineare computed styles.
+ * Costruisce un SVG Gantt programmaticamente dai dati e lo esporta come PNG.
+ * Non dipende dal DOM, produce output ad alta risoluzione.
  */
 export const exportMultiGanttAsPNG = (estimatesList, totalDays, filenamePrefix = 'gantt', { onError } = {}) => {
-  const svgElement = document.querySelector('svg[data-export-gantt="multi-gantt"]');
-  if (!svgElement) {
-    onError?.('Errore: elemento Gantt non trovato');
+  if (!estimatesList || estimatesList.length === 0) {
+    onError?.('Nessuna stima da esportare');
     return;
   }
 
   const filename = `${filenamePrefix}-gantt-${totalDays}gg-${Date.now()}.png`;
-  const svgWidth = svgElement.width.baseVal.value || svgElement.getBoundingClientRect().width;
-  const svgHeight = svgElement.height.baseVal.value || svgElement.getBoundingClientRect().height;
 
-  // Clona l'SVG e rimuovi attributi class (riferimenti a CSS esterni di Tailwind
-  // causano "tainted canvas" quando l'SVG viene caricato come immagine)
-  const clone = svgElement.cloneNode(true);
-  const stripClasses = (el) => {
-    el.removeAttribute('class');
-    Array.from(el.children).forEach(stripClasses);
-  };
-  stripClasses(clone);
+  // Dimensioni
+  const totalIntervals = 10;
+  const labelColumnWidth = 28; // colonna sinistra con nome stima verticale
+  const ganttLeftPad = 6;
+  const ganttLeft = labelColumnWidth + ganttLeftPad;
+  const availableWidth = 1100;
+  const intervalWidth = availableWidth / totalIntervals;
+  const rightMargin = 12;
+  const totalWidth = ganttLeft + availableWidth + rightMargin;
 
-  // Assicura xmlns per il rendering standalone
-  if (!clone.getAttribute('xmlns')) {
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  const barHeight = 18;
+  const phaseRowHeight = 22;
+  const topMargin = 48;
+  const bottomMargin = 8;
+  const estimateGap = 6; // spazio tra blocchi stime
+
+  // Altezza per blocco stima (solo fasi, niente summary)
+  const estimateBlockHeight = PHASES.length * phaseRowHeight;
+
+  // Calcola altezza totale
+  let totalHeight = topMargin + bottomMargin;
+  totalHeight += estimatesList.length * estimateBlockHeight;
+  totalHeight += Math.max(0, estimatesList.length - 1) * estimateGap;
+
+  // Crea SVG root
+  const svg = svgEl('svg', {
+    xmlns: NS,
+    width: totalWidth,
+    height: totalHeight,
+    viewBox: `0 0 ${totalWidth} ${totalHeight}`,
+  });
+
+  // Sfondo
+  svg.appendChild(svgRect(0, 0, totalWidth, totalHeight, { fill: '#FAFAFA', rx: 8 }));
+
+  // Period labels (header) - spostati a destra per la colonna label
+  const periodLabels = calculatePeriodLabels(totalDays);
+  periodLabels.forEach((period) => {
+    const startX = ganttLeft + period.startInterval * intervalWidth;
+    const endX = ganttLeft + period.endInterval * intervalWidth;
+    const w = endX - startX;
+
+    svg.appendChild(svgRect(startX + 2, topMargin - 40, w - 4, 32, {
+      fill: '#374151', stroke: '#1F2937', 'stroke-width': 1, rx: 4,
+    }));
+    svg.appendChild(svgText(startX + w / 2, topMargin - 19, period.label, {
+      'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: '#FFFFFF',
+      'font-family': 'system-ui, -apple-system, sans-serif',
+    }));
+  });
+
+  // Grid lines verticali
+  for (let i = 1; i <= totalIntervals; i++) {
+    const x = ganttLeft + i * intervalWidth;
+    svg.appendChild(svgLine(x, topMargin, x, totalHeight - bottomMargin, {
+      stroke: '#E5E7EB', 'stroke-width': 1, opacity: 0.5,
+    }));
   }
 
-  // Usa data URL (same-origin) invece di blob URL per evitare taint
-  const svgData = new XMLSerializer().serializeToString(clone);
+  // Righe per ogni stima
+  let currentY = topMargin;
+
+  estimatesList.forEach((estimateItem, estimateIndex) => {
+    const { estimate, phaseIntervals } = estimateItem;
+    const color = ESTIMATE_COLORS[estimateIndex % ESTIMATE_COLORS.length];
+    const blockStartY = currentY;
+
+    // --- Righe fasi ---
+    PHASES.forEach((phase, phaseIndex) => {
+      const phaseBg = phaseIndex % 2 === 0 ? '#F9FAFB' : '#FFFFFF';
+      svg.appendChild(svgRect(labelColumnWidth, currentY, totalWidth - labelColumnWidth, phaseRowHeight, { fill: phaseBg }));
+
+      const intervals = phaseIntervals[phase.key];
+      const phaseRange = getPhaseRange(intervals);
+
+      if (phaseRange) {
+        const barX = ganttLeft + (phaseRange.start - 1) * intervalWidth;
+        const barW = (phaseRange.end - phaseRange.start + 1) * intervalWidth;
+        const barY = currentY + (phaseRowHeight - barHeight) / 2;
+
+        // Barra fase
+        svg.appendChild(svgRect(barX, barY, barW, barHeight, {
+          fill: color, rx: 4, opacity: 0.75,
+        }));
+
+        // Label fase (troncata)
+        const maxLabelW = barW - 8;
+        const truncatedPhase = truncateLabel(phase.label, maxLabelW, 5.5);
+        if (truncatedPhase) {
+          svg.appendChild(svgText(barX + 5, barY + barHeight / 2 + 3.5, truncatedPhase, {
+            'font-size': 10, 'font-weight': 500, fill: '#FFFFFF',
+            'font-family': 'system-ui, -apple-system, sans-serif',
+          }));
+        }
+      }
+
+      currentY += phaseRowHeight;
+    });
+
+    // --- Colonna sinistra: rettangolo colorato con testo verticale ---
+    const blockH = currentY - blockStartY;
+    svg.appendChild(svgRect(0, blockStartY, labelColumnWidth, blockH, {
+      fill: color, opacity: 0.85,
+    }));
+
+    // Testo verticale (ruotato -90°, dal basso verso l'alto)
+    const labelText = `${estimate?.client_name || ''} - ${estimate?.title || ''}`;
+    const maxVerticalChars = Math.floor(blockH / 6);
+    const truncatedVertical = labelText.length > maxVerticalChars
+      ? labelText.slice(0, maxVerticalChars - 1) + '\u2026'
+      : labelText;
+
+    const textCenterX = labelColumnWidth / 2;
+    const textCenterY = blockStartY + blockH / 2;
+
+    svg.appendChild(svgText(textCenterX, textCenterY, truncatedVertical, {
+      'text-anchor': 'middle',
+      'dominant-baseline': 'central',
+      'font-size': 10,
+      'font-weight': 600,
+      fill: '#FFFFFF',
+      'font-family': 'system-ui, -apple-system, sans-serif',
+      transform: `rotate(-90, ${textCenterX}, ${textCenterY})`,
+    }));
+
+    // Linea separatrice tra stime (centrata nel gap)
+    if (estimateIndex < estimatesList.length - 1) {
+      const lineY = currentY + estimateGap / 2;
+      svg.appendChild(svgLine(0, lineY, totalWidth, lineY, {
+        stroke: '#D1D5DB', 'stroke-width': 1,
+      }));
+      currentY += estimateGap;
+    }
+  });
+
+  // Bordo esterno
+  svg.appendChild(svgRect(0, 0, totalWidth, totalHeight, {
+    fill: 'none', stroke: '#D1D5DB', 'stroke-width': 1, rx: 8,
+  }));
+
+  // --- SVG → Canvas → PNG ---
+  const scale = 2;
+  const svgData = new XMLSerializer().serializeToString(svg);
   const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
 
   const img = new Image();
   img.onload = () => {
-    const scale = 2;
     const canvas = document.createElement('canvas');
-    canvas.width = svgWidth * scale;
-    canvas.height = svgHeight * scale;
-
+    canvas.width = totalWidth * scale;
+    canvas.height = totalHeight * scale;
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
     ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, svgWidth, svgHeight);
-    ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
+    ctx.fillRect(0, 0, totalWidth, totalHeight);
+    ctx.drawImage(img, 0, 0, totalWidth, totalHeight);
 
     canvas.toBlob((blob) => {
       const link = document.createElement('a');
@@ -100,21 +298,21 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
   const periodLabels = calculatePeriodLabels(totalDays, t);
 
   // Costruzione SVG programmatica
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('xmlns', NS);
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
   // Sfondo bianco
-  const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  const bgRect = document.createElementNS(NS, 'rect');
   bgRect.setAttribute('width', '100%');
   bgRect.setAttribute('height', '100%');
   bgRect.setAttribute('fill', 'white');
   svg.appendChild(bgRect);
 
   // Titolo
-  const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  const title = document.createElementNS(NS, 'text');
   title.setAttribute('x', width / 2);
   title.setAttribute('y', 30);
   title.setAttribute('text-anchor', 'middle');
@@ -130,7 +328,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
     const yValue = (maxFTE / yAxisSteps) * i;
     const yPos = margin.top + chartHeight - (chartHeight / yAxisSteps) * i;
 
-    const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const gridLine = document.createElementNS(NS, 'line');
     gridLine.setAttribute('x1', margin.left);
     gridLine.setAttribute('y1', yPos);
     gridLine.setAttribute('x2', margin.left + chartWidth);
@@ -140,7 +338,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
     gridLine.setAttribute('stroke-dasharray', i === 0 ? '0' : '4,4');
     svg.appendChild(gridLine);
 
-    const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    const yLabel = document.createElementNS(NS, 'text');
     yLabel.setAttribute('x', margin.left - 10);
     yLabel.setAttribute('y', yPos + 4);
     yLabel.setAttribute('text-anchor', 'end');
@@ -169,7 +367,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
     [...categoryValues].reverse().forEach(({ key, value }) => {
       if (value > 0) {
         const segmentHeight = maxFTE > 0 ? (value / maxFTE) * chartHeight : 0;
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        const rect = document.createElementNS(NS, 'rect');
         rect.setAttribute('x', x + 5);
         rect.setAttribute('y', currentY);
         rect.setAttribute('width', barWidth - 10);
@@ -181,7 +379,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
     });
 
     if (totalFTE > 0) {
-      const totalLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      const totalLabel = document.createElementNS(NS, 'text');
       totalLabel.setAttribute('x', x + barWidth / 2);
       totalLabel.setAttribute('y', y - 8);
       totalLabel.setAttribute('text-anchor', 'middle');
@@ -201,7 +399,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
     const bandY = margin.top + chartHeight + 5;
     const bandHeight = 22;
 
-    const band = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    const band = document.createElementNS(NS, 'rect');
     band.setAttribute('x', startX + 2);
     band.setAttribute('y', bandY);
     band.setAttribute('width', bandWidth - 4);
@@ -212,7 +410,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
     band.setAttribute('rx', '4');
     svg.appendChild(band);
 
-    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    const label = document.createElementNS(NS, 'text');
     label.setAttribute('x', startX + bandWidth / 2);
     label.setAttribute('y', bandY + bandHeight / 2 + 5);
     label.setAttribute('text-anchor', 'middle');
@@ -224,7 +422,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
   });
 
   // Assi
-  const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  const yAxis = document.createElementNS(NS, 'line');
   yAxis.setAttribute('x1', margin.left);
   yAxis.setAttribute('y1', margin.top);
   yAxis.setAttribute('x2', margin.left);
@@ -233,7 +431,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
   yAxis.setAttribute('stroke-width', '2');
   svg.appendChild(yAxis);
 
-  const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  const xAxis = document.createElementNS(NS, 'line');
   xAxis.setAttribute('x1', margin.left);
   xAxis.setAttribute('y1', margin.top + chartHeight);
   xAxis.setAttribute('x2', margin.left + chartWidth);
@@ -259,7 +457,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
   legendData.forEach((item, idx) => {
     const legendX = legendStartX + idx * legendSpacing;
 
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    const rect = document.createElementNS(NS, 'rect');
     rect.setAttribute('x', legendX);
     rect.setAttribute('y', legendY);
     rect.setAttribute('width', '16');
@@ -268,7 +466,7 @@ export const exportFTEChartAsPNG = (fteResults, filenamePrefix = 'fte', totalDay
     rect.setAttribute('rx', '2');
     svg.appendChild(rect);
 
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    const text = document.createElementNS(NS, 'text');
     text.setAttribute('x', legendX + 22);
     text.setAttribute('y', legendY + 12);
     text.setAttribute('font-size', '12');

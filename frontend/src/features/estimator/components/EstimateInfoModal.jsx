@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Users } from 'lucide-react';
+import { FileText, Users, Lock, LockOpen, Check, Loader2 } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
 import UserAssignmentPanel from '../../../shared/components/UserAssignmentPanel';
-import { useLazyGetAvailableManagersQuery } from '../../projects/api/projectEndpoints';
+import { useLazyGetAvailableManagersQuery, useLazyGenerateProjectKeyQuery, useLazyValidateProjectKeyQuery } from '../../projects/api/projectEndpoints';
+import logger from '../../../utils/logger';
 
 function EstimateInfoModal({
   isOpen,
@@ -28,6 +29,11 @@ function EstimateInfoModal({
   const [isSaving, setIsSaving] = useState(false);
   const [assignedManagers, setAssignedManagers] = useState([]);
   const [fetchAvailableManagers, { data: availableManagers = [] }] = useLazyGetAvailableManagersQuery();
+  const [generateProjectKey, { isFetching: isGeneratingKey }] = useLazyGenerateProjectKeyQuery();
+  const [validateProjectKey, { isFetching: isValidatingKey }] = useLazyValidateProjectKeyQuery();
+  const [keyLocked, setKeyLocked] = useState(true);
+  const [keyValidated, setKeyValidated] = useState(false);
+  const keyValidatedRef = useRef(false);
 
   const activeClients = clients.filter(client => client.status_id === 'ACTIVE');
 
@@ -40,6 +46,11 @@ function EstimateInfoModal({
         status: status || 'DRAFT'
       });
       setLocalProjectKey(projectKey || '');
+      setKeyLocked(true);
+      setKeyValidated(false);
+      if (projectKey) {
+        keyValidatedRef.current = true;
+      }
     }
   }, [isOpen, formData, projectKey]);
 
@@ -59,6 +70,38 @@ function EstimateInfoModal({
       setAssignedManagers([]);
     }
   }, [isOpen, projectManagers, availableManagers]);
+
+  const handleValidateKey = async () => {
+    if (!localProjectKey?.trim()) return;
+    try {
+      const result = await validateProjectKey({
+        projectKey: localProjectKey.trim().toUpperCase(),
+      }).unwrap();
+      setLocalProjectKey(result.project_key);
+      keyValidatedRef.current = true;
+      setKeyValidated(true);
+      setKeyLocked(true);
+    } catch (error) {
+      logger.error('Errore validazione codice progetto:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen || isReadOnly || !keyLocked || !localFormData.title?.trim()) {
+      return;
+    }
+    if (keyValidatedRef.current) {
+      keyValidatedRef.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      generateProjectKey({ title: localFormData.title.trim() })
+        .unwrap()
+        .then((key) => setLocalProjectKey(key))
+        .catch(() => setLocalProjectKey(''));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localFormData.title, keyLocked, isOpen, isReadOnly]);
 
   const handleAddPM = (userId) => {
     const user = availableManagers.find(u => u.user_id === userId);
@@ -141,14 +184,79 @@ function EstimateInfoModal({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('estimator:projectCodeLabel')}
           </label>
-          <input
-            type="text"
-            value={localProjectKey}
-            onChange={(e) => setLocalProjectKey(e.target.value.toUpperCase())}
-            disabled={isReadOnly}
-            className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 uppercase ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-            placeholder={t('estimator:projectCodePlaceholder')}
-          />
+          {isReadOnly ? (
+            <input
+              type="text"
+              value={localProjectKey}
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed uppercase"
+            />
+          ) : (
+            <>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={isGeneratingKey ? '' : localProjectKey}
+                  onChange={(e) => setLocalProjectKey(e.target.value.toUpperCase())}
+                  readOnly={keyLocked}
+                  className={`w-full px-3 py-2 ${!keyLocked ? 'pr-20' : 'pr-10'} border border-gray-300 rounded-lg uppercase ${
+                    keyLocked
+                      ? 'bg-gray-50 text-gray-700'
+                      : 'bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500'
+                  }`}
+                  placeholder={isGeneratingKey ? t('estimator:generatingKey') : t('estimator:projectCodePlaceholder')}
+                />
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                  {!keyLocked && (
+                    <button
+                      type="button"
+                      onClick={handleValidateKey}
+                      disabled={isValidatingKey || !localProjectKey?.trim()}
+                      className="text-gray-400 hover:text-green-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={t('estimator:validateCode')}
+                    >
+                      {isValidatingKey ? (
+                        <Loader2 size={16} className="animate-spin text-cyan-500" />
+                      ) : (
+                        <Check size={16} />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newLocked = !keyLocked;
+                      setKeyLocked(newLocked);
+                      setKeyValidated(false);
+                      if (newLocked) {
+                        generateProjectKey({ title: localFormData.title.trim() || '' })
+                          .unwrap()
+                          .then((key) => setLocalProjectKey(key))
+                          .catch(() => setLocalProjectKey(''));
+                      }
+                    }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title={keyLocked ? t('estimator:unlockCode') : t('estimator:lockCode')}
+                  >
+                    {isGeneratingKey ? (
+                      <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                    ) : keyLocked ? (
+                      <Lock size={16} />
+                    ) : (
+                      <LockOpen size={16} />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {keyValidated
+                  ? t('estimator:projectCodeValidated')
+                  : keyLocked
+                    ? t('estimator:projectCodeAutoGenerated')
+                    : t('estimator:projectCodeCustom')}
+              </p>
+            </>
+          )}
         </div>
 
         <div>

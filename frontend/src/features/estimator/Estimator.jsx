@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,13 +7,15 @@ import {
   useCloneEstimateMutation
 } from './api/estimateEndpoints';
 import { useGetClientsQuery } from '../clients/api/clientEndpoints';
-import { Calculator, Copy, Edit2, Eye } from 'lucide-react';
+import { Calculator, Copy, Edit2, Eye, Lock, LockOpen, Check, Loader2 } from 'lucide-react';
 import BaseModal from '../../shared/components/BaseModal';
 import SearchFilter from '../../shared/components/SearchFilter';
 import PageHeader from '../../shared/ui/PageHeader';
 import EmptyState from '../../shared/ui/EmptyState';
 import Button from '../../shared/ui/Button';
 import { useFilteredList } from '../../hooks/useFilteredList';
+import { useLazyGenerateProjectKeyQuery, useLazyValidateProjectKeyQuery } from '../projects/api/projectEndpoints';
+import logger from '../../utils/logger';
 
 function Estimator() {
   const { t } = useTranslation(['estimator', 'common']);
@@ -32,6 +34,11 @@ function Estimator() {
   const [isCloning, setIsCloning] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [generateProjectKey, { isFetching: isGeneratingKey }] = useLazyGenerateProjectKeyQuery();
+  const [validateProjectKey, { isFetching: isValidatingKey }] = useLazyValidateProjectKeyQuery();
+  const [keyLocked, setKeyLocked] = useState(true);
+  const [keyValidated, setKeyValidated] = useState(false);
+  const keyValidatedRef = useRef(false);
 
   useEffect(() => {
     const clientIdFromUrl = searchParams.get('client_id');
@@ -73,10 +80,27 @@ function Estimator() {
     }
   };
 
+  const handleValidateCloneKey = async () => {
+    if (!cloneProjectKey?.trim()) return;
+    try {
+      const result = await validateProjectKey({
+        projectKey: cloneProjectKey.trim().toUpperCase(),
+      }).unwrap();
+      setCloneProjectKey(result.project_key);
+      keyValidatedRef.current = true;
+      setKeyValidated(true);
+      setKeyLocked(true);
+    } catch (error) {
+      logger.error('Errore validazione codice progetto:', error);
+    }
+  };
+
   const handleOpenCloneModal = (estimate) => {
     setCloneEstimateId(estimate.estimate_id);
     setCloneTitle(`${estimate.title} ${t('estimator:copyLabel')}`);
-    setCloneProjectKey(estimate.project_key ? `${estimate.project_key}_CLONE` : '');
+    setCloneProjectKey('');
+    setKeyLocked(true);
+    setKeyValidated(false);
     setCloneModalOpen(true);
   };
 
@@ -85,7 +109,27 @@ function Estimator() {
     setCloneTitle('');
     setCloneProjectKey('');
     setCloneEstimateId(null);
+    setKeyLocked(true);
+    setKeyValidated(false);
   };
+
+  useEffect(() => {
+    if (!cloneModalOpen || !keyLocked || !cloneTitle?.trim()) {
+      if (cloneModalOpen && keyLocked && !cloneTitle?.trim()) setCloneProjectKey('');
+      return;
+    }
+    if (keyValidatedRef.current) {
+      keyValidatedRef.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      generateProjectKey({ title: cloneTitle.trim() })
+        .unwrap()
+        .then((key) => setCloneProjectKey(key))
+        .catch(() => setCloneProjectKey(''));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [cloneTitle, cloneModalOpen, keyLocked]);
 
   const handleConfirmClone = async () => {
     if (!cloneTitle.trim()) return;
@@ -354,14 +398,69 @@ function Estimator() {
             <label htmlFor="clone-project-key" className="block text-sm font-medium text-gray-700 mb-1">
               {t('estimator:cloneCode')}
             </label>
-            <input
-              id="clone-project-key"
-              type="text"
-              value={cloneProjectKey}
-              onChange={(e) => setCloneProjectKey(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 font-mono"
-              placeholder={t('estimator:cloneCodePlaceholder')}
-            />
+            <div className="relative">
+              <input
+                id="clone-project-key"
+                type="text"
+                value={isGeneratingKey ? '' : cloneProjectKey}
+                onChange={(e) => setCloneProjectKey(e.target.value.toUpperCase())}
+                readOnly={keyLocked}
+                className={`w-full px-3 py-2 ${!keyLocked ? 'pr-20' : 'pr-10'} border border-gray-300 rounded-md ${
+                  keyLocked
+                    ? 'bg-gray-50 text-gray-700'
+                    : 'bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500'
+                } font-mono`}
+                placeholder={isGeneratingKey ? t('estimator:generatingKey') : t('estimator:cloneCodePlaceholder')}
+              />
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                {!keyLocked && (
+                  <button
+                    type="button"
+                    onClick={handleValidateCloneKey}
+                    disabled={isValidatingKey || !cloneProjectKey?.trim()}
+                    className="text-gray-400 hover:text-green-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    title={t('estimator:validateCode')}
+                  >
+                    {isValidatingKey ? (
+                      <Loader2 size={16} className="animate-spin text-cyan-500" />
+                    ) : (
+                      <Check size={16} />
+                    )}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newLocked = !keyLocked;
+                    setKeyLocked(newLocked);
+                    setKeyValidated(false);
+                    if (newLocked) {
+                      generateProjectKey({ title: cloneTitle.trim() || '' })
+                        .unwrap()
+                        .then((key) => setCloneProjectKey(key))
+                        .catch(() => setCloneProjectKey(''));
+                    }
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title={keyLocked ? t('estimator:unlockCode') : t('estimator:lockCode')}
+                >
+                  {isGeneratingKey ? (
+                    <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                  ) : keyLocked ? (
+                    <Lock size={16} />
+                  ) : (
+                    <LockOpen size={16} />
+                  )}
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {keyValidated
+                ? t('estimator:projectCodeValidated')
+                : keyLocked
+                  ? t('estimator:projectCodeAutoGenerated')
+                  : t('estimator:projectCodeCustom')}
+            </p>
           </div>
         </div>
       </BaseModal>

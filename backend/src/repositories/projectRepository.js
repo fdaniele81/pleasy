@@ -10,6 +10,21 @@ async function checkProjectKeyExists(clientId, projectKey) {
   return result.rowCount > 0;
 }
 
+async function checkProjectKeyExistsByCompany(companyId, projectKey) {
+  const result = await pool.query(
+    `SELECT 1 FROM project p
+       INNER JOIN client c ON p.client_id = c.client_id
+       WHERE c.company_id = $1 AND p.project_key = $2
+     UNION ALL
+     SELECT 1 FROM project_draft pd
+       INNER JOIN client c ON pd.client_id = c.client_id
+       WHERE c.company_id = $1 AND pd.project_key = $2
+     LIMIT 1`,
+    [companyId, projectKey]
+  );
+  return result.rowCount > 0;
+}
+
 async function createProject(projectId, clientId, projectKey, title, description, statusId, projectDetails, projectTypeId = 'PROJECT') {
   const result = await pool.query(
     `INSERT INTO project
@@ -106,6 +121,35 @@ async function deleteAllProjectManagers(projectId) {
   );
 }
 
+async function getClientKey(clientId) {
+  const result = await pool.query(
+    "SELECT client_key FROM client WHERE client_id = $1",
+    [clientId]
+  );
+  return result.rows[0]?.client_key;
+}
+
+async function getNextProjectNumber(clientId, prefix) {
+  const fullPrefix = prefix + '-';
+  const result = await pool.query(
+    `SELECT project_key FROM project
+     WHERE client_id = $1
+       AND project_key LIKE $2`,
+    [clientId, fullPrefix + '%']
+  );
+
+  let maxNumber = 0;
+  for (const row of result.rows) {
+    const suffix = row.project_key.substring(fullPrefix.length);
+    const num = parseInt(suffix, 10);
+    if (!isNaN(num) && num > maxNumber) {
+      maxNumber = num;
+    }
+  }
+
+  return maxNumber + 1;
+}
+
 async function getAvailableManagers(companyId) {
   const result = await pool.query(
     `SELECT
@@ -139,6 +183,8 @@ export {
   getProjectManagers,
   deleteAllProjectManagers,
   getAvailableManagers,
+  getClientKey,
+  getNextProjectNumber,
   beginTransaction,
   commitTransaction,
   rollbackTransaction,
@@ -146,6 +192,7 @@ export {
 
 export default {
   checkProjectKeyExists,
+  checkProjectKeyExistsByCompany,
   createProject,
   updateProject,
   deleteProject,
@@ -160,6 +207,8 @@ export default {
   getProjectManagers,
   deleteAllProjectManagers,
   getAvailableManagers,
+  getClientKey,
+  getNextProjectNumber,
   beginTransaction,
   commitTransaction,
   rollbackTransaction,

@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FolderKanban, Users } from 'lucide-react';
+import { FolderKanban, Users, Lock, LockOpen, Check, Loader2 } from 'lucide-react';
 import {
   useLazyGetAvailableManagersQuery,
   useLazyGetProjectManagersQuery,
   useAddProjectManagerMutation,
-  useRemoveProjectManagerMutation
+  useRemoveProjectManagerMutation,
+  useLazyGenerateProjectKeyQuery,
+  useLazyValidateProjectKeyQuery
 } from '../api/projectEndpoints';
 import { isRequired } from '../../../utils/validation/validationUtils';
 import { useFormModal } from '../../../hooks/useFormModal';
@@ -19,6 +21,35 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
   const [fetchProjectManagers, { data: currentProjectManagers = [] }] = useLazyGetProjectManagersQuery();
   const [addProjectManager, { isLoading: isAddingPM }] = useAddProjectManagerMutation();
   const [removeProjectManager, { isLoading: isRemovingPM }] = useRemoveProjectManagerMutation();
+  const [generateProjectKey, { isFetching: isGeneratingKey }] = useLazyGenerateProjectKeyQuery();
+  const [validateProjectKey, { isFetching: isValidatingKey }] = useLazyValidateProjectKeyQuery();
+  const [keyLocked, setKeyLocked] = useState(true);
+  const [keyValidated, setKeyValidated] = useState(false);
+  const keyValidatedRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setKeyLocked(true);
+      setKeyValidated(false);
+    }
+  }, [isOpen]);
+
+  const handleValidateKey = async () => {
+    if (!formData.project_key?.trim()) return;
+
+    try {
+      const result = await validateProjectKey({
+        projectKey: formData.project_key.trim().toUpperCase(),
+      }).unwrap();
+
+      handleChange('project_key', result.project_key);
+      keyValidatedRef.current = true;
+      setKeyValidated(true);
+      setKeyLocked(true);
+    } catch (error) {
+      logger.error('Errore validazione codice progetto:', error);
+    }
+  };
 
   const {
     formData,
@@ -44,14 +75,14 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
       status_id: project.status_id || 'ACTIVE'
     }),
     validate: (data) => {
+      if (!data.client_id) {
+        return t('projects:clientRequired');
+      }
       if (!isRequired(data.project_key)) {
         return t('projects:projectCodeRequired');
       }
       if (!isRequired(data.title)) {
         return t('projects:projectTitleRequired');
-      }
-      if (!data.client_id) {
-        return t('projects:clientRequired');
       }
       if (!data.status_id) {
         return t('projects:statusRequired');
@@ -75,6 +106,32 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
       fetchAvailableManagers(formData.client_id);
     }
   }, [formData.client_id, isOpen, fetchAvailableManagers]);
+
+  useEffect(() => {
+    if (!keyLocked || !formData.title?.trim() || !isOpen || isEditMode) {
+      if (!isEditMode && isOpen && keyLocked && !formData.title?.trim()) handleChange('project_key', '');
+      return;
+    }
+
+    if (keyValidatedRef.current) {
+      keyValidatedRef.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      generateProjectKey({ title: formData.title.trim() })
+        .unwrap()
+        .then((projectKey) => {
+          handleChange('project_key', projectKey);
+        })
+        .catch((error) => {
+          logger.error('Errore generazione codice progetto:', error);
+          handleChange('project_key', '');
+        });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.title, isOpen, isEditMode, keyLocked]);
 
   useEffect(() => {
     const projectId = project?.project_id;
@@ -162,19 +219,69 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('projects:projectCodeLabel')}
           </label>
-          <input
-            type="text"
-            value={formData.project_key}
-            onChange={(e) => handleChange('project_key', e.target.value.toUpperCase())}
-            placeholder={t('projects:projectCodePlaceholder')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            disabled={isEditMode}
-          />
-          {isEditMode && (
-            <p className="text-xs text-gray-500 mt-1">
-              {t('projects:projectCodeReadonly')}
-            </p>
-          )}
+          <div className="relative">
+            <input
+              type="text"
+              value={isGeneratingKey ? '' : formData.project_key}
+              onChange={(e) => handleChange('project_key', e.target.value.toUpperCase())}
+              readOnly={isEditMode || keyLocked}
+              placeholder={isGeneratingKey ? t('projects:generatingKey') : t('projects:projectCodePlaceholder')}
+              className={`w-full px-3 py-2 ${!isEditMode && !keyLocked ? 'pr-20' : 'pr-10'} border border-gray-300 rounded-lg ${
+                isEditMode || keyLocked
+                  ? 'bg-gray-50 text-gray-700'
+                  : 'bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500'
+              }`}
+            />
+            {!isEditMode && (
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                {!keyLocked && (
+                  <button
+                    type="button"
+                    onClick={handleValidateKey}
+                    disabled={isValidatingKey || !formData.project_key?.trim()}
+                    className="text-gray-400 hover:text-green-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    title={t('projects:validateCode')}
+                  >
+                    {isValidatingKey ? (
+                      <Loader2 size={16} className="animate-spin text-cyan-500" />
+                    ) : (
+                      <Check size={16} />
+                    )}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newLocked = !keyLocked;
+                    setKeyLocked(newLocked);
+                    setKeyValidated(false);
+                    if (newLocked) {
+                      handleChange('project_key', '');
+                    }
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title={keyLocked ? t('projects:unlockCode') : t('projects:lockCode')}
+                >
+                  {isGeneratingKey ? (
+                    <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                  ) : keyLocked ? (
+                    <Lock size={16} />
+                  ) : (
+                    <LockOpen size={16} />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {isEditMode
+              ? t('projects:projectCodeReadonly')
+              : keyValidated
+                ? t('projects:projectCodeValidated')
+                : keyLocked
+                  ? t('projects:projectCodeAutoGenerated')
+                  : t('projects:projectCodeCustom')}
+          </p>
         </div>
       </div>
 

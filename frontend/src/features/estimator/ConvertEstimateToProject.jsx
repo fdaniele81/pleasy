@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { ArrowRightLeft, ArrowLeft, Save, FolderKanban, Calculator, AlertTriangle } from 'lucide-react';
+import { ArrowRightLeft, ArrowLeft, Save, FolderKanban, Calculator, AlertTriangle, Lock, LockOpen, Check, Loader2 } from 'lucide-react';
 import logger from '../../utils/logger';
 import { useGetEstimatesQuery, useLazyGetEstimateQuery } from './api/estimateEndpoints';
 import { useGetClientsQuery } from '../clients/api/clientEndpoints';
@@ -12,6 +12,7 @@ import {
   useConvertDraftToProjectMutation,
   useLazyCheckProjectKeyQuery
 } from './api/projectDraftEndpoints';
+import { useLazyGenerateProjectKeyQuery, useLazyValidateProjectKeyQuery } from '../projects/api/projectEndpoints';
 import Button from '../../shared/ui/Button';
 import SelectableCellsTable from './components/SelectableCellsTable';
 import TaskModal from './components/TaskModal';
@@ -36,6 +37,8 @@ function ConvertEstimateToProject() {
   const [createOrUpdateDraft] = useCreateOrUpdateDraftMutation();
   const [convertDraftToProject] = useConvertDraftToProjectMutation();
   const [checkProjectKey] = useLazyCheckProjectKeyQuery();
+  const [generateProjectKey, { isFetching: isGeneratingKey }] = useLazyGenerateProjectKeyQuery();
+  const [validateProjectKey, { isFetching: isValidatingKey }] = useLazyValidateProjectKeyQuery();
   const currentUser = useSelector(state => state.auth.user);
 
   const confirmation = useConfirmation();
@@ -57,7 +60,25 @@ function ConvertEstimateToProject() {
   const [converting, setConverting] = useState(false);
   const [existingProjectModal, setExistingProjectModal] = useState({ open: false, project: null, resolve: null });
 
+  const [keyLocked, setKeyLocked] = useState(true);
+  const [keyValidated, setKeyValidated] = useState(false);
   const [toast, setToast] = useState(null);
+
+  const handleValidateKey = async () => {
+    if (!projectKey?.trim()) return;
+
+    try {
+      const result = await validateProjectKey({
+        projectKey: projectKey.trim().toUpperCase(),
+      }).unwrap();
+
+      setProjectKey(result.project_key);
+      setKeyValidated(true);
+      setKeyLocked(true);
+    } catch (error) {
+      logger.error('Errore validazione codice progetto:', error);
+    }
+  };
 
   const handleSelectEstimate = async (estimateId) => {
     if (!estimateId) {
@@ -69,6 +90,8 @@ function ConvertEstimateToProject() {
       setCellToTaskMap(new Map());
       setSelectedCells(new Set());
       setUsedColors([]);
+      setKeyLocked(true);
+      setKeyValidated(false);
       return;
     }
 
@@ -115,9 +138,17 @@ function ConvertEstimateToProject() {
           setUsedColors(colors);
         }
       } else {
-        const estimateData = estimates.find(e => e.estimate_id === estimateId);
-        if (estimateData?.project_key) {
-          setProjectKey(estimateData.project_key);
+        setKeyLocked(true);
+        if (estimate?.client_id) {
+          try {
+            const generatedKey = await generateProjectKey({
+              title: estimate.title || ''
+            }).unwrap();
+            setProjectKey(generatedKey);
+          } catch (error) {
+            logger.error('Error generating project key:', error);
+            setProjectKey('');
+          }
         }
       }
     } catch (error) {
@@ -662,13 +693,70 @@ function ConvertEstimateToProject() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('estimator:projectCodeLabel')}
                 </label>
-                <input
-                  type="text"
-                  value={projectKey}
-                  onChange={(e) => setProjectKey(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 uppercase"
-                  placeholder={t('estimator:projectCodePlaceholder')}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={isGeneratingKey ? '' : projectKey}
+                    onChange={(e) => setProjectKey(e.target.value.toUpperCase())}
+                    readOnly={keyLocked}
+                    className={`w-full px-3 py-2 ${!keyLocked ? 'pr-20' : 'pr-10'} border border-gray-300 rounded-lg uppercase ${
+                      keyLocked
+                        ? 'bg-gray-50 text-gray-700'
+                        : 'bg-white focus:ring-2 focus:ring-cyan-500'
+                    }`}
+                    placeholder={isGeneratingKey ? t('estimator:generatingKey') : t('estimator:projectCodePlaceholder')}
+                  />
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                    {!keyLocked && (
+                      <button
+                        type="button"
+                        onClick={handleValidateKey}
+                        disabled={isValidatingKey || !projectKey?.trim()}
+                        className="text-gray-400 hover:text-green-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        title={t('estimator:validateCode')}
+                      >
+                        {isValidatingKey ? (
+                          <Loader2 size={16} className="animate-spin text-cyan-500" />
+                        ) : (
+                          <Check size={16} />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newLocked = !keyLocked;
+                        setKeyLocked(newLocked);
+                        setKeyValidated(false);
+                        if (newLocked) {
+                          generateProjectKey({
+                            title: estimateDetails?.title || ''
+                          })
+                            .unwrap()
+                            .then((key) => setProjectKey(key))
+                            .catch(() => setProjectKey(''));
+                        }
+                      }}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      title={keyLocked ? t('estimator:unlockCode') : t('estimator:lockCode')}
+                    >
+                      {isGeneratingKey ? (
+                        <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                      ) : keyLocked ? (
+                        <Lock size={16} />
+                      ) : (
+                        <LockOpen size={16} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {keyValidated
+                    ? t('estimator:projectCodeValidated')
+                    : keyLocked
+                      ? t('estimator:projectCodeAutoGenerated')
+                      : t('estimator:projectCodeCustom')}
+                </p>
               </div>
             )}
           </div>

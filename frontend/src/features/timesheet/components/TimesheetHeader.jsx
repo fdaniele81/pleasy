@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { Download, X } from "lucide-react";
+import { Download, X, ClipboardList } from "lucide-react";
 import { getRouteIcon } from "../../../constants/routeIcons";
 import Button from "../../../shared/ui/Button";
 import {
@@ -61,6 +61,7 @@ function TimesheetHeader({
               color="cyan"
               variant="solid"
               size="md"
+              icon={ClipboardList}
             >
               {t('timesheet:submitTimesheets')}
             </Button>

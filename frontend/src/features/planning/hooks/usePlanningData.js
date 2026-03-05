@@ -96,6 +96,7 @@ export function usePlanningData() {
   return {
     projects,
     loading,
+    holidays,
     toast: null,
     availableUsers: availableUsersCache,
     addingTaskForProject,

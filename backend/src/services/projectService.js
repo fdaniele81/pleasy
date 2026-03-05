@@ -24,9 +24,9 @@ async function create(data, user) {
   const clientCompanyId = await projectRepository.getClientCompanyId(client_id);
   checkCompanyAccess(user, clientCompanyId);
 
-  const exists = await projectRepository.checkProjectKeyExists(client_id, project_key);
+  const exists = await projectRepository.checkProjectKeyExistsByCompany(user.company_id, project_key);
   if (exists) {
-    throw serviceError("Codice progetto già presente per questo cliente", 409);
+    throw serviceError("Codice progetto già presente per questa company", 409);
   }
 
   const project_id = uuidv4();
@@ -180,6 +180,98 @@ async function getAvailableManagers(clientId, user) {
   return await projectRepository.getAvailableManagers(companyId);
 }
 
+function generateKeyCandidates(title) {
+  if (!title || !title.trim()) return [];
+
+  const words = title.trim()
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 0)
+    .map(w => w.toUpperCase());
+
+  if (words.length === 0) return [];
+
+  const candidates = [];
+
+  if (words.length === 1) {
+    for (let len = 6; len <= 10; len++) {
+      candidates.push(words[0].substring(0, len));
+    }
+  } else if (words.length === 2) {
+    const combos = [[3,3], [4,3], [3,4], [4,4], [5,4], [4,5], [5,5]];
+    for (const [a, b] of combos) {
+      candidates.push(words[0].substring(0, a) + words[1].substring(0, b));
+    }
+  } else {
+    candidates.push(words[0].substring(0, 3) + words[1].substring(0, 3));
+    candidates.push(words[0].substring(0, 3) + words[1].substring(0, 3) + words[2].substring(0, 3));
+    candidates.push(words[0].substring(0, 4) + words[1].substring(0, 3) + words[2].substring(0, 3));
+    candidates.push(words[0].substring(0, 3) + words[1].substring(0, 4) + words[2].substring(0, 3));
+    candidates.push(words[0].substring(0, 3) + words[1].substring(0, 3) + words[2].substring(0, 4));
+  }
+
+  const seen = new Set();
+  return candidates.filter(c => {
+    if (seen.has(c)) return false;
+    seen.add(c);
+    return true;
+  });
+}
+
+async function generateKey(title, user) {
+  if (!title || !title.trim()) {
+    throw serviceError("Il titolo del progetto è obbligatorio per generare il codice", 400);
+  }
+
+  const companyId = user.company_id;
+  const candidates = generateKeyCandidates(title);
+
+  for (const candidate of candidates) {
+    if (!(await projectRepository.checkProjectKeyExistsByCompany(companyId, candidate))) {
+      return { project_key: candidate };
+    }
+  }
+
+  const baseCandidate = candidates[candidates.length - 1];
+  for (let suffix = 2; suffix <= 99; suffix++) {
+    const suffixStr = String(suffix);
+    const maxBaseLen = 10 - suffixStr.length;
+    const candidateKey = baseCandidate.substring(0, maxBaseLen) + suffixStr;
+
+    if (!(await projectRepository.checkProjectKeyExistsByCompany(companyId, candidateKey))) {
+      return { project_key: candidateKey };
+    }
+  }
+
+  throw serviceError("Impossibile generare un codice progetto univoco", 500);
+}
+
+async function validateKey(projectKey, user) {
+  if (!projectKey) {
+    throw serviceError("Codice progetto è obbligatorio", 400);
+  }
+
+  const companyId = user.company_id;
+  const baseKey = projectKey.trim().toUpperCase();
+
+  const exists = await projectRepository.checkProjectKeyExistsByCompany(companyId, baseKey);
+  if (!exists) {
+    return { project_key: baseKey, original_available: true };
+  }
+
+  for (let suffix = 2; suffix <= 99; suffix++) {
+    const suffixStr = String(suffix);
+    const maxBaseLen = 10 - suffixStr.length;
+    const candidateKey = baseKey.substring(0, maxBaseLen) + suffixStr;
+
+    if (!(await projectRepository.checkProjectKeyExistsByCompany(companyId, candidateKey))) {
+      return { project_key: candidateKey, original_available: false };
+    }
+  }
+
+  throw serviceError("Impossibile generare un codice progetto univoco", 500);
+}
+
 export {
   create,
   update,
@@ -189,6 +281,8 @@ export {
   getManagers,
   updateManagers,
   getAvailableManagers,
+  generateKey,
+  validateKey,
 };
 
 export default {
@@ -200,4 +294,6 @@ export default {
   getManagers,
   updateManagers,
   getAvailableManagers,
+  generateKey,
+  validateKey,
 };

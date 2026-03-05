@@ -52,14 +52,14 @@ const MultiGanttContainer = ({
     });
   }, []);
 
-  // Dimensioni
-  const barHeight = 32;
-  const rowHeight = 48;
-  const summaryRowHeight = 48; // Altezza della barra riassuntiva (sempre visibile)
+  // Dimensioni (layout compresso stile timeline Planning)
+  const barHeight = 20;
+  const rowHeight = 22;
+  const summaryRowHeight = 24;
   const leftMargin = 8;
-  const topMargin = 70;
-  const gearSpace = 32; // 4px gap + 24px icon + 4px padding
-  const bottomMargin = 40;
+  const topMargin = 46;
+  const gearSpace = 28; // 4px gap + 20px icon + 4px padding
+  const bottomMargin = 12;
 
   const availableWidth = 920;
   const intervalWidth = availableWidth / totalIntervals;
@@ -69,6 +69,7 @@ const MultiGanttContainer = ({
   const phasesPerEstimate = phases.length;
   const expandedBlockHeight = summaryRowHeight + phasesPerEstimate * rowHeight;
   const collapsedBlockHeight = summaryRowHeight;
+  const estimateGap = 6; // spazio tra blocchi stime
 
   const totalHeight = useMemo(() => {
     let height = topMargin + bottomMargin;
@@ -76,8 +77,9 @@ const MultiGanttContainer = ({
       const isExpanded = expandedEstimates.has(item.estimateId);
       height += isExpanded ? expandedBlockHeight : collapsedBlockHeight;
     });
+    height += Math.max(0, estimatesList.length - 1) * estimateGap;
     return height;
-  }, [estimatesList, expandedEstimates, expandedBlockHeight, collapsedBlockHeight]);
+  }, [estimatesList, expandedEstimates, expandedBlockHeight, collapsedBlockHeight, estimateGap]);
 
   // Hook per drag-and-drop
   const {
@@ -138,10 +140,11 @@ const MultiGanttContainer = ({
       for (let i = 0; i < estimateIndex; i++) {
         const prevExpanded = expandedEstimates.has(estimatesList[i].estimateId);
         yStart += prevExpanded ? expandedBlockHeight : collapsedBlockHeight;
+        yStart += estimateGap;
       }
       return yStart;
     },
-    [expandedEstimates, estimatesList, expandedBlockHeight, collapsedBlockHeight]
+    [expandedEstimates, estimatesList, expandedBlockHeight, collapsedBlockHeight, estimateGap]
   );
 
   return (

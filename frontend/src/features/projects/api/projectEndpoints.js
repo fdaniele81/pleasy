@@ -96,6 +96,25 @@ export const projectEndpoints = apiSlice.injectEndpoints({
         { type: TAG_TYPES.PLANNING, id: 'LIST' },
       ],
     }),
+
+    generateProjectKey: builder.query({
+      query: ({ title }) => ({
+        url: '/project/generate-key',
+        params: { title },
+      }),
+      transformResponse: (response) => response.project_key,
+    }),
+
+    validateProjectKey: builder.query({
+      query: ({ projectKey }) => ({
+        url: '/project/validate-key',
+        params: { projectKey },
+      }),
+      transformResponse: (response) => ({
+        project_key: response.project_key,
+        original_available: response.original_available,
+      }),
+    }),
   }),
 });
 
@@ -110,4 +129,6 @@ export const {
   useAddProjectManagerMutation,
   useRemoveProjectManagerMutation,
   useAssignProjectManagersMutation,
+  useLazyGenerateProjectKeyQuery,
+  useLazyValidateProjectKeyQuery,
 } = projectEndpoints;

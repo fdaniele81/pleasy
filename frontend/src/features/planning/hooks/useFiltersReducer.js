@@ -13,6 +13,7 @@ const initialFiltersState = {
   dateFilterMode: 'intersect',
   hideProjectHeaders: false,
   showInDays: false,
+  showTimeline: false,
 };
 
 const ACTIONS = {
@@ -28,6 +29,7 @@ const ACTIONS = {
   SET_DATE_FILTER_MODE: 'SET_DATE_FILTER_MODE',
   SET_HIDE_PROJECT_HEADERS: 'SET_HIDE_PROJECT_HEADERS',
   SET_SHOW_IN_DAYS: 'SET_SHOW_IN_DAYS',
+  SET_SHOW_TIMELINE: 'SET_SHOW_TIMELINE',
   RESET_ALL_FILTERS: 'RESET_ALL_FILTERS',
   SET_MULTIPLE: 'SET_MULTIPLE',
 };
@@ -58,6 +60,8 @@ function filtersReducer(state, action) {
       return { ...state, hideProjectHeaders: action.payload };
     case ACTIONS.SET_SHOW_IN_DAYS:
       return { ...state, showInDays: action.payload };
+    case ACTIONS.SET_SHOW_TIMELINE:
+      return { ...state, showTimeline: action.payload };
     case ACTIONS.RESET_ALL_FILTERS:
       return { ...initialFiltersState };
     case ACTIONS.SET_MULTIPLE:
@@ -118,6 +122,10 @@ export function useFiltersReducer() {
     dispatch({ type: ACTIONS.SET_SHOW_IN_DAYS, payload: value });
   }, []);
 
+  const setShowTimeline = useCallback((value) => {
+    dispatch({ type: ACTIONS.SET_SHOW_TIMELINE, payload: value });
+  }, []);
+
   const resetAllFilters = useCallback(() => {
     dispatch({ type: ACTIONS.RESET_ALL_FILTERS });
   }, []);
@@ -141,6 +149,7 @@ export function useFiltersReducer() {
     setDateFilterMode,
     setHideProjectHeaders,
     setShowInDays,
+    setShowTimeline,
 
     resetAllFilters,
     setMultipleFilters,

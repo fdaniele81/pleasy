@@ -41,9 +41,34 @@ export const taskEndpoints = apiSlice.injectEndpoints({
         method: 'PUT',
         body: taskData,
       }),
+      async onQueryStarted({ taskId, projectId, taskData }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          apiSlice.util.updateQueryData('getPMPlanning', undefined, (draft) => {
+            const project = draft.find(p => p.project_id === projectId);
+            if (project) {
+              const task = project.tasks?.find(t => t.task_id === taskId);
+              if (task) {
+                if (taskData.start_date !== undefined) task.start_date = taskData.start_date;
+                if (taskData.end_date !== undefined) task.end_date = taskData.end_date;
+                if (taskData.title !== undefined) task.title = taskData.title;
+                if (taskData.task_status_id !== undefined) task.task_status_id = taskData.task_status_id;
+                if (taskData.owner_id !== undefined) task.owner_id = taskData.owner_id;
+                if (taskData.budget !== undefined) task.budget = taskData.budget;
+              }
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
       invalidatesTags: (result, error, { taskId, projectId }) => [
         { type: TAG_TYPES.TASK, id: taskId },
         { type: TAG_TYPES.TASK, id: 'LIST' },
+        { type: TAG_TYPES.TASK, id: 'FTE_REPORT' },
         ...(projectId ? [{ type: TAG_TYPES.PROJECT, id: projectId }] : []),
         { type: TAG_TYPES.PROJECT, id: 'LIST' },
         { type: TAG_TYPES.PLANNING, id: 'LIST' },
@@ -161,6 +186,7 @@ export const taskEndpoints = apiSlice.injectEndpoints({
           ...(etcReferenceDate && { data_riferimento_etc: etcReferenceDate }),
         },
       }),
+      providesTags: [{ type: TAG_TYPES.TASK, id: 'FTE_REPORT' }],
       keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
     }),
   }),

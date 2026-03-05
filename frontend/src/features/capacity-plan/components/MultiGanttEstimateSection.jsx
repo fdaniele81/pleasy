@@ -1,17 +1,17 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, Settings } from 'lucide-react';
 import MultiGanttPhaseBar from './MultiGanttPhaseBar';
 
 const phases = [
-  { key: 'intervals_analysis', labelKey: 'phaseAnalysis' },
-  { key: 'intervals_development', labelKey: 'phaseDevelopment' },
-  { key: 'intervals_internal_test', labelKey: 'phaseInternalTest' },
-  { key: 'intervals_uat', labelKey: 'phaseUAT' },
-  { key: 'intervals_release', labelKey: 'phaseRelease' },
-  { key: 'intervals_documentation', labelKey: 'phaseDocumentation' },
-  { key: 'intervals_startup', labelKey: 'phaseStartup' },
-  { key: 'intervals_pm', labelKey: 'phasePM' },
+  { key: 'intervals_analysis', labelKey: 'phaseAnalysis', totalsKey: 'total_hours_analysis' },
+  { key: 'intervals_development', labelKey: 'phaseDevelopment', totalsKey: 'total_hours_development' },
+  { key: 'intervals_internal_test', labelKey: 'phaseInternalTest', totalsKey: 'total_hours_internal_test' },
+  { key: 'intervals_uat', labelKey: 'phaseUAT', totalsKey: 'total_hours_uat' },
+  { key: 'intervals_release', labelKey: 'phaseRelease', totalsKey: 'total_hours_release' },
+  { key: 'intervals_documentation', labelKey: 'phaseDocumentation', totalsKey: 'total_hours_documentation' },
+  { key: 'intervals_startup', labelKey: 'phaseStartup', totalsKey: 'total_hours_startup' },
+  { key: 'intervals_pm', labelKey: 'phasePM', totalsKey: 'total_hours_pm' },
 ];
 
 const MultiGanttEstimateSection = ({
@@ -44,6 +44,12 @@ const MultiGanttEstimateSection = ({
   const summaryBarY = estimateYStart + (summaryRowHeight - barHeight) / 2;
   const summaryLabel = `${estimate?.client_name || t('capacityPlan:clientLabel')} - ${estimate?.title || t('capacityPlan:projectLabel')}`;
 
+  const totalDays = useMemo(() => {
+    const h = estimate?.totals?.total_hours_with_contingency;
+    if (!h || h === 0) return null;
+    return Math.round((h / 8) * 10) / 10;
+  }, [estimate]);
+
   const handleBarDragStartWrapped = useCallback(
     (e, eid, phaseKey) => {
       onBarDragStart(e, eid, phaseKey, phaseIntervals);
@@ -73,7 +79,13 @@ const MultiGanttEstimateSection = ({
       {range && (() => {
         const barX = leftMargin + (range.start - 1) * intervalWidth;
         const barWidth = (range.end - range.start + 1) * intervalWidth;
-        const textAvailableWidth = barWidth - 28; // 24px per freccia + 4px padding destra
+        const textAvailableWidth = barWidth - 20;
+
+        // Giorni stimati: calcola se il testo entra nella barra
+        const daysText = totalDays ? `${totalDays}gg` : null;
+        const daysTextWidth = daysText ? daysText.length * 6 + 8 : 0;
+        const labelMinWidth = 60;
+        const daysFitInside = daysText && barWidth >= (labelMinWidth + daysTextWidth + 24);
 
         return (
             <g
@@ -87,11 +99,10 @@ const MultiGanttEstimateSection = ({
                 width={barWidth}
                 height={barHeight}
                 fill={color}
-                rx={6}
+                rx={4}
                 opacity={isBlockActive ? 0.9 : 0.75}
                 style={{ cursor: isReadOnly ? 'default' : 'pointer' }}
                 onClick={() => {
-                  // Solo se non è un drag
                   if (!dragStateRef.current.hasMoved) {
                     onToggleExpand(estimateId);
                   }
@@ -110,24 +121,24 @@ const MultiGanttEstimateSection = ({
 
               {/* Freccia expand/collapse dentro la barra */}
               <foreignObject
-                x={barX + 6}
-                y={summaryBarY + (barHeight - 16) / 2}
-                width={16}
-                height={16}
+                x={barX + 4}
+                y={summaryBarY + (barHeight - 12) / 2}
+                width={12}
+                height={12}
                 style={{ pointerEvents: 'none' }}
               >
                 {isExpanded ? (
-                  <ChevronDown size={16} color="white" />
+                  <ChevronDown size={12} color="white" />
                 ) : (
-                  <ChevronRight size={16} color="white" />
+                  <ChevronRight size={12} color="white" />
                 )}
               </foreignObject>
 
-              {/* Testo nella barra con ellipsis - allineato a sinistra dopo la freccia */}
+              {/* Testo nella barra con ellipsis */}
               <foreignObject
-                x={barX + 22}
+                x={barX + 18}
                 y={summaryBarY}
-                width={textAvailableWidth}
+                width={daysFitInside ? textAvailableWidth - daysTextWidth : textAvailableWidth}
                 height={barHeight}
                 style={{ pointerEvents: 'none' }}
               >
@@ -139,7 +150,7 @@ const MultiGanttEstimateSection = ({
                     alignItems: 'center',
                     justifyContent: 'flex-start',
                     color: 'white',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     fontWeight: 600,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -151,24 +162,79 @@ const MultiGanttEstimateSection = ({
                 </div>
               </foreignObject>
 
+              {/* Giorni stimati - dentro la barra (a destra) */}
+              {daysFitInside && (
+                <foreignObject
+                  data-no-export="true"
+                  x={barX + barWidth - daysTextWidth - 4}
+                  y={summaryBarY}
+                  width={daysTextWidth}
+                  height={barHeight}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      color: 'white',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {daysText}
+                  </div>
+                </foreignObject>
+              )}
+
+              {/* Giorni stimati - fuori dalla barra (a destra, dopo icona gear) */}
+              {daysText && !daysFitInside && (
+                <foreignObject
+                  data-no-export="true"
+                  x={barX + barWidth + (onDistributionConfig ? 28 : 4)}
+                  y={summaryBarY}
+                  width={daysTextWidth + 10}
+                  height={barHeight}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: '#6B7280',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {daysText}
+                  </div>
+                </foreignObject>
+              )}
+
               {/* Icona ingranaggio per configurazione distribuzione */}
               {onDistributionConfig && (
                 <foreignObject
                   x={barX + barWidth + 4}
-                  y={summaryBarY + (barHeight - 24) / 2}
-                  width={24}
-                  height={24}
+                  y={summaryBarY + (barHeight - 20) / 2}
+                  width={20}
+                  height={20}
                 >
                   <div
                     style={{
-                      width: 24,
-                      height: 24,
+                      width: 20,
+                      height: 20,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       backgroundColor: '#F3F4F6',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 4,
+                      borderRadius: 3,
                       cursor: 'pointer',
                     }}
                     title={t('capacityPlan:configureFTE')}
@@ -177,7 +243,7 @@ const MultiGanttEstimateSection = ({
                       onDistributionConfig(estimateId);
                     }}
                   >
-                    <Settings size={14} color="#6B7280" />
+                    <Settings size={12} color="#6B7280" />
                   </div>
                 </foreignObject>
               )}
@@ -190,6 +256,7 @@ const MultiGanttEstimateSection = ({
         const yPos = estimateYStart + summaryRowHeight + phaseIndex * rowHeight;
         const barPosition = getBasePosition(phaseIntervals[phase.key]);
         const isActive = draggedPhase === `${estimateId}-${phase.key}`;
+        const phaseHours = estimate?.totals?.[phase.totalsKey];
 
         return (
           <g key={`${estimateId}-${phase.key}`}>
@@ -214,6 +281,7 @@ const MultiGanttEstimateSection = ({
                 color={color}
                 isActive={isActive}
                 isReadOnly={isReadOnly}
+                phaseHours={phaseHours}
                 onBarDragStart={handleBarDragStartWrapped}
                 onResizeStart={handleResizeStartWrapped}
               />

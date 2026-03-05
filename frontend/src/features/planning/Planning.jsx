@@ -12,6 +12,7 @@ import SimpleGanttModal from './components/gantt-selezione/SimpleGanttModal';
 import { usePlanningData } from './hooks/usePlanningData';
 import { useTaskEdit } from './hooks/useTaskEdit';
 import { useFiltersReducer } from './hooks/useFiltersReducer';
+import { useTimelinePeriod } from './hooks/useTimelinePeriod';
 import { useConfirmation } from '../../hooks';
 import ConfirmationModal from '../../shared/ui/ConfirmationModal';
 
@@ -30,6 +31,7 @@ function Pianificazione() {
   const {
     projects,
     loading,
+    holidays,
     availableUsers,
     showGanttModal,
     setShowGanttModal,
@@ -40,6 +42,8 @@ function Pianificazione() {
     fetchSyncData,
     refetchPlanning,
   } = planningData;
+
+  const timelinePeriod = useTimelinePeriod();
 
   const [selectedTasks, setSelectedTasks] = useState({});
 
@@ -56,6 +60,7 @@ function Pianificazione() {
     dateFilterMode,
     hideProjectHeaders,
     showInDays,
+    showTimeline,
     setSearchTerm,
     setFilterUserIds,
     setFilterStatuses,
@@ -68,6 +73,7 @@ function Pianificazione() {
     setDateFilterMode,
     setHideProjectHeaders,
     setShowInDays,
+    setShowTimeline,
   } = useFiltersReducer();
 
   const [ganttRefreshTrigger, setGanttRefreshTrigger] = useState(0);
@@ -313,6 +319,14 @@ function Pianificazione() {
       })).sort((a, b) => (a.project_key || "").localeCompare(b.project_key || ""));
   }, [projects]);
 
+  const totalTaskCount = useMemo(() => {
+    return projects.filter(p => p.project_type_id !== 'TM').reduce((sum, p) => sum + p.tasks.length, 0);
+  }, [projects]);
+
+  const filteredTaskCount = useMemo(() => {
+    return filteredProjects.reduce((sum, p) => sum + p.tasks.length, 0);
+  }, [filteredProjects]);
+
   const hasSelectedTasks = useMemo(() => {
     return Object.keys(selectedTasks).some(key =>
       selectedTasks[key] && !key.startsWith('project_')
@@ -493,9 +507,13 @@ function Pianificazione() {
             setHideProjectHeaders={setHideProjectHeaders}
             showInDays={showInDays}
             setShowInDays={setShowInDays}
+            showTimeline={showTimeline}
+            setShowTimeline={setShowTimeline}
             allUsers={allUsers}
             allClients={allClients}
             allProjects={allProjects}
+            totalTaskCount={totalTaskCount}
+            filteredTaskCount={filteredTaskCount}
           />
 
           <PlanningTable
@@ -521,6 +539,21 @@ function Pianificazione() {
             handleTaskDetailsClick={handleTaskDetailsClick}
             hideProjectHeaders={hideProjectHeaders}
             showInDays={showInDays}
+            showTimeline={showTimeline}
+            refetchPlanning={refetchPlanning}
+            dateRange={timelinePeriod.dateRange}
+            columnWidth={timelinePeriod.columnWidth}
+            timelineWidth={timelinePeriod.timelineWidth}
+            todayLineOffset={timelinePeriod.todayLineOffset}
+            setAvailableWidth={timelinePeriod.setAvailableWidth}
+            holidays={holidays}
+            timeInterval={timelinePeriod.timeInterval}
+            setTimeInterval={timelinePeriod.setTimeInterval}
+            goToPrevious={timelinePeriod.goToPrevious}
+            goToNext={timelinePeriod.goToNext}
+            goToToday={timelinePeriod.goToToday}
+            isAtStart={timelinePeriod.isAtStart}
+            periodLabel={timelinePeriod.periodLabel}
           />
         </div>
       </div>

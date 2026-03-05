@@ -21,9 +21,9 @@ const MultiGanttHeader = ({
           <g key={idx}>
             <rect
               x={startX + 2}
-              y={topMargin - 60}
+              y={topMargin - 38}
               width={width - 4}
-              height={50}
+              height={30}
               fill="#374151"
               stroke="#1F2937"
               strokeWidth={1}
@@ -31,9 +31,9 @@ const MultiGanttHeader = ({
             />
             <text
               x={centerX}
-              y={topMargin - 30}
+              y={topMargin - 19}
               textAnchor="middle"
-              fontSize={14}
+              fontSize={12}
               fontWeight="700"
               fill="#FFFFFF"
             >

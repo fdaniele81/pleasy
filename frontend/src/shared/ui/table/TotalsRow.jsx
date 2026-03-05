@@ -54,11 +54,13 @@ function TotalsCell({
     right: 'text-right',
   };
 
+  const hasNoPadding = className.includes('p-0');
+
   const baseClasses = [
-    'border-t border-b border-r border-white ',
-    'px-1 py-2',
+    'border-t border-b border-r border-white',
+    !hasNoPadding && 'px-1 py-2',
     alignClasses[align],
-  ];
+  ].filter(Boolean);
 
   if (className) baseClasses.push(className);
 

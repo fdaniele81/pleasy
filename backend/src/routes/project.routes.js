@@ -11,6 +11,18 @@ router.post("/",
   projectController.create
 );
 
+router.get("/generate-key",
+  verifyToken,
+  checkRole(["ADMIN", "PM"]),
+  projectController.generateKey
+);
+
+router.get("/validate-key",
+  verifyToken,
+  checkRole(["ADMIN", "PM"]),
+  projectController.validateKey
+);
+
 router.put("/:project_id",
   verifyToken,
   checkRole(["ADMIN", "PM"]),

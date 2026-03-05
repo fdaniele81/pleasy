@@ -112,6 +112,30 @@ async function getAvailableManagers(req, res) {
   }
 }
 
+async function generateKey(req, res) {
+  try {
+    const result = await projectService.generateKey(req.query.title, req.user);
+    res.status(200).json({
+      message: "Codice progetto generato correttamente",
+      ...result,
+    });
+  } catch (err) {
+    handleError(res, err, "GENERATE PROJECT KEY ERR");
+  }
+}
+
+async function validateKey(req, res) {
+  try {
+    const result = await projectService.validateKey(req.query.projectKey, req.user);
+    res.status(200).json({
+      message: "Codice progetto verificato correttamente",
+      ...result,
+    });
+  } catch (err) {
+    handleError(res, err, "VALIDATE PROJECT KEY ERR");
+  }
+}
+
 export {
   create,
   update,
@@ -121,6 +145,8 @@ export {
   getManagers,
   updateManagers,
   getAvailableManagers,
+  generateKey,
+  validateKey,
 };
 
 export default {
@@ -132,4 +158,6 @@ export default {
   getManagers,
   updateManagers,
   getAvailableManagers,
+  generateKey,
+  validateKey,
 };

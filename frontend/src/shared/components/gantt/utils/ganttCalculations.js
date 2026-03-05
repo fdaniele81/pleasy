@@ -34,6 +34,34 @@ export const TASK_COLORS = {
 
 export const NEUTRAL_COLOR = '#6366F1';
 
+// Palette of distinct colors for different users
+const USER_COLOR_PALETTE = [
+  '#3B82F6', // blue
+  '#F59E0B', // amber
+  '#8B5CF6', // violet
+  '#10B981', // emerald
+  '#EF4444', // red
+  '#EC4899', // pink
+  '#14B8A6', // teal
+  '#F97316', // orange
+  '#6366F1', // indigo
+  '#84CC16', // lime
+  '#06B6D4', // cyan
+  '#A855F7', // purple
+];
+
+// Map to cache user -> color assignments
+const userColorMap = new Map();
+
+export function getUserColor(userId) {
+  if (!userId) return '#94A3B8'; // gray for unassigned
+  if (userColorMap.has(userId)) return userColorMap.get(userId);
+  const index = userColorMap.size % USER_COLOR_PALETTE.length;
+  const color = USER_COLOR_PALETTE[index];
+  userColorMap.set(userId, color);
+  return color;
+}
+
 export function estimateTextWidth(text, fontWeight = 500) {
   if (!text) return 0;
   const charWidth = fontWeight >= 600 ? AVG_CHAR_WIDTH * 1.1 : AVG_CHAR_WIDTH;

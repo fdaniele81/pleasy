@@ -4,10 +4,11 @@ function TableContainer({
   className = '',
   rounded = true,
   shadow = true,
+  overflowX = 'auto',
 }) {
   const baseClasses = [
     'bg-white',
-    'overflow-x-auto',
+    `overflow-x-${overflowX}`,
     'overflow-y-auto',
     'overscroll-y-contain',
   ];

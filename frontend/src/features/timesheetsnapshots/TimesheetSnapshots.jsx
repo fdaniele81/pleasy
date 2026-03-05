@@ -7,6 +7,7 @@ import {
 import { FileText, RefreshCw, Calendar, Clock, User, ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import SearchFilter from '../../shared/components/SearchFilter';
 import PageHeader from '../../shared/ui/PageHeader';
+import DateInput from '../../shared/ui/DateInput';
 import { useAuth } from '../../hooks';
 import { useLocale } from '../../hooks/useLocale';
 
@@ -142,37 +143,35 @@ function TimesheetSnapshots() {
             placeholder={t('timesheetsnapshots:searchPlaceholder')}
           />
 
-          <div className="mb-4 flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">{t('timesheetsnapshots:periodLabel')}</label>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-                <span className="text-gray-500">-</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-                {(startDate || endDate) && (
-                  <button
-                    onClick={() => {
-                      setStartDate('');
-                      setEndDate('');
-                    }}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded transition-colors"
-                  >
-                    {t('timesheetsnapshots:clearDates')}
-                  </button>
-                )}
-              </div>
+          <div className="mb-4 flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">{t('timesheetsnapshots:periodLabel')}</label>
+            <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
+            <div className="min-w-[130px]">
+              <DateInput
+                value={startDate}
+                onChange={setStartDate}
+                className="w-full"
+              />
             </div>
+            <span className="text-gray-400 text-xs">&mdash;</span>
+            <div className="min-w-[130px]">
+              <DateInput
+                value={endDate}
+                onChange={setEndDate}
+                className="w-full"
+              />
+            </div>
+            {(startDate || endDate) && (
+              <button
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                }}
+                className="text-xs text-cyan-600 hover:text-cyan-700 font-medium ml-1"
+              >
+                {t('timesheetsnapshots:clearDates')}
+              </button>
+            )}
           </div>
 
         {userGroups.length === 0 ? (

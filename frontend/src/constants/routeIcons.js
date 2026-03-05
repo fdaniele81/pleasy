@@ -14,7 +14,8 @@ import {
   ArrowRightLeft,
   FileSpreadsheet,
   Timer,
-  Layers
+  Layers,
+  Send
 } from "lucide-react";
 import { ROUTES } from './routes';
 
@@ -35,6 +36,7 @@ export const routeIcons = {
   [ROUTES.TIMESHEET_SNAPSHOTS]: ClipboardCheck,
   [ROUTES.RECONCILIATION]: FileSpreadsheet,
   [ROUTES.TM_PLANNING]: Timer,
+  [ROUTES.MY_SUBMISSIONS]: Send,
 };
 
 export const getRouteIcon = (path) => {

@@ -2,7 +2,7 @@
   "title": "Timesheets",
   "exportExcel": "Export to Excel",
   "export": "Export",
-  "submitTimesheets": "Submit Timesheets",
+  "submitTimesheets": "My Submissions",
   "searchPlaceholder": "Search by client, project or activity...",
   "plannedActivities": "Planned activities",
   "calendarClients": "Calendar clients",
@@ -99,5 +99,6 @@
   "excelDate": "Date",
   "excelNotes": "Notes",
   "excelTotal": "TOTAL",
-  "excelNoData": "No data in the selected period"
+  "excelNoData": "No data in the selected period",
+  "noTimesheetInRange": "No timesheets in the selected period"
 }

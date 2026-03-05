@@ -2,7 +2,7 @@
   "title": "Consuntivi",
   "exportExcel": "Esporta in Excel",
   "export": "Export",
-  "submitTimesheets": "Sottometti Consuntivi",
+  "submitTimesheets": "I Miei Consuntivi",
   "searchPlaceholder": "Cerca per cliente, progetto o attività...",
   "plannedActivities": "Attività a piano",
   "calendarClients": "Calendario clienti",
@@ -99,5 +99,6 @@
   "excelDate": "Data",
   "excelNotes": "Note",
   "excelTotal": "TOTALE",
-  "excelNoData": "Nessun dato nel periodo selezionato"
+  "excelNoData": "Nessun dato nel periodo selezionato",
+  "noTimesheetInRange": "Nessun consuntivo nel periodo selezionato"
 }

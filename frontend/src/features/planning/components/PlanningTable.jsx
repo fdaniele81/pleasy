@@ -42,18 +42,6 @@ export const PlanningTable = memo(function PlanningTable({
 }) {
   const { t } = useTranslation(['planning', 'common']);
 
-  if (filteredProjects.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <p className="text-gray-500 text-lg">
-          {projects.length === 0
-            ? t('planning:noProjects')
-            : t('planning:noActivitiesMatch')}
-        </p>
-      </div>
-    );
-  }
-
   const grandTotals = useMemo(() => getGrandTotals(filteredProjects), [filteredProjects]);
 
   const { globalMinDate, globalMaxDate } = useMemo(() => {
@@ -91,6 +79,18 @@ export const PlanningTable = memo(function PlanningTable({
       emptyProjects.every((p) => selectedTasks[`project_${p.project_id}`]);
     return allTasksSelected && allEmptyProjectsSelected;
   }, [filteredProjects, selectedTasks]);
+
+  if (filteredProjects.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-8 text-center">
+        <p className="text-gray-500 text-lg">
+          {projects.length === 0
+            ? t('planning:noProjects')
+            : t('planning:noActivitiesMatch')}
+        </p>
+      </div>
+    );
+  }
 
   const handleSelectAll = (e) => {
     const allTaskIds = filteredProjects.flatMap((p) =>

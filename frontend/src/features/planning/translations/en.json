@@ -48,6 +48,8 @@
   "initialActualDescription": "Enter the initial hours already recorded for the activity",
   "initialActualExplanation": "This value represents work already done before tracking started in PleasyHub (e.g. hours from external systems or prior work).",
   "initialActualLabel": "Initial Actual Hours",
+  "actualFromTimesheets": "Actual from timesheets",
+  "actualTotal": "Total Actual",
   "hideHolidayArea": "Hide planning suspension area",
   "showHolidayArea": "Show planning suspension area (e.g. holidays)",
   "taskDetails": "Task Details",

@@ -12,6 +12,8 @@ const TimesheetGridTable = ({
   selectable = false,
   selectedTimesheetIds = new Set(),
   onSelectionChange,
+  filterStartDate,
+  filterEndDate,
 }) => {
   const { t } = useTranslation(['planning', 'common']);
   const locale = useLocale();
@@ -29,31 +31,33 @@ const TimesheetGridTable = ({
   const NUM_COLUMNS = 14;
 
   const formatDateKey = (date) => {
-    return date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   };
 
   const allAvailableDates = useMemo(() => {
     if (tasks.length === 0) return [];
 
-    let minDate = null;
-    let maxDate = null;
+    let minStr = null;
+    let maxStr = null;
 
     tasks.forEach(task => {
       task.timesheets.forEach(ts => {
-        const tsDate = new Date(ts.timesheet_date);
-        if (!minDate || tsDate < minDate) minDate = new Date(tsDate);
-        if (!maxDate || tsDate > maxDate) maxDate = new Date(tsDate);
+        const d = ts.timesheet_date;
+        if (!minStr || d < minStr) minStr = d;
+        if (!maxStr || d > maxStr) maxStr = d;
       });
     });
 
-    if (!minDate || !maxDate) return [];
+    if (!minStr || !maxStr) return [];
 
     const allDates = [];
-    const currentDate = new Date(minDate);
-    currentDate.setHours(0, 0, 0, 0);
-    maxDate.setHours(0, 0, 0, 0);
+    const currentDate = new Date(minStr + 'T00:00:00');
+    const endDate = new Date(maxStr + 'T00:00:00');
 
-    while (currentDate <= maxDate) {
+    while (currentDate <= endDate) {
       allDates.push(formatDateKey(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -61,20 +65,71 @@ const TimesheetGridTable = ({
     return allDates;
   }, [tasks]);
 
+  const hasActiveFilter = Boolean(filterStartDate || filterEndDate);
+
+  const isDateInRange = useCallback((dateStr) => {
+    if (!hasActiveFilter) return true;
+    if (filterStartDate && dateStr < filterStartDate) return false;
+    if (filterEndDate && dateStr > filterEndDate) return false;
+    return true;
+  }, [hasActiveFilter, filterStartDate, filterEndDate]);
+
+  const displayDates = useMemo(() => {
+    if (!hasActiveFilter || allAvailableDates.length === 0) return allAvailableDates;
+
+    const effectiveStart = filterStartDate || allAvailableDates[0];
+    const effectiveEnd = filterEndDate || allAvailableDates[allAvailableDates.length - 1];
+
+    if (!effectiveStart || !effectiveEnd) return allAvailableDates;
+
+    const rangeDates = [];
+    const current = new Date(effectiveStart + 'T00:00:00');
+    const end = new Date(effectiveEnd + 'T00:00:00');
+    while (current <= end) {
+      rangeDates.push(formatDateKey(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    if (rangeDates.length === 0) return allAvailableDates;
+
+    if (rangeDates.length < NUM_COLUMNS) {
+      const padLeft = Math.floor((NUM_COLUMNS - rangeDates.length) / 2);
+      const padRight = NUM_COLUMNS - rangeDates.length - padLeft;
+
+      const result = [];
+      const startDate = new Date(effectiveStart + 'T00:00:00');
+      for (let i = padLeft; i > 0; i--) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() - i);
+        result.push(formatDateKey(d));
+      }
+      result.push(...rangeDates);
+      const endDate2 = new Date(effectiveEnd + 'T00:00:00');
+      for (let i = 1; i <= padRight; i++) {
+        const d = new Date(endDate2);
+        d.setDate(d.getDate() + i);
+        result.push(formatDateKey(d));
+      }
+      return result;
+    }
+
+    return rangeDates;
+  }, [hasActiveFilter, filterStartDate, filterEndDate, allAvailableDates, NUM_COLUMNS]);
+
   const totalPages = useMemo(() => {
-    return Math.ceil(allAvailableDates.length / NUM_COLUMNS) || 1;
-  }, [allAvailableDates, NUM_COLUMNS]);
+    return Math.ceil(displayDates.length / NUM_COLUMNS) || 1;
+  }, [displayDates, NUM_COLUMNS]);
 
   const uniqueDates = useMemo(() => {
-    if (allAvailableDates.length === 0) return [];
+    if (displayDates.length === 0) return [];
 
     const startIdx = weekOffset * NUM_COLUMNS;
     const endIdx = startIdx + NUM_COLUMNS;
 
-    let pageDates = allAvailableDates.slice(startIdx, endIdx);
+    const pageDates = displayDates.slice(startIdx, endIdx);
 
     if (pageDates.length < NUM_COLUMNS && pageDates.length > 0) {
-      const lastDate = new Date(pageDates[pageDates.length - 1]);
+      const lastDate = new Date(pageDates[pageDates.length - 1] + 'T00:00:00');
       while (pageDates.length < NUM_COLUMNS) {
         lastDate.setDate(lastDate.getDate() + 1);
         pageDates.push(formatDateKey(lastDate));
@@ -82,7 +137,28 @@ const TimesheetGridTable = ({
     }
 
     return pageDates;
-  }, [allAvailableDates, weekOffset, NUM_COLUMNS]);
+  }, [displayDates, weekOffset, NUM_COLUMNS]);
+
+  const firstInRangeIdx = useMemo(() => {
+    if (!hasActiveFilter) return -1;
+    return uniqueDates.findIndex(d => isDateInRange(d));
+  }, [uniqueDates, isDateInRange, hasActiveFilter]);
+
+  const lastInRangeIdx = useMemo(() => {
+    if (!hasActiveFilter) return -1;
+    for (let i = uniqueDates.length - 1; i >= 0; i--) {
+      if (isDateInRange(uniqueDates[i])) return i;
+    }
+    return -1;
+  }, [uniqueDates, isDateInRange, hasActiveFilter]);
+
+  const getBoundaryCls = useCallback((dateIdx) => {
+    if (!hasActiveFilter) return '';
+    const parts = [];
+    if (dateIdx === firstInRangeIdx && dateIdx > 0) parts.push('border-l-2 border-l-cyan-400');
+    if (dateIdx === lastInRangeIdx && dateIdx < uniqueDates.length - 1) parts.push('border-r-2 border-r-cyan-400');
+    return parts.join(' ');
+  }, [hasActiveFilter, firstInRangeIdx, lastInRangeIdx, uniqueDates.length]);
 
   const goToPreviousPeriod = useCallback(() => {
     setWeekOffset(prev => Math.max(0, prev - 1));
@@ -102,8 +178,8 @@ const TimesheetGridTable = ({
   const getPeriodLabel = useCallback(() => {
     if (uniqueDates.length === 0) return '';
 
-    const startDate = new Date(uniqueDates[0]);
-    const endDate = new Date(uniqueDates[uniqueDates.length - 1]);
+    const startDate = new Date(uniqueDates[0] + 'T00:00:00');
+    const endDate = new Date(uniqueDates[uniqueDates.length - 1] + 'T00:00:00');
 
     const formatOptions = { day: 'numeric', month: 'short' };
     const startStr = startDate.toLocaleDateString(locale, formatOptions);
@@ -113,14 +189,14 @@ const TimesheetGridTable = ({
   }, [uniqueDates]);
 
   const isNonWorkingDay = useCallback((dateStr) => {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr + 'T00:00:00');
     return isWeekend(date) || isHoliday(date, holidays);
   }, [holidays]);
 
   const getHolidayName = useCallback((dateStr) => {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr + 'T00:00:00');
     const holiday = holidays.find(h => {
-      const holidayDate = new Date(h.date);
+      const holidayDate = new Date(h.date + 'T00:00:00');
       if (h.is_recurring) {
         return date.getMonth() === holidayDate.getMonth() && date.getDate() === holidayDate.getDate();
       }
@@ -133,11 +209,13 @@ const TimesheetGridTable = ({
     const ids = new Set();
     tasks.forEach(task => {
       task.timesheets.forEach(ts => {
-        ids.add(ts.timesheet_id);
+        if (isDateInRange(ts.timesheet_date)) {
+          ids.add(ts.timesheet_id);
+        }
       });
     });
     return ids;
-  }, [tasks]);
+  }, [tasks, isDateInRange]);
 
   const groupedData = useMemo(() => {
     const typeGroups = {
@@ -221,13 +299,13 @@ const TimesheetGridTable = ({
     let total = 0;
     tasks.forEach(task => {
       task.timesheets.forEach(ts => {
-        if (uniqueDates.includes(ts.timesheet_date)) {
+        if (isDateInRange(ts.timesheet_date)) {
           total += ts.hours;
         }
       });
     });
     return total;
-  }, [tasks, uniqueDates]);
+  }, [tasks, isDateInRange]);
 
   const dailyTotals = useMemo(() => {
     const totals = {};
@@ -252,6 +330,10 @@ const TimesheetGridTable = ({
     setExpandedProjects({});
     setWeekOffset(0);
   }, [tasks]);
+
+  useEffect(() => {
+    setWeekOffset(0);
+  }, [filterStartDate, filterEndDate]);
 
   useEffect(() => {
     return () => {
@@ -319,7 +401,7 @@ const TimesheetGridTable = ({
         client.projects.forEach(project => {
           project.tasks.forEach(task => {
             task.timesheets.forEach(ts => {
-              if (uniqueDates.includes(ts.timesheet_date)) {
+              if (isDateInRange(ts.timesheet_date)) {
                 clientTotal += ts.hours;
               }
             });
@@ -329,7 +411,7 @@ const TimesheetGridTable = ({
       });
     });
     return totals;
-  }, [groupedData, uniqueDates]);
+  }, [groupedData, isDateInRange]);
 
   const projectTotals = useMemo(() => {
     const totals = {};
@@ -340,7 +422,7 @@ const TimesheetGridTable = ({
           let projectTotal = 0;
           project.tasks.forEach(task => {
             task.timesheets.forEach(ts => {
-              if (uniqueDates.includes(ts.timesheet_date)) {
+              if (isDateInRange(ts.timesheet_date)) {
                 projectTotal += ts.hours;
               }
             });
@@ -350,21 +432,21 @@ const TimesheetGridTable = ({
       });
     });
     return totals;
-  }, [groupedData, uniqueDates]);
+  }, [groupedData, isDateInRange]);
 
   const taskTotals = useMemo(() => {
     const totals = {};
     tasks.forEach(task => {
       let taskTotal = 0;
       task.timesheets.forEach(ts => {
-        if (uniqueDates.includes(ts.timesheet_date)) {
+        if (isDateInRange(ts.timesheet_date)) {
           taskTotal += ts.hours;
         }
       });
       totals[task.task_id] = taskTotal;
     });
     return totals;
-  }, [tasks, uniqueDates]);
+  }, [tasks, isDateInRange]);
 
   const clientDailyTotals = useMemo(() => {
     const totals = {};
@@ -374,7 +456,7 @@ const TimesheetGridTable = ({
         totals[key] = {};
         uniqueDates.forEach(dateStr => {
           let hours = 0;
-          let timesheetIds = [];
+          const timesheetIds = [];
           client.projects.forEach(project => {
             project.tasks.forEach(task => {
               const ts = task.timesheets.find(t => t.timesheet_date === dateStr);
@@ -400,7 +482,7 @@ const TimesheetGridTable = ({
           totals[key] = {};
           uniqueDates.forEach(dateStr => {
             let hours = 0;
-            let timesheetIds = [];
+            const timesheetIds = [];
             project.tasks.forEach(task => {
               const ts = task.timesheets.find(t => t.timesheet_date === dateStr);
               if (ts) {
@@ -422,6 +504,7 @@ const TimesheetGridTable = ({
   }, [selectable, onSelectionChange]);
 
   const toggleClientDateSelection = useCallback((typeId, clientId, dateStr) => {
+    if (!isDateInRange(dateStr)) return;
     const key = `${typeId}-${clientId}`;
     const { timesheetIds } = clientDailyTotals[key]?.[dateStr] || { timesheetIds: [] };
     if (timesheetIds.length === 0) return;
@@ -437,27 +520,38 @@ const TimesheetGridTable = ({
       }
       return next;
     });
-  }, [clientDailyTotals, selectedTimesheetIds, updateSelection]);
+  }, [clientDailyTotals, selectedTimesheetIds, updateSelection, isDateInRange]);
 
   const isClientDateFullySelected = useCallback((typeId, clientId, dateStr) => {
+    if (!isDateInRange(dateStr)) return false;
     const key = `${typeId}-${clientId}`;
     const { timesheetIds } = clientDailyTotals[key]?.[dateStr] || { timesheetIds: [] };
     return timesheetIds.length > 0 && timesheetIds.every(id => selectedTimesheetIds.has(id));
-  }, [clientDailyTotals, selectedTimesheetIds]);
+  }, [clientDailyTotals, selectedTimesheetIds, isDateInRange]);
 
   const isClientDatePartiallySelected = useCallback((typeId, clientId, dateStr) => {
+    if (!isDateInRange(dateStr)) return false;
     const key = `${typeId}-${clientId}`;
     const { timesheetIds } = clientDailyTotals[key]?.[dateStr] || { timesheetIds: [] };
     const selectedCount = timesheetIds.filter(id => selectedTimesheetIds.has(id)).length;
     return selectedCount > 0 && selectedCount < timesheetIds.length;
-  }, [clientDailyTotals, selectedTimesheetIds]);
+  }, [clientDailyTotals, selectedTimesheetIds, isDateInRange]);
 
   const toggleClientSelection = useCallback((typeId, clientId) => {
-    const key = `${typeId}-${clientId}`;
+    const clientGroup = groupedData
+      .find(tg => tg.type_id === typeId)?.clients
+      .find(c => c.client_id === clientId);
+    if (!clientGroup) return;
+
     const allTimesheetIdsForClient = [];
-    uniqueDates.forEach(dateStr => {
-      const { timesheetIds } = clientDailyTotals[key]?.[dateStr] || { timesheetIds: [] };
-      allTimesheetIdsForClient.push(...timesheetIds);
+    clientGroup.projects.forEach(project => {
+      project.tasks.forEach(task => {
+        task.timesheets.forEach(ts => {
+          if (isDateInRange(ts.timesheet_date)) {
+            allTimesheetIdsForClient.push(ts.timesheet_id);
+          }
+        });
+      });
     });
     if (allTimesheetIdsForClient.length === 0) return;
 
@@ -472,14 +566,28 @@ const TimesheetGridTable = ({
       }
       return next;
     });
-  }, [clientDailyTotals, uniqueDates, selectedTimesheetIds, updateSelection]);
+  }, [groupedData, selectedTimesheetIds, updateSelection, isDateInRange]);
 
   const toggleProjectSelection = useCallback((clientId, projectId) => {
-    const key = `${clientId}-${projectId}`;
+    let projectGroup = null;
+    for (const tg of groupedData) {
+      for (const c of tg.clients) {
+        if (c.client_id === clientId) {
+          projectGroup = c.projects.find(p => p.project_id === projectId);
+          if (projectGroup) break;
+        }
+      }
+      if (projectGroup) break;
+    }
+    if (!projectGroup) return;
+
     const allTimesheetIdsForProject = [];
-    uniqueDates.forEach(dateStr => {
-      const { timesheetIds } = projectDailyTotals[key]?.[dateStr] || { timesheetIds: [] };
-      allTimesheetIdsForProject.push(...timesheetIds);
+    projectGroup.tasks.forEach(task => {
+      task.timesheets.forEach(ts => {
+        if (isDateInRange(ts.timesheet_date)) {
+          allTimesheetIdsForProject.push(ts.timesheet_id);
+        }
+      });
     });
     if (allTimesheetIdsForProject.length === 0) return;
 
@@ -494,9 +602,10 @@ const TimesheetGridTable = ({
       }
       return next;
     });
-  }, [projectDailyTotals, uniqueDates, selectedTimesheetIds, updateSelection]);
+  }, [groupedData, selectedTimesheetIds, updateSelection, isDateInRange]);
 
   const toggleProjectDateSelection = useCallback((clientId, projectId, dateStr) => {
+    if (!isDateInRange(dateStr)) return;
     const key = `${clientId}-${projectId}`;
     const { timesheetIds } = projectDailyTotals[key][dateStr];
     if (timesheetIds.length === 0) return;
@@ -512,20 +621,22 @@ const TimesheetGridTable = ({
       }
       return next;
     });
-  }, [projectDailyTotals, selectedTimesheetIds, updateSelection]);
+  }, [projectDailyTotals, selectedTimesheetIds, updateSelection, isDateInRange]);
 
   const isProjectDateFullySelected = useCallback((clientId, projectId, dateStr) => {
+    if (!isDateInRange(dateStr)) return false;
     const key = `${clientId}-${projectId}`;
     const { timesheetIds } = projectDailyTotals[key]?.[dateStr] || { timesheetIds: [] };
     return timesheetIds.length > 0 && timesheetIds.every(id => selectedTimesheetIds.has(id));
-  }, [projectDailyTotals, selectedTimesheetIds]);
+  }, [projectDailyTotals, selectedTimesheetIds, isDateInRange]);
 
   const isProjectDatePartiallySelected = useCallback((clientId, projectId, dateStr) => {
+    if (!isDateInRange(dateStr)) return false;
     const key = `${clientId}-${projectId}`;
     const { timesheetIds } = projectDailyTotals[key]?.[dateStr] || { timesheetIds: [] };
     const selectedCount = timesheetIds.filter(id => selectedTimesheetIds.has(id)).length;
     return selectedCount > 0 && selectedCount < timesheetIds.length;
-  }, [projectDailyTotals, selectedTimesheetIds]);
+  }, [projectDailyTotals, selectedTimesheetIds, isDateInRange]);
 
   const toggleTimesheetSelection = useCallback((timesheetId) => {
     updateSelection(prev => {
@@ -540,7 +651,10 @@ const TimesheetGridTable = ({
   }, [updateSelection]);
 
   const toggleTaskSelection = useCallback((task) => {
-    const taskTimesheetIds = task.timesheets.map(ts => ts.timesheet_id);
+    const taskTimesheetIds = task.timesheets
+      .filter(ts => isDateInRange(ts.timesheet_date))
+      .map(ts => ts.timesheet_id);
+    if (taskTimesheetIds.length === 0) return;
     const allSelected = taskTimesheetIds.every(id => selectedTimesheetIds.has(id));
 
     updateSelection(prev => {
@@ -552,9 +666,10 @@ const TimesheetGridTable = ({
       }
       return next;
     });
-  }, [selectedTimesheetIds, updateSelection]);
+  }, [selectedTimesheetIds, updateSelection, isDateInRange]);
 
   const toggleDateSelection = useCallback((dateStr) => {
+    if (!isDateInRange(dateStr)) return;
     const dateTimesheetIds = [];
     tasks.forEach(task => {
       task.timesheets.forEach(ts => {
@@ -574,9 +689,10 @@ const TimesheetGridTable = ({
       }
       return next;
     });
-  }, [tasks, selectedTimesheetIds, updateSelection]);
+  }, [tasks, selectedTimesheetIds, updateSelection, isDateInRange]);
 
   const isDateFullySelected = useCallback((dateStr) => {
+    if (!isDateInRange(dateStr)) return false;
     const dateTimesheetIds = [];
     tasks.forEach(task => {
       task.timesheets.forEach(ts => {
@@ -586,7 +702,7 @@ const TimesheetGridTable = ({
       });
     });
     return dateTimesheetIds.length > 0 && dateTimesheetIds.every(id => selectedTimesheetIds.has(id));
-  }, [tasks, selectedTimesheetIds]);
+  }, [tasks, selectedTimesheetIds, isDateInRange]);
 
   const toggleSelectAll = useCallback(() => {
     if (selectedTimesheetIds.size === allTimesheetIds.size) {
@@ -623,7 +739,7 @@ const TimesheetGridTable = ({
   }, []);
 
   const formatDateHeader = (dateStr) => {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr + 'T00:00:00');
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const weekday = date.toLocaleDateString(locale, { weekday: 'short' });
@@ -691,25 +807,32 @@ const TimesheetGridTable = ({
               <th className="px-1 py-2 text-center text-xs font-semibold text-white border-b border-r border-gray-200 bg-cyan-800">
                 {t('planning:tot')}
               </th>
-              {uniqueDates.map(dateStr => {
+              {uniqueDates.map((dateStr, dateIdx) => {
                 const { dayMonth, weekday } = formatDateHeader(dateStr);
-                const isFullySelected = selectable && isDateFullySelected(dateStr);
+                const inRange = isDateInRange(dateStr);
+                const isFullySelected = selectable && inRange && isDateFullySelected(dateStr);
                 const nonWorking = isNonWorkingDay(dateStr);
                 const holidayName = getHolidayName(dateStr);
                 return (
                   <th
                     key={dateStr}
-                    onClick={selectable ? () => toggleDateSelection(dateStr) : undefined}
-                    className={`px-0 py-1 text-center border-b border-r border-gray-200 ${selectable ? 'cursor-pointer' : ''} transition-colors ${
-                      nonWorking
-                        ? (isFullySelected ? 'bg-gray-700' : 'bg-gray-600 hover:bg-gray-700')
-                        : (isFullySelected ? 'bg-cyan-800' : 'bg-cyan-700 hover:bg-cyan-800')
-                    } text-white`}
+                    onClick={selectable && inRange ? () => toggleDateSelection(dateStr) : undefined}
+                    className={`px-0 py-1 text-center border-b border-r border-gray-200 transition-colors ${
+                      !inRange
+                        ? 'bg-gray-100'
+                        : selectable ? 'cursor-pointer' : ''
+                    } ${
+                      inRange
+                        ? (nonWorking
+                            ? (isFullySelected ? 'bg-gray-700' : 'bg-gray-600 hover:bg-gray-700')
+                            : (isFullySelected ? 'bg-cyan-800' : 'bg-cyan-700 hover:bg-cyan-800'))
+                        : ''
+                    } ${inRange ? 'text-white' : ''} ${getBoundaryCls(dateIdx)}`}
                     title={holidayName || undefined}
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-[10px] font-semibold text-white">{dayMonth}</span>
-                      <span className={`text-[9px] ${nonWorking ? 'text-gray-200' : 'text-cyan-100'}`}>{weekday}</span>
+                      <span className={`text-[10px] font-semibold ${!inRange ? 'text-gray-300' : 'text-white'}`}>{dayMonth}</span>
+                      <span className={`text-[9px] ${!inRange ? 'text-gray-300' : nonWorking ? 'text-gray-200' : 'text-cyan-100'}`}>{weekday}</span>
                     </div>
                   </th>
                 );
@@ -749,23 +872,56 @@ const TimesheetGridTable = ({
                       <td className="px-1 py-1 text-center border-b border-r border-gray-200 bg-cyan-50">
                         <span className="text-xs font-bold text-cyan-700">{clientTotals[clientKey]?.toFixed(1) || '0.0'}</span>
                       </td>
-                      {uniqueDates.map(dateStr => {
+                      {uniqueDates.map((dateStr, dateIdx) => {
+                        const inRange = isDateInRange(dateStr);
                         const isExpanded = isClientExpanded(typeGroup.type_id, client.client_id);
                         const { hours } = clientDailyTotals[clientKey]?.[dateStr] || { hours: 0 };
-                        const isFullySelected = selectable && isClientDateFullySelected(typeGroup.type_id, client.client_id, dateStr);
-                        const isPartially = selectable && isClientDatePartiallySelected(typeGroup.type_id, client.client_id, dateStr);
+                        const isFullySelected = selectable && inRange && isClientDateFullySelected(typeGroup.type_id, client.client_id, dateStr);
+                        const isPartially = selectable && inRange && isClientDatePartiallySelected(typeGroup.type_id, client.client_id, dateStr);
                         const nonWorking = isNonWorkingDay(dateStr);
-                        if (isExpanded) return <td key={dateStr} className={`border-b border-r border-gray-200 ${nonWorking ? 'bg-gray-300' : 'bg-gray-100'}`} />;
+
+                        if (isExpanded) {
+                          return (
+                            <td
+                              key={dateStr}
+                              className={`border-b border-r border-gray-200 ${
+                                !inRange ? 'bg-gray-50' : nonWorking ? 'bg-gray-300' : 'bg-gray-100'
+                              } ${getBoundaryCls(dateIdx)}`}
+                            />
+                          );
+                        }
+
                         return (
-                          <td key={dateStr} className={`border-b border-r border-gray-200 px-0 py-1 ${nonWorking ? 'bg-gray-300' : 'bg-gray-100'}`}>
+                          <td
+                            key={dateStr}
+                            className={`border-b border-r border-gray-200 px-0 py-1 ${
+                              !inRange ? 'bg-gray-50' : nonWorking ? 'bg-gray-300' : 'bg-gray-100'
+                            } ${getBoundaryCls(dateIdx)}`}
+                          >
                             {hours > 0 ? (
                               <div
-                                onClick={selectable ? () => toggleClientDateSelection(typeGroup.type_id, client.client_id, dateStr) : undefined}
-                                className={`flex items-center justify-center py-1 rounded ${selectable ? 'cursor-pointer' : ''} ${isFullySelected ? 'bg-cyan-200' : isPartially ? 'bg-cyan-100' : selectable ? 'hover:bg-gray-200' : ''}`}
+                                onClick={selectable && inRange ? () => toggleClientDateSelection(typeGroup.type_id, client.client_id, dateStr) : undefined}
+                                className={`flex items-center justify-center py-1 rounded ${
+                                  !inRange
+                                    ? ''
+                                    : selectable ? 'cursor-pointer' : ''
+                                } ${
+                                  !inRange
+                                    ? ''
+                                    : isFullySelected ? 'bg-cyan-200' : isPartially ? 'bg-cyan-100' : selectable ? 'hover:bg-gray-200' : ''
+                                }`}
                               >
-                                <span className={`text-[10px] font-semibold ${isFullySelected ? 'text-cyan-700' : isPartially ? 'text-cyan-600' : 'text-gray-700'}`}>{hours.toFixed(1)}</span>
+                                <span className={`text-[10px] font-semibold ${
+                                  !inRange
+                                    ? 'text-gray-300'
+                                    : isFullySelected ? 'text-cyan-700' : isPartially ? 'text-cyan-600' : 'text-gray-700'
+                                }`}>
+                                  {hours.toFixed(1)}
+                                </span>
                               </div>
-                            ) : <span className="text-[10px] text-gray-300 text-center block">-</span>}
+                            ) : (
+                              <span className={`text-[10px] text-center block ${!inRange ? 'text-gray-200' : 'text-gray-300'}`}>-</span>
+                            )}
                           </td>
                         );
                       })}
@@ -792,22 +948,55 @@ const TimesheetGridTable = ({
                             <td className="px-1 py-1 text-center border-b border-r border-gray-200 bg-cyan-50/50">
                               <span className="text-[10px] font-semibold text-cyan-600">{projectTotals[projectKey]?.toFixed(1) || '0.0'}</span>
                             </td>
-                            {uniqueDates.map(dateStr => {
+                            {uniqueDates.map((dateStr, dateIdx) => {
+                              const inRange = isDateInRange(dateStr);
                               const { hours } = projectDailyTotals[projectKey]?.[dateStr] || { hours: 0 };
-                              const isFullySelected = selectable && isProjectDateFullySelected(client.client_id, project.project_id, dateStr);
-                              const isPartially = selectable && isProjectDatePartiallySelected(client.client_id, project.project_id, dateStr);
+                              const isFullySelected = selectable && inRange && isProjectDateFullySelected(client.client_id, project.project_id, dateStr);
+                              const isPartially = selectable && inRange && isProjectDatePartiallySelected(client.client_id, project.project_id, dateStr);
                               const nonWorking = isNonWorkingDay(dateStr);
-                              if (isProjectExp) return <td key={dateStr} className={`border-b border-r border-gray-200 ${nonWorking ? 'bg-gray-300' : 'bg-gray-50'}`} />;
+
+                              if (isProjectExp) {
+                                return (
+                                  <td
+                                    key={dateStr}
+                                    className={`border-b border-r border-gray-200 ${
+                                      !inRange ? 'bg-gray-50' : nonWorking ? 'bg-gray-300' : 'bg-gray-50'
+                                    } ${getBoundaryCls(dateIdx)}`}
+                                  />
+                                );
+                              }
+
                               return (
-                                <td key={dateStr} className={`border-b border-r border-gray-200 px-0 py-1 ${nonWorking ? 'bg-gray-300' : 'bg-gray-50'}`}>
+                                <td
+                                  key={dateStr}
+                                  className={`border-b border-r border-gray-200 px-0 py-1 ${
+                                    !inRange ? 'bg-gray-50' : nonWorking ? 'bg-gray-300' : 'bg-gray-50'
+                                  } ${getBoundaryCls(dateIdx)}`}
+                                >
                                   {hours > 0 ? (
                                     <div
-                                      onClick={selectable ? () => toggleProjectDateSelection(client.client_id, project.project_id, dateStr) : undefined}
-                                      className={`flex items-center justify-center py-0.5 rounded ${selectable ? 'cursor-pointer' : ''} ${isFullySelected ? 'bg-cyan-200' : isPartially ? 'bg-cyan-100' : selectable ? 'hover:bg-gray-200' : ''}`}
+                                      onClick={selectable && inRange ? () => toggleProjectDateSelection(client.client_id, project.project_id, dateStr) : undefined}
+                                      className={`flex items-center justify-center py-0.5 rounded ${
+                                        !inRange
+                                          ? ''
+                                          : selectable ? 'cursor-pointer' : ''
+                                      } ${
+                                        !inRange
+                                          ? ''
+                                          : isFullySelected ? 'bg-cyan-200' : isPartially ? 'bg-cyan-100' : selectable ? 'hover:bg-gray-200' : ''
+                                      }`}
                                     >
-                                      <span className={`text-[10px] font-semibold ${isFullySelected ? 'text-cyan-700' : isPartially ? 'text-cyan-600' : 'text-gray-600'}`}>{hours.toFixed(1)}</span>
+                                      <span className={`text-[10px] font-semibold ${
+                                        !inRange
+                                          ? 'text-gray-300'
+                                          : isFullySelected ? 'text-cyan-700' : isPartially ? 'text-cyan-600' : 'text-gray-600'
+                                      }`}>
+                                        {hours.toFixed(1)}
+                                      </span>
                                     </div>
-                                  ) : <span className="text-[10px] text-gray-300 text-center block">-</span>}
+                                  ) : (
+                                    <span className={`text-[10px] text-center block ${!inRange ? 'text-gray-200' : 'text-gray-300'}`}>-</span>
+                                  )}
                                 </td>
                               );
                             })}
@@ -831,28 +1020,43 @@ const TimesheetGridTable = ({
                               <td className="px-1 py-1 text-center border-b border-r border-gray-200 bg-white">
                                 <span className="text-[10px] font-medium text-gray-600">{taskTotals[task.task_id]?.toFixed(1) || '0.0'}</span>
                               </td>
-                              {uniqueDates.map(dateStr => {
+                              {uniqueDates.map((dateStr, dateIdx) => {
+                                const inRange = isDateInRange(dateStr);
                                 const ts = getTimesheetForTaskDate(task, dateStr);
-                                const isSelected = selectable && ts && selectedTimesheetIds.has(ts.timesheet_id);
+                                const isSelected = selectable && inRange && ts && selectedTimesheetIds.has(ts.timesheet_id);
                                 const nonWorking = isNonWorkingDay(dateStr);
                                 return (
                                   <td
                                     key={dateStr}
-                                    onClick={selectable && ts ? () => toggleTimesheetSelection(ts.timesheet_id) : undefined}
-                                    className={`px-0 py-1 text-center border-b border-r border-gray-200 ${nonWorking ? 'bg-gray-200' : ''} ${selectable && ts ? 'cursor-pointer' : ''}`}
+                                    onClick={selectable && inRange && ts ? () => toggleTimesheetSelection(ts.timesheet_id) : undefined}
+                                    className={`px-0 py-1 text-center border-b border-r border-gray-200 ${
+                                      !inRange ? 'bg-gray-50' : nonWorking ? 'bg-gray-200' : ''
+                                    } ${selectable && inRange && ts ? 'cursor-pointer' : ''} ${getBoundaryCls(dateIdx)}`}
                                   >
                                     {ts ? (
                                       <div
-                                        className={`relative flex items-center justify-center py-1 rounded ${isSelected ? 'bg-cyan-200' : selectable ? 'hover:bg-gray-100' : ''}`}
+                                        className={`relative flex items-center justify-center py-1 rounded ${
+                                          !inRange
+                                            ? ''
+                                            : isSelected ? 'bg-cyan-200' : selectable ? 'hover:bg-gray-100' : ''
+                                        }`}
                                         onMouseEnter={ts.details ? (e) => handleNoteTooltipHover(e, ts.timesheet_id, ts.details) : undefined}
                                         onMouseLeave={ts.details ? handleNoteTooltipLeave : undefined}
                                       >
                                         {ts.details && (
                                           <div className="absolute top-0 left-0 w-0 h-0 border-t-[5px] border-t-blue-600 border-r-[5px] border-r-transparent" />
                                         )}
-                                        <span className={`text-[10px] font-semibold ${isSelected ? 'text-cyan-700' : 'text-gray-700'}`}>{ts.hours.toFixed(1)}</span>
+                                        <span className={`text-[10px] font-semibold ${
+                                          !inRange
+                                            ? 'text-gray-300'
+                                            : isSelected ? 'text-cyan-700' : 'text-gray-700'
+                                        }`}>
+                                          {ts.hours.toFixed(1)}
+                                        </span>
                                       </div>
-                                    ) : <span className="text-[10px] text-gray-300">-</span>}
+                                    ) : (
+                                      <span className={`text-[10px] ${!inRange ? 'text-gray-200' : 'text-gray-300'}`}>-</span>
+                                    )}
                                   </td>
                                 );
                               })}
@@ -876,11 +1080,21 @@ const TimesheetGridTable = ({
               <td className="px-1 py-2 text-center border-t-2 border-r border-cyan-800 bg-cyan-800">
                 <span className="text-xs font-bold">{grandTotal.toFixed(1)}</span>
               </td>
-              {uniqueDates.map(dateStr => {
+              {uniqueDates.map((dateStr, dateIdx) => {
+                const inRange = isDateInRange(dateStr);
                 const nonWorking = isNonWorkingDay(dateStr);
                 return (
-                  <td key={dateStr} className={`px-0 py-2 text-center border-t-2 border-r border-cyan-800 ${nonWorking ? 'bg-cyan-600' : ''}`}>
-                    <span className="text-[10px] font-bold">{(dailyTotals[dateStr]?.total || 0).toFixed(1)}</span>
+                  <td
+                    key={dateStr}
+                    className={`px-0 py-2 text-center border-t-2 border-r ${
+                      !inRange
+                        ? 'border-gray-200 bg-gray-200'
+                        : `border-cyan-800 ${nonWorking ? 'bg-cyan-600' : ''}`
+                    } ${getBoundaryCls(dateIdx)}`}
+                  >
+                    <span className={`text-[10px] font-bold ${!inRange ? 'text-gray-400' : ''}`}>
+                      {(dailyTotals[dateStr]?.total || 0).toFixed(1)}
+                    </span>
                   </td>
                 );
               })}

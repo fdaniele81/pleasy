@@ -26,6 +26,7 @@ const EstimateEditorInfo = lazy(() => import("./features/estimator/EstimateEdito
 const EstimateEditorTasks = lazy(() => import("./features/estimator/EstimateEditorTasks"));
 const ConvertEstimateToProject = lazy(() => import("./features/estimator/ConvertEstimateToProject"));
 const Reconciliation = lazy(() => import("./features/reconciliation/Reconciliation"));
+const MySubmissions = lazy(() => import("./features/mysubmissions/MySubmissions"));
 const TMPlanning = lazy(() => import("./features/tmplanning/TMPlanning"));
 const CapacityPlan = lazy(() => import("./features/capacity-plan/CapacityPlan"));
 const CapacityPlanView = lazy(() => import("./features/capacity-plan/CapacityPlanView"));
@@ -258,6 +259,17 @@ function App() {
               <ProtectedRoute allowedRoles={ROLE_GROUPS.PM_AND_USER}>
                 <FeatureErrorBoundary featureName="Consuntivo">
                   <Timesheet />
+                </FeatureErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.MY_SUBMISSIONS}
+            element={
+              <ProtectedRoute allowedRoles={ROLE_GROUPS.PM_AND_USER}>
+                <FeatureErrorBoundary featureName="I Miei Consuntivi">
+                  <MySubmissions />
                 </FeatureErrorBoundary>
               </ProtectedRoute>
             }

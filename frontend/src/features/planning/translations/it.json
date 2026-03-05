@@ -48,6 +48,8 @@
   "initialActualDescription": "Inserisci le ore iniziali già registrate per l'attività",
   "initialActualExplanation": "Questo valore rappresenta il lavoro già svolto prima dell'inizio del tracking in PleasyHub (es. ore da sistemi esterni o lavoro pregresso).",
   "initialActualLabel": "Ore Initial Actual",
+  "actualFromTimesheets": "Actual da consuntivo",
+  "actualTotal": "Actual totale",
   "hideHolidayArea": "Nascondi area di sospensione pianificazione",
   "showHolidayArea": "Mostra area di sospensione pianificazione (es. festività)",
   "taskDetails": "Dettagli Attività",

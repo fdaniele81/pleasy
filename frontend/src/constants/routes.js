@@ -25,6 +25,7 @@ export const ROUTES = {
   CAPACITY_PLAN_VIEW: '/capacity-plan/view',
 
   TIMESHEET: '/timesheet',
+  MY_SUBMISSIONS: '/my-submissions',
 
   TIMEOFF_PLAN: '/timeoff-plan',
   TIMESHEET_SNAPSHOTS: '/timesheet-snapshots',

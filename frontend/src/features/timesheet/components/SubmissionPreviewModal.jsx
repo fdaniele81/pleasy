@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Clock, AlertCircle } from 'lucide-react';
+import { FileText, Clock, Calendar, AlertCircle } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
+import DateInput from '../../../shared/ui/DateInput';
 import TimesheetGridTable from '../../../shared/components/TimesheetGridTable';
 import { useLazyGetPreviewSubmissionQuery } from '../api/timesheetEndpoints';
 import { useGetHolidaysQuery } from '../../holidays/api/holidayEndpoints';
@@ -12,23 +13,58 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
   const [fetchPreview, { data: previewTasks = [], isLoading: previewLoading }] = useLazyGetPreviewSubmissionQuery();
   const { data: holidays = [] } = useGetHolidaysQuery();
   const [selectedTimesheetIds, setSelectedTimesheetIds] = useState(new Set());
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
 
-  const allTimesheetIds = useMemo(() => {
+  const filteredPreviewTasks = useMemo(() => {
+    if (!filterStartDate && !filterEndDate) return previewTasks;
+
+    return previewTasks
+      .map(task => {
+        const filteredTimesheets = task.timesheets.filter(ts => {
+          if (filterStartDate && ts.timesheet_date < filterStartDate) return false;
+          if (filterEndDate && ts.timesheet_date > filterEndDate) return false;
+          return true;
+        });
+        if (filteredTimesheets.length === 0) return null;
+        return {
+          ...task,
+          timesheets: filteredTimesheets,
+          total_hours: filteredTimesheets.reduce((sum, ts) => sum + ts.hours, 0),
+        };
+      })
+      .filter(Boolean);
+  }, [previewTasks, filterStartDate, filterEndDate]);
+
+  const filteredTimesheetIds = useMemo(() => {
     const ids = new Set();
-    previewTasks.forEach(task => {
+    filteredPreviewTasks.forEach(task => {
       task.timesheets.forEach(ts => {
         ids.add(ts.timesheet_id);
       });
     });
     return ids;
-  }, [previewTasks]);
+  }, [filteredPreviewTasks]);
 
   useEffect(() => {
     if (isOpen) {
       fetchPreview();
       setSelectedTimesheetIds(new Set());
+      setFilterStartDate('');
+      setFilterEndDate('');
     }
   }, [isOpen, fetchPreview]);
+
+  useEffect(() => {
+    setSelectedTimesheetIds(prev => {
+      const next = new Set();
+      prev.forEach(id => {
+        if (filteredTimesheetIds.has(id)) next.add(id);
+      });
+      if (next.size === prev.size) return prev;
+      return next;
+    });
+  }, [filteredTimesheetIds]);
 
   const handleClose = () => {
     onClose();
@@ -40,7 +76,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
 
   const getSelectedHours = () => {
     let total = 0;
-    previewTasks.forEach(task => {
+    filteredPreviewTasks.forEach(task => {
       task.timesheets.forEach(ts => {
         if (selectedTimesheetIds.has(ts.timesheet_id)) {
           total += ts.hours;
@@ -55,8 +91,14 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
   };
 
   const getTotalHours = () => {
-    return previewTasks.reduce((sum, task) => sum + task.total_hours, 0);
+    return filteredPreviewTasks.reduce((sum, task) => sum + task.total_hours, 0);
   };
+
+  const clearDateFilters = useCallback(() => {
+    setFilterStartDate('');
+    setFilterEndDate('');
+  }, []);
+
 
   const customFooter = (
     <>
@@ -65,7 +107,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       </Button>
       <Button
         onClick={handleConfirm}
-        disabled={previewTasks.length === 0 || selectedTimesheetIds.size === 0}
+        disabled={filteredPreviewTasks.length === 0 || selectedTimesheetIds.size === 0}
         color="cyan"
         size="md"
       >
@@ -98,36 +140,73 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       )}
 
       {!previewLoading && previewTasks.length > 0 && (
-        <div className="space-y-4">
-          <div className="bg-cyan-50 rounded-lg p-4 border border-cyan-100">
-            <div className="flex items-center gap-6 text-sm text-gray-700">
-              <div className="flex items-center gap-2">
+        <div className="space-y-3">
+          <div className="bg-cyan-50 rounded-lg px-4 py-3 border border-cyan-100 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-cyan-600 shrink-0" />
+              <div className="min-w-[130px]">
+                <DateInput
+                  value={filterStartDate}
+                  onChange={setFilterStartDate}
+                  className="w-full"
+                />
+              </div>
+              <span className="text-gray-400 text-xs">—</span>
+              <div className="min-w-[130px]">
+                <DateInput
+                  value={filterEndDate}
+                  onChange={setFilterEndDate}
+                  className="w-full"
+                />
+              </div>
+              {(filterStartDate || filterEndDate) && (
+                <button
+                  onClick={clearDateFilters}
+                  className="text-xs text-cyan-600 hover:text-cyan-700 font-medium ml-1"
+                >
+                  {t('common:clearAll')}
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-5 text-sm text-gray-700">
+              <div className="flex items-center gap-1.5">
                 <FileText className="h-4 w-4 text-cyan-600" />
                 <span className="font-medium">{t('timesheet:entriesLabel')}</span>
                 <span className="font-semibold">{getSelectedCount()}</span>
-                <span className="text-gray-500">/ {allTimesheetIds.size}</span>
+                <span className="text-gray-500">/ {filteredTimesheetIds.size}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-cyan-600" />
                 <span className="font-medium">{t('timesheet:hoursLabel')}</span>
                 <span className="font-semibold">{getSelectedHours().toFixed(1)}h</span>
                 <span className="text-gray-500">/ {getTotalHours().toFixed(1)}h</span>
               </div>
             </div>
-            {selectedTimesheetIds.size === 0 && (
-              <p className="text-xs text-gray-500 mt-2">
-                {t('timesheet:selectEntriesToSubmit')}
-              </p>
-            )}
           </div>
 
-          <TimesheetGridTable
-            tasks={previewTasks}
-            holidays={holidays}
-            selectable={true}
-            selectedTimesheetIds={selectedTimesheetIds}
-            onSelectionChange={setSelectedTimesheetIds}
-          />
+          {selectedTimesheetIds.size === 0 && (
+            <p className="text-xs text-gray-500 text-center -mt-1">
+              {t('timesheet:selectEntriesToSubmit')}
+            </p>
+          )}
+
+          {filteredPreviewTasks.length > 0 ? (
+            <TimesheetGridTable
+              tasks={previewTasks}
+              holidays={holidays}
+              selectable={true}
+              selectedTimesheetIds={selectedTimesheetIds}
+              onSelectionChange={setSelectedTimesheetIds}
+              filterStartDate={filterStartDate}
+              filterEndDate={filterEndDate}
+            />
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded flex items-center gap-3">
+              <AlertCircle size={20} />
+              <span>{t('timesheet:noTimesheetInRange')}</span>
+            </div>
+          )}
         </div>
       )}
     </BaseModal>

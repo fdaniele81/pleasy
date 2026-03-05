@@ -420,6 +420,7 @@ function Pianificazione() {
         onConfirm={(initialActual) => handleInitialActualConfirm(initialActual, selectedTaskForInitialActual?.task_id)}
         taskTitle={selectedTaskForInitialActual?.title || ''}
         currentValue={selectedTaskForInitialActual?.initial_actual || 0}
+        actualTotal={selectedTaskForInitialActual?.actual || 0}
       />
 
       <Suspense fallback={null}>

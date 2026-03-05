@@ -22,7 +22,8 @@ function Login() {
   const [impersonateFn, { isLoading: impersonateLoading, error: impersonateError, reset: resetImpersonate }] = useImpersonateMutation();
 
   const loading = loginLoading || impersonateLoading;
-  const error = loginError?.data || impersonateError?.data;
+  const errorData = loginError?.data || impersonateError?.data;
+  const error = typeof errorData === 'string' ? errorData : errorData?.error || errorData?.message;
 
   const [impersonateMode, setImpersonateMode] = useState(false);
   const [formData, setFormData] = useState({

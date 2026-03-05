@@ -66,6 +66,7 @@ export const timesheetEndpoints = apiSlice.injectEndpoints({
         { type: TAG_TYPES.TIMESHEET, id: 'LIST' },
         { type: TAG_TYPES.DASHBOARD, id: 'LIST' },
         { type: TAG_TYPES.PLANNING, id: 'LIST' },
+        { type: TAG_TYPES.SNAPSHOT, id: 'LIST' },
       ],
     }),
 

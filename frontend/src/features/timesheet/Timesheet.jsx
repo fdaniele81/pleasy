@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ROUTES } from "../../constants";
 import ContextMenu from "../../shared/ui/ContextMenu";
 import { useTimesheetData } from "./hooks/useTimesheetData";
 import { useTimesheetCalculations } from "./hooks/useTimesheetCalculations";
@@ -21,6 +23,7 @@ const TimeOffSummaryModal = lazy(() => import("./components/TimeOffSummaryModal"
 function Timesheet() {
   const { t } = useTranslation(['timesheet', 'common']);
   const locale = useLocale();
+  const navigate = useNavigate();
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -286,7 +289,7 @@ function Timesheet() {
             filterProjectType={filterProjectType} onFilterProjectTypeChange={setFilterProjectType}
             uniqueClients={uniqueClients} uniqueProjects={uniqueProjects}
             onClearAllFilters={clearAllFilters} onExport={openExportModal}
-            onSubmit={handleSubmitTimesheets} loading={loading}
+            onSubmit={() => navigate(ROUTES.MY_SUBMISSIONS)} loading={loading}
             onPreviousPeriod={goToPreviousPeriod} onNextPeriod={goToNextPeriod} onToday={goToToday}
             isPreviousDisabled={false} isTodayDisabled={isAtStart} periodLabel={getPeriodLabel()}
           />

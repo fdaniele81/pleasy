@@ -32,5 +32,11 @@
   "noPmAssigned": "Nessun Project Manager assegnato",
   "selectClientForPm": "Seleziona un cliente per visualizzare i Project Manager disponibili",
   "noPmAvailable": "Nessun Project Manager disponibile per questo cliente",
-  "pmAssignAfterCreate": "I Project Manager potranno essere assegnati dopo la creazione del progetto."
+  "pmAssignAfterCreate": "I Project Manager potranno essere assegnati dopo la creazione del progetto.",
+  "allClients": "Tutti i clienti",
+  "selectClients": "Seleziona clienti",
+  "clientsCount": "{{count}} clienti",
+  "projectsCount": "{{count}} progetti",
+  "expandAll": "Espandi tutto",
+  "collapseAll": "Comprimi tutto"
 }

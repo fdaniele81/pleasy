@@ -87,13 +87,10 @@ const EstimateSelectionTable = ({
                 }`}
                 onClick={() => onToggleSelect(estimate.estimate_id)}
               >
-                <td className="px-1 py-3 text-center">
+                <td className="px-1 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                   <SelectionCheckbox
                     checked={isSelected}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      onToggleSelect(estimate.estimate_id);
-                    }}
+                    onChange={() => onToggleSelect(estimate.estimate_id)}
                     ariaLabel={t('capacityPlan:selectEstimate', { title: estimate.title })}
                   />
                 </td>

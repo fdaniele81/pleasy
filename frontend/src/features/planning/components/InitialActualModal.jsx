@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import { useFormModal } from '../../../hooks/useFormModal';
 
-const InitialActualModal = ({ isOpen, onClose, onConfirm, taskTitle, currentValue = 0 }) => {
+const InitialActualModal = ({ isOpen, onClose, onConfirm, taskTitle, currentValue = 0, actualTotal = 0 }) => {
   const { t } = useTranslation(['planning', 'common']);
   const inputRef = useRef(null);
 
@@ -107,6 +107,24 @@ const InitialActualModal = ({ isOpen, onClose, onConfirm, taskTitle, currentValu
           <p className="mt-1 text-sm text-red-600">{errors.initial_actual}</p>
         )}
       </div>
+
+      {(() => {
+        const initialActualNum = parseFloat(formData.initial_actual) || 0;
+        const timesheetActual = Math.max(0, actualTotal - currentValue);
+        const computedTotal = initialActualNum + timesheetActual;
+        return (
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">{t('planning:actualFromTimesheets')}</span>
+              <span className="text-sm font-medium text-gray-700">{timesheetActual.toFixed(2)} h</span>
+            </div>
+            <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+              <span className="text-sm font-semibold text-gray-800">{t('planning:actualTotal')}</span>
+              <span className="text-sm font-bold text-cyan-700">{computedTotal.toFixed(2)} h</span>
+            </div>
+          </div>
+        );
+      })()}
     </BaseModal>
   );
 };

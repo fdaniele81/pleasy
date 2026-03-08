@@ -5,7 +5,7 @@ async function create(req, res) {
   try {
     const client = await clientService.create(req.body, req.user);
     res.status(201).json({
-      message: "Cliente creato correttamente",
+      message: "Client created successfully",
       client,
     });
   } catch (err) {
@@ -17,7 +17,7 @@ async function update(req, res) {
   try {
     const client = await clientService.update(req.params.client_id, req.body, req.user);
     res.status(200).json({
-      message: "Cliente aggiornato correttamente",
+      message: "Client updated successfully",
       client,
     });
   } catch (err) {
@@ -29,7 +29,7 @@ async function remove(req, res) {
   try {
     const client = await clientService.remove(req.params.client_id, req.user);
     res.status(200).json({
-      message: "Cliente e progetti associati eliminati correttamente",
+      message: "Client and associated projects deleted successfully",
       client,
     });
   } catch (err) {
@@ -41,7 +41,7 @@ async function getAll(req, res) {
   try {
     const clients = await clientService.getAll(req.user);
     res.status(200).json({
-      message: "Clienti recuperati correttamente",
+      message: "Clients retrieved successfully",
       clients,
       total: clients.length
     });
@@ -54,7 +54,7 @@ async function getPhasesConfig(req, res) {
   try {
     const result = await clientService.getPhasesConfig(req.params.client_id, req.user);
     res.status(200).json({
-      message: "Configurazione fasi progetto recuperata correttamente",
+      message: "Project phases configuration retrieved successfully",
       ...result
     });
   } catch (err) {
@@ -70,7 +70,7 @@ async function updatePhasesConfig(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "Configurazione fasi progetto aggiornata correttamente",
+      message: "Project phases configuration updated successfully",
       client
     });
   } catch (err) {
@@ -82,7 +82,7 @@ async function getClientsWithProjects(req, res) {
   try {
     const clients = await clientService.getClientsWithProjects(req.user);
     res.status(200).json({
-      message: "Clienti recuperati correttamente",
+      message: "Clients retrieved successfully",
       clients,
       total: clients.length
     });
@@ -99,7 +99,7 @@ async function assignUser(req, res) {
       req.user
     );
     res.status(201).json({
-      message: "Utente associato al cliente correttamente",
+      message: "User assigned to client successfully",
       task
     });
   } catch (err) {
@@ -114,7 +114,7 @@ async function getTMDetails(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "Dettagli T&M recuperati correttamente",
+      message: "T&M details retrieved successfully",
       ...details
     });
   } catch (err) {
@@ -130,7 +130,7 @@ async function unassignUser(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "Utente rimosso dal cliente correttamente",
+      message: "User removed from client successfully",
       ...result
     });
   } catch (err) {
@@ -146,7 +146,7 @@ async function assignPM(req, res) {
       req.user
     );
     res.status(201).json({
-      message: "PM assegnato al cliente correttamente",
+      message: "PM assigned to client successfully",
       ...result
     });
   } catch (err) {
@@ -162,7 +162,7 @@ async function unassignPM(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "PM rimosso dal cliente correttamente",
+      message: "PM removed from client successfully",
       ...result
     });
   } catch (err) {
@@ -178,7 +178,7 @@ async function updateTMReconciliation(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "Flag quadratura aggiornato correttamente",
+      message: "Reconciliation flag updated successfully",
       ...result
     });
   } catch (err) {

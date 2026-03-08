@@ -5,24 +5,24 @@ export function validateCreateEstimate(data) {
   const { client_id, title } = data;
 
   if (!client_id || !title) {
-    throw validationError("client_id e title sono obbligatori");
+    throw validationError("ESTIMATE_CLIENT_TITLE_REQUIRED", "client_id and title are required");
   }
 
   if (!isValidUUID(client_id)) {
-    throw validationError("client_id non valido");
+    throw validationError("ESTIMATE_INVALID_CLIENT_ID", "Invalid client_id");
   }
 
   if (data.project_id && !isValidUUID(data.project_id)) {
-    throw validationError("project_id non valido");
+    throw validationError("ESTIMATE_INVALID_PROJECT_ID", "Invalid project_id");
   }
 
   if (data.project_managers !== undefined) {
     if (!Array.isArray(data.project_managers)) {
-      throw validationError("project_managers deve essere un array");
+      throw validationError("ESTIMATE_PM_MUST_BE_ARRAY", "project_managers must be an array");
     }
     for (const pmId of data.project_managers) {
       if (!isValidUUID(pmId)) {
-        throw validationError(`Project Manager ID non valido: ${pmId}`);
+        throw validationError("ESTIMATE_INVALID_PM_ID", `Invalid Project Manager ID: ${pmId}`);
       }
     }
   }
@@ -47,7 +47,7 @@ export function validateCreateEstimate(data) {
 
 export function validateEstimateId(estimateId) {
   if (!isValidUUID(estimateId)) {
-    throw validationError("estimate_id non valido");
+    throw validationError("ESTIMATE_INVALID_ESTIMATE_ID", "Invalid estimate_id");
   }
   return estimateId;
 }
@@ -63,7 +63,7 @@ export function validateUpdateEstimate(data) {
   }
   if (data.project_id !== undefined) {
     if (data.project_id !== null && !isValidUUID(data.project_id)) {
-      throw validationError("project_id non valido");
+      throw validationError("ESTIMATE_INVALID_PROJECT_ID", "Invalid project_id");
     }
     validated.project_id = data.project_id;
   }
@@ -83,32 +83,32 @@ export function validateUpdateEstimate(data) {
   if (data.status !== undefined) {
     const allowedStatuses = ['DRAFT', 'CONVERTED'];
     if (!allowedStatuses.includes(data.status)) {
-      throw validationError("Stato non valido. Valori ammessi: DRAFT, CONVERTED");
+      throw validationError("ESTIMATE_INVALID_STATUS", "Invalid status. Allowed values: DRAFT, CONVERTED");
     }
     validated.status = data.status;
   }
 
   if (data.estimate_phase_config !== undefined) {
     if (data.estimate_phase_config !== null && typeof data.estimate_phase_config !== 'object') {
-      throw validationError("estimate_phase_config deve essere un oggetto JSON valido");
+      throw validationError("ESTIMATE_INVALID_PHASE_CONFIG", "estimate_phase_config must be a valid JSON object");
     }
     validated.estimate_phase_config = data.estimate_phase_config;
   }
 
   if (data.project_managers !== undefined) {
     if (!Array.isArray(data.project_managers)) {
-      throw validationError("project_managers deve essere un array");
+      throw validationError("ESTIMATE_PM_MUST_BE_ARRAY", "project_managers must be an array");
     }
     for (const pmId of data.project_managers) {
       if (!isValidUUID(pmId)) {
-        throw validationError(`Project Manager ID non valido: ${pmId}`);
+        throw validationError("ESTIMATE_INVALID_PM_ID", `Invalid Project Manager ID: ${pmId}`);
       }
     }
     validated.project_managers = data.project_managers;
   }
 
   if (Object.keys(validated).length === 0) {
-    throw validationError("Nessun campo da aggiornare");
+    throw validationError("ESTIMATE_NO_FIELDS", "No fields to update");
   }
 
   return validated;
@@ -118,11 +118,11 @@ export function validateCreateTask(data) {
   const { activity_name, hours_development_input } = data;
 
   if (!activity_name || hours_development_input === undefined) {
-    throw validationError("activity_name e hours_development_input sono obbligatori");
+    throw validationError("ESTIMATE_ACTIVITY_REQUIRED", "activity_name and hours_development_input are required");
   }
 
   if (hours_development_input < 0) {
-    throw validationError("hours_development_input deve essere maggiore o uguale a 0");
+    throw validationError("ESTIMATE_HOURS_NEGATIVE", "hours_development_input must be greater than or equal to 0");
   }
 
   return {
@@ -134,7 +134,7 @@ export function validateCreateTask(data) {
 
 export function validateTaskIds(estimateId, taskId) {
   if (!isValidUUID(estimateId) || !isValidUUID(taskId)) {
-    throw validationError("ID non validi");
+    throw validationError("ESTIMATE_INVALID_IDS", "Invalid IDs");
   }
   return { estimateId, taskId };
 }
@@ -150,7 +150,7 @@ export function validateUpdateTask(data) {
   }
   if (data.hours_development_input !== undefined) {
     if (data.hours_development_input < 0) {
-      throw validationError("hours_development_input deve essere maggiore o uguale a 0");
+      throw validationError("ESTIMATE_HOURS_NEGATIVE", "hours_development_input must be greater than or equal to 0");
     }
     validated.hours_development_input = data.hours_development_input;
   }
@@ -168,7 +168,7 @@ export function validateUpdateTask(data) {
   }
 
   if (Object.keys(validated).length === 0) {
-    throw validationError("Nessun campo da aggiornare");
+    throw validationError("ESTIMATE_NO_FIELDS", "No fields to update");
   }
 
   return validated;
@@ -178,18 +178,18 @@ export function validateConvertToProject(data) {
   const { project_key, project_title, project_managers, tasks } = data;
 
   if (!project_key || !project_title || !project_managers?.length || !tasks?.length) {
-    throw validationError("project_key, project_title, project_managers (array) e tasks (array) sono obbligatori");
+    throw validationError("ESTIMATE_CONVERT_REQUIRED", "project_key, project_title, project_managers and tasks are required");
   }
 
   for (const pmId of project_managers) {
     if (!isValidUUID(pmId)) {
-      throw validationError(`Project Manager ID non valido: ${pmId}`);
+      throw validationError("ESTIMATE_INVALID_PM_ID", `Invalid Project Manager ID: ${pmId}`);
     }
   }
 
   for (const task of tasks) {
     if (!task.title || task.budget === undefined || task.budget < 0) {
-      throw validationError("Ogni task deve avere title e budget validi");
+      throw validationError("ESTIMATE_INVALID_TASK", "Each task must have a valid title and budget");
     }
   }
 
@@ -209,7 +209,7 @@ export function validateSaveDraftProject(data) {
   const { project_key, project_title, project_managers } = data;
 
   if (!project_key || !project_title || !project_managers?.length) {
-    throw validationError("project_key, project_title e project_managers (array) sono obbligatori");
+    throw validationError("ESTIMATE_DRAFT_REQUIRED", "project_key, project_title and project_managers are required");
   }
 
   return {
@@ -228,7 +228,7 @@ export function validateCloneEstimate(data) {
   const { title, project_key } = data;
 
   if (!title || !title.trim()) {
-    throw validationError("Il titolo è obbligatorio");
+    throw validationError("ESTIMATE_TITLE_REQUIRED", "Title is required");
   }
 
   return {
@@ -241,7 +241,7 @@ export function validateSimpleConvert(data) {
   const { project_id } = data;
 
   if (!project_id || !isValidUUID(project_id)) {
-    throw validationError("project_id valido è obbligatorio");
+    throw validationError("ESTIMATE_PROJECT_ID_REQUIRED", "Valid project_id is required");
   }
 
   return { project_id };
@@ -261,19 +261,19 @@ export function validateCalculateFTE(data) {
   } = data;
 
   if (!total_days || total_days <= 0 || total_days % 10 !== 0) {
-    throw validationError("total_days è obbligatorio e deve essere un multiplo di 10");
+    throw validationError("ESTIMATE_TOTAL_DAYS_REQUIRED", "total_days is required and must be a multiple of 10");
   }
 
   const validateIntervals = (intervals, name) => {
     if (!intervals || !Array.isArray(intervals)) {
-      throw validationError(`${name} deve essere un array`);
+      throw validationError("ESTIMATE_MUST_BE_ARRAY", `${name} must be an array`);
     }
     if (intervals.length === 0) {
-      throw validationError(`${name} non può essere vuoto`);
+      throw validationError("ESTIMATE_ARRAY_EMPTY", `${name} cannot be empty`);
     }
     for (const interval of intervals) {
       if (!Number.isInteger(interval) || interval < 1 || interval > 10) {
-        throw validationError(`${name} deve contenere numeri interi tra 1 e 10`);
+        throw validationError("ESTIMATE_ARRAY_VALUES", `${name} must contain integers between 1 and 10`);
       }
     }
   };
@@ -302,14 +302,14 @@ export function validateCalculateFTE(data) {
 
 export function validateClientIdParam(clientId) {
   if (clientId && !isValidUUID(clientId)) {
-    throw validationError("client_id non valido");
+    throw validationError("ESTIMATE_INVALID_CLIENT_ID", "Invalid client_id");
   }
   return clientId;
 }
 
 export function validateProjectIdParam(projectId) {
   if (projectId && !isValidUUID(projectId)) {
-    throw validationError("project_id non valido");
+    throw validationError("ESTIMATE_INVALID_PROJECT_ID", "Invalid project_id");
   }
   return projectId;
 }

@@ -7,13 +7,13 @@ async function getTemplate(req, res) {
 
     if (!template) {
       return res.status(200).json({
-        message: "Nessun template configurato",
+        message: "No template configured",
         template: null
       });
     }
 
     res.status(200).json({
-      message: "Template recuperato",
+      message: "Template retrieved",
       template
     });
   } catch (err) {
@@ -27,26 +27,26 @@ async function uploadFile(req, res) {
     const { template_name } = req.body || {};
 
     if (!file) {
-      return res.status(400).json({ error: "File Excel non fornito" });
+      return res.status(400).json({ error: "RECONCILIATION_FILE_REQUIRED", message: "Excel file is required" });
     }
 
     const result = await reconciliationService.uploadFile(file, template_name, req.user);
 
     if (result.isNew) {
       res.status(201).json({
-        message: "Staging table creata e popolata. Ora configura la query SQL.",
+        message: "Staging table created and populated. Now configure the SQL query.",
         rowsInserted: result.rowsInserted,
         stagingTableName: result.stagingTableName
       });
     } else if (result.reconciled) {
       res.status(200).json({
-        message: "Upload completato e dati riconciliati",
+        message: "Upload completed and data reconciled",
         rowsProcessed: result.rowsProcessed,
         rowsInserted: result.rowsInserted
       });
     } else {
       res.status(200).json({
-        message: "Staging table aggiornata. Configura la query SQL per la riconciliazione.",
+        message: "Staging table updated. Configure the SQL query for reconciliation.",
         rowsInserted: result.rowsInserted,
         stagingTableName: result.stagingTableName
       });
@@ -63,7 +63,8 @@ async function configureTemplate(req, res) {
 
     if (!template_name || !sql_query) {
       return res.status(400).json({
-        error: "template_name e sql_query sono obbligatori"
+        error: "RECONCILIATION_CONFIG_REQUIRED",
+        message: "template_name and sql_query are required"
       });
     }
 
@@ -76,7 +77,7 @@ async function configureTemplate(req, res) {
 
     const isUpdate = !!file;
     res.status(isUpdate ? 200 : 200).json({
-      message: isUpdate ? "Template aggiornato" : "Query SQL aggiornata",
+      message: isUpdate ? "Template updated" : "SQL query updated",
       template
     });
   } catch (err) {
@@ -89,7 +90,7 @@ async function deleteTemplate(req, res) {
     await reconciliationService.deleteTemplate(req.user);
 
     res.status(200).json({
-      message: "Template eliminato"
+      message: "Template deleted"
     });
   } catch (err) {
     handleError(res, err, "DELETE TEMPLATE ERROR");
@@ -101,7 +102,7 @@ async function getSyncStatus(req, res) {
     const data = await reconciliationService.getSyncStatus(req.user);
 
     res.status(200).json({
-      message: "Sync status recuperato",
+      message: "Sync status retrieved",
       data
     });
   } catch (err) {
@@ -114,13 +115,13 @@ async function previewQuery(req, res) {
     const { query } = req.body;
 
     if (!query) {
-      return res.status(400).json({ error: "Query SQL non fornita" });
+      return res.status(400).json({ error: "RECONCILIATION_QUERY_REQUIRED", message: "SQL query not provided" });
     }
 
     const result = await reconciliationService.previewQuery(query, req.user);
 
     res.status(200).json({
-      message: "Anteprima query completata",
+      message: "Query preview completed",
       ...result
     });
   } catch (err) {
@@ -133,7 +134,7 @@ async function previewUsers(req, res) {
     const result = await reconciliationService.previewUsers(req.user);
 
     res.status(200).json({
-      message: "Anteprima vista utenti",
+      message: "Users view preview",
       ...result,
       info: result.viewName
     });
@@ -147,7 +148,7 @@ async function previewStaging(req, res) {
     const result = await reconciliationService.previewStaging(req.user);
 
     res.status(200).json({
-      message: "Anteprima tabella staging",
+      message: "Staging table preview",
       ...result
     });
   } catch (err) {

@@ -8,7 +8,8 @@ export async function emailExistsError(email) {
   );
 
   if (result.rowCount > 0) {
-    const error = new Error("Email già registrata nel sistema");
+    const error = new Error("Email already registered");
+    error.code = "EMAIL_ALREADY_EXISTS";
     error.statusCode = 409;
     throw error;
   }
@@ -16,7 +17,8 @@ export async function emailExistsError(email) {
 
 export async function companyNotExistsError(companyId) {
   if (!isValidUUID(companyId)) {
-    const error = new Error("ID company non valido");
+    const error = new Error("Invalid company ID");
+    error.code = "INVALID_COMPANY_ID";
     error.statusCode = 400;
     throw error;
   }
@@ -27,7 +29,8 @@ export async function companyNotExistsError(companyId) {
   );
 
   if (result.rowCount === 0) {
-    const error = new Error("Company non trovata");
+    const error = new Error("Company not found");
+    error.code = "COMPANY_NOT_FOUND";
     error.statusCode = 404;
     throw error;
   }
@@ -40,7 +43,8 @@ export async function roleNotExistsError(roleId) {
   );
 
   if (result.rowCount === 0) {
-    const error = new Error("Ruolo non valido");
+    const error = new Error("Invalid role");
+    error.code = "INVALID_ROLE";
     error.statusCode = 404;
     throw error;
   }
@@ -53,7 +57,8 @@ export async function statusNotExistsError(statusId) {
   );
 
   if (result.rowCount === 0) {
-    const error = new Error("Stato non valido");
+    const error = new Error("Invalid status");
+    error.code = "INVALID_STATUS";
     error.statusCode = 404;
     throw error;
   }
@@ -61,7 +66,8 @@ export async function statusNotExistsError(statusId) {
 
 export async function userNotExistsError(userId) {
   if (!isValidUUID(userId)) {
-    const error = new Error("ID utente non valido");
+    const error = new Error("Invalid user ID");
+    error.code = "INVALID_USER_ID";
     error.statusCode = 400;
     throw error;
   }
@@ -72,7 +78,8 @@ export async function userNotExistsError(userId) {
   );
 
   if (result.rowCount === 0) {
-    const error = new Error("Utente non presente a sistema");
+    const error = new Error("User not found");
+    error.code = "USER_NOT_FOUND";
     error.statusCode = 404;
     throw error;
   }
@@ -80,7 +87,8 @@ export async function userNotExistsError(userId) {
 
 export async function clientNotExistsError(clientId) {
   if (!isValidUUID(clientId)) {
-    const error = new Error("ID cliente non valido");
+    const error = new Error("Invalid client ID");
+    error.code = "INVALID_CLIENT_ID";
     error.statusCode = 400;
     throw error;
   }
@@ -91,7 +99,8 @@ export async function clientNotExistsError(clientId) {
   );
 
   if (result.rowCount === 0) {
-    const error = new Error("Cliente non trovato");
+    const error = new Error("Client not found");
+    error.code = "CLIENT_NOT_FOUND";
     error.statusCode = 404;
     throw error;
   }
@@ -99,7 +108,8 @@ export async function clientNotExistsError(clientId) {
 
 export async function projectNotExistsError(projectId) {
   if (!isValidUUID(projectId)) {
-    const error = new Error("ID progetto non valido");
+    const error = new Error("Invalid project ID");
+    error.code = "INVALID_PROJECT_ID";
     error.statusCode = 400;
     throw error;
   }
@@ -110,7 +120,8 @@ export async function projectNotExistsError(projectId) {
   );
 
   if (result.rowCount === 0) {
-    const error = new Error("Progetto non trovato");
+    const error = new Error("Project not found");
+    error.code = "PROJECT_NOT_FOUND";
     error.statusCode = 404;
     throw error;
   }

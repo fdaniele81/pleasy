@@ -30,15 +30,15 @@ async function getSnapshotDetails(snapshotId, user) {
   const snapshot = await timesheetRepository.findSnapshotById(snapshotId);
 
   if (!snapshot) {
-    throw serviceError("Snapshot non trovato", 404);
+    throw serviceError("SNAPSHOT_NOT_FOUND", "Snapshot not found", 404);
   }
 
   if (user.role_id === "USER" && snapshot.user_id !== user.user_id) {
-    throw serviceError("Non sei autorizzato a visualizzare questo snapshot", 403);
+    throw serviceError("SNAPSHOT_UNAUTHORIZED", "You are not authorized to access this snapshot", 403);
   }
 
   if (user.role_id === "PM" && snapshot.company_id !== user.company_id) {
-    throw serviceError("Non sei autorizzato a visualizzare questo snapshot", 403);
+    throw serviceError("SNAPSHOT_UNAUTHORIZED", "You are not authorized to access this snapshot", 403);
   }
 
   const rows = await timesheetRepository.getSnapshotDetails(snapshotId);
@@ -116,22 +116,22 @@ async function reopenSnapshot(snapshotId, user) {
 
     if (!snapshot) {
       await client.query('ROLLBACK');
-      throw serviceError("Snapshot non trovato", 404);
+      throw serviceError("SNAPSHOT_NOT_FOUND", "Snapshot not found", 404);
     }
 
     if (!snapshot.is_submitted) {
       await client.query('ROLLBACK');
-      throw serviceError("Lo snapshot non è stato sottomesso", 400);
+      throw serviceError("SNAPSHOT_NOT_SUBMITTED", "Snapshot has not been submitted", 400);
     }
 
     if (user.role_id === "USER" && snapshot.user_id !== user.user_id) {
       await client.query('ROLLBACK');
-      throw serviceError("Non sei autorizzato a riaprire questo snapshot", 403);
+      throw serviceError("SNAPSHOT_UNAUTHORIZED", "You are not authorized to reopen this snapshot", 403);
     }
 
     if (user.role_id === "PM" && snapshot.company_id !== user.company_id) {
       await client.query('ROLLBACK');
-      throw serviceError("Non sei autorizzato a riaprire questo snapshot", 403);
+      throw serviceError("SNAPSHOT_UNAUTHORIZED", "You are not authorized to reopen this snapshot", 403);
     }
 
     const timesheetsToReopen = await timesheetRepository.getTimesheetsToReopen(snapshotId, client);

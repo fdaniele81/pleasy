@@ -8,7 +8,7 @@ async function getProjectTasks(req, res) {
     const projects = await taskService.getProjectsWithTasks(req.user);
 
     res.status(200).json({
-      message: "Progetti e attività recuperati correttamente",
+      message: "Projects and tasks retrieved successfully",
       projects,
       total: projects.length
     });
@@ -23,7 +23,7 @@ async function create(req, res) {
     const task = await taskService.createTask(data, req.user);
 
     res.status(201).json({
-      message: "Attività creata correttamente",
+      message: "Task created successfully",
       task
     });
   } catch (err) {
@@ -37,14 +37,14 @@ async function update(req, res) {
 
     const existingTask = await taskRepository.findById(taskId);
     if (!existingTask) {
-      return res.status(404).json({ error: "Attività non trovata" });
+      return res.status(404).json({ error: "TASK_NOT_FOUND", message: "Task not found" });
     }
 
     const data = taskValidator.validateUpdateTask(req.body, existingTask);
     const task = await taskService.updateTask(taskId, data, req.user);
 
     res.status(200).json({
-      message: "Attività aggiornata correttamente",
+      message: "Task updated successfully",
       task
     });
   } catch (err) {
@@ -58,7 +58,7 @@ async function remove(req, res) {
     const task = await taskService.deleteTask(taskId, req.user);
 
     res.status(200).json({
-      message: "Attività eliminata correttamente",
+      message: "Task deleted successfully",
       task
     });
   } catch (err) {
@@ -71,7 +71,7 @@ async function getPMPlanning(req, res) {
     const projects = await taskService.getPMPlanning(req.user);
 
     res.status(200).json({
-      message: "Pianificazione PM recuperata correttamente",
+      message: "PM planning retrieved successfully",
       projects,
       total: projects.length
     });
@@ -86,7 +86,7 @@ async function getAvailableUsers(req, res) {
     const users = await taskService.getAvailableUsers(projectId, req.user);
 
     res.status(200).json({
-      message: "Utenti disponibili recuperati correttamente",
+      message: "Available users retrieved successfully",
       users
     });
   } catch (err) {
@@ -101,7 +101,7 @@ async function updateInitialActual(req, res) {
     const task = await taskService.updateInitialActual(taskId, initial_actual, req.user);
 
     res.status(200).json({
-      message: "Initial actual aggiornato correttamente",
+      message: "Initial actual updated successfully",
       task
     });
   } catch (err) {
@@ -115,18 +115,18 @@ async function updateTaskETC(req, res) {
     const { etc } = req.body;
 
     if (etc === undefined || etc === null) {
-      return res.status(400).json({ error: "etc è obbligatorio" });
+      return res.status(400).json({ error: "TASK_ETC_REQUIRED", message: "etc is required" });
     }
 
     const etcHours = parseFloat(etc);
     if (isNaN(etcHours) || etcHours < 0) {
-      return res.status(400).json({ error: "etc deve essere un numero non negativo" });
+      return res.status(400).json({ error: "TASK_ETC_INVALID", message: "etc must be a non-negative number" });
     }
 
     const result = await taskService.updateTaskETC(taskId, etcHours, req.user);
 
     res.status(200).json({
-      message: "ETC aggiornato correttamente",
+      message: "ETC updated successfully",
       etc: result
     });
   } catch (err) {
@@ -140,7 +140,7 @@ async function getTaskDetails(req, res) {
     const task = await taskService.getTaskDetails(taskId, req.user);
 
     res.status(200).json({
-      message: "Dettagli attività recuperati correttamente",
+      message: "Task details retrieved successfully",
       task
     });
   } catch (err) {
@@ -154,7 +154,7 @@ async function getUserTaskDetails(req, res) {
     const task = await taskService.getUserTaskDetails(taskId, req.user);
 
     res.status(200).json({
-      message: "Dettagli attività recuperati correttamente",
+      message: "Task details retrieved successfully",
       task
     });
   } catch (err) {
@@ -169,7 +169,7 @@ async function updateUserTaskDetails(req, res) {
     const task = await taskService.updateUserTaskDetails(taskId, task_details, req.user);
 
     res.status(200).json({
-      message: "Dettagli attività aggiornati correttamente",
+      message: "Task details updated successfully",
       task
     });
   } catch (err) {
@@ -183,7 +183,7 @@ async function getFTEReport(req, res) {
     const result = await taskService.getFTEReport(startDate, endDate, diffDays, req.user, etcReferenceDate);
 
     res.status(200).json({
-      message: "Report FTE recuperato correttamente",
+      message: "FTE report retrieved successfully",
       ...result
     });
   } catch (err) {

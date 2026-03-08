@@ -6,7 +6,7 @@ async function createOrUpdate(req, res) {
     const result = await projectDraftService.createOrUpdate(req.body, req.user);
 
     res.status(201).json({
-      message: result.isUpdate ? 'Project draft aggiornato con successo' : 'Project draft creato con successo',
+      message: result.isUpdate ? 'Project draft updated successfully' : 'Project draft created successfully',
       projectDraft: result.projectDraft,
       tasks: result.tasks
     });
@@ -43,7 +43,7 @@ async function remove(req, res) {
     await projectDraftService.remove(req.params.project_draft_id, req.user);
 
     res.json({
-      message: 'Project draft eliminato con successo'
+      message: 'Project draft deleted successfully'
     });
   } catch (err) {
     handleError(res, err, "DELETE PROJECT DRAFT ERR");
@@ -55,7 +55,7 @@ async function convert(req, res) {
     const result = await projectDraftService.convert(req.params.project_draft_id, req.user);
 
     res.status(201).json({
-      message: 'Project draft convertito con successo in progetto reale',
+      message: 'Project draft converted to real project successfully',
       project: result.project,
       tasks: result.tasks
     });

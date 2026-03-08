@@ -15,11 +15,11 @@ async function create(data, requestingUser) {
   const { company_id, email, password, role_id, full_name } = data;
 
   if (!company_id || !email || !role_id || !password || !full_name) {
-    throw serviceError("Company, email, ruolo, nome e password sono obbligatori", 400);
+    throw serviceError("USER_REQUIRED_FIELDS", "Company, email, role, name and password are required", 400);
   }
 
   if (requestingUser.role_id === "PM" && role_id === "ADMIN") {
-    throw serviceError("Non hai i permessi per assegnare il ruolo ADMIN", 403);
+    throw serviceError("USER_ADMIN_ROLE_DENIED", "You don't have permission to assign the ADMIN role", 403);
   }
 
   checkCompanyAccess(requestingUser, company_id);
@@ -40,11 +40,11 @@ async function update(userId, data, requestingUser) {
   await userNotExistsError(userId);
 
   if (!email || !role_id || !status_id || !full_name) {
-    throw serviceError("Email, ruolo, stato e nome sono obbligatori", 400);
+    throw serviceError("USER_UPDATE_REQUIRED_FIELDS", "Email, role, status and name are required", 400);
   }
 
   if (requestingUser.role_id === "PM" && role_id === "ADMIN") {
-    throw serviceError("Non hai i permessi per assegnare il ruolo ADMIN", 403);
+    throw serviceError("USER_ADMIN_ROLE_DENIED", "You don't have permission to assign the ADMIN role", 403);
   }
 
   const user = await userRepository.getUserById(userId);
@@ -59,7 +59,7 @@ async function update(userId, data, requestingUser) {
 
 async function changePassword(userId, currentPassword, newPassword) {
   if (!currentPassword || !newPassword) {
-    throw serviceError("Password attuale e nuova password sono obbligatorie", 400);
+    throw serviceError("USER_PASSWORDS_REQUIRED", "Current password and new password are required", 400);
   }
 
   await userNotExistsError(userId);
@@ -68,7 +68,7 @@ async function changePassword(userId, currentPassword, newPassword) {
 
   const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
   if (!isValidPassword) {
-    throw serviceError("Password attuale non corretta", 401);
+    throw serviceError("USER_CURRENT_PASSWORD_WRONG", "Current password is incorrect", 401);
   }
 
   const newPasswordHash = await bcrypt.hash(newPassword, 10);
@@ -78,7 +78,7 @@ async function changePassword(userId, currentPassword, newPassword) {
 
 async function resetPassword(targetUserId, newPassword, requestingUser) {
   if (!newPassword) {
-    throw serviceError("Nuova password obbligatoria", 400);
+    throw serviceError("USER_NEW_PASSWORD_REQUIRED", "New password is required", 400);
   }
 
   const user = await userRepository.getUserById(targetUserId);

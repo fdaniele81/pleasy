@@ -70,7 +70,7 @@ async function uploadFile(file, templateName, user) {
         const validation = validateReconciliationQuery(sqlQuery, { pmId });
         if (!validation.valid) {
           await client.query("ROLLBACK");
-          throw serviceError(`Query salvata non valida: ${validation.error}`, 400);
+          throw serviceError("RECONCILIATION_QUERY_INVALID", `Query salvata non valida: ${validation.error}`, 400);
         }
 
         const queryResult = await reconciliationRepository.executeQuery(sqlQuery, client);
@@ -82,6 +82,7 @@ async function uploadFile(file, templateName, user) {
         if (missingColumns.length > 0) {
           await client.query("ROLLBACK");
           throw serviceError(
+            "RECONCILIATION_MISSING_COLUMNS",
             `Query deve restituire le colonne: ${requiredColumns.join(", ")}. Mancanti: ${missingColumns.join(", ")}`,
             400
           );
@@ -92,6 +93,7 @@ async function uploadFile(file, templateName, user) {
           await client.query("ROLLBACK");
           const problematicKeys = [...new Set(rowsWithNullUserId.map(row => row.external_key))];
           throw serviceError(
+            "RECONCILIATION_NULL_USER_IDS",
             `Alcune righe non hanno trovato corrispondenza con gli utenti. Verifica la query SQL e i nomi nell'Excel. Righe con user_id NULL: ${rowsWithNullUserId.length}. Keys problematiche: ${problematicKeys.slice(0, 5).join(", ")}`,
             400
           );
@@ -146,7 +148,7 @@ async function configureTemplate(templateName, sqlQuery, file, user) {
 
   const validation = validateReconciliationQuery(sqlQuery, { pmId });
   if (!validation.valid) {
-    throw serviceError(validation.error, 400);
+    throw serviceError("RECONCILIATION_QUERY_INVALID", validation.error, 400);
   }
 
   const pool = reconciliationRepository.getPool();
@@ -186,7 +188,7 @@ async function configureTemplate(templateName, sqlQuery, file, user) {
       }
     } else {
       if (!file) {
-        throw serviceError("File Excel obbligatorio per creare un nuovo template", 400);
+        throw serviceError("RECONCILIATION_FILE_REQUIRED", "File Excel obbligatorio per creare un nuovo template", 400);
       }
 
       const { columns, originalColumns, columnMapping } = await parseExcelFile(file.buffer);
@@ -230,7 +232,7 @@ async function deleteTemplate(user) {
     const template = await reconciliationRepository.getTemplateByPmId(pmId, client);
     if (!template) {
       await client.query("ROLLBACK");
-      throw serviceError("Template non trovato", 404);
+      throw serviceError("RECONCILIATION_TEMPLATE_NOT_FOUND", "Template not found", 404);
     }
 
     const stagingTableName = template.staging_table_name;
@@ -259,7 +261,7 @@ async function getSyncStatus(user) {
 async function previewQuery(query, user) {
   const validation = validateReconciliationQuery(query, { pmId: user.user_id });
   if (!validation.valid) {
-    throw serviceError(validation.error, 400);
+    throw serviceError("RECONCILIATION_QUERY_INVALID", validation.error, 400);
   }
 
   const pool = reconciliationRepository.getPool();
@@ -283,6 +285,7 @@ async function previewQuery(query, user) {
 
           if (wrongCompanyCount > 0) {
             throw serviceError(
+              "RECONCILIATION_CROSS_COMPANY",
               "ATTENZIONE: La query restituisce utenti di altre aziende! Verifica i filtri company_id nella JOIN con users.",
               403
             );
@@ -319,7 +322,7 @@ async function previewStaging(user) {
   try {
     const template = await reconciliationRepository.getTemplateByPmId(user.user_id, client);
     if (!template) {
-      throw serviceError("Nessun template configurato", 404);
+      throw serviceError("RECONCILIATION_NO_TEMPLATE", "No template configured", 404);
     }
 
     const { rows, fields } = await reconciliationRepository.getStagingData(

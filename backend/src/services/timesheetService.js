@@ -150,16 +150,16 @@ async function saveTimesheet(data, user) {
 
   const taskOwner = await timesheetRepository.findTaskOwner(data.task_id);
   if (!taskOwner) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   if (taskOwner.owner_id !== userId) {
-    throw serviceError("Non sei autorizzato a inserire ore per questo task", 403);
+    throw serviceError("TIMESHEET_UNAUTHORIZED_TASK", "You are not authorized to log hours for this task", 403);
   }
 
   const taskCompany = await timesheetRepository.findTaskCompany(data.task_id);
   if (!taskCompany) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   const result = await timesheetRepository.upsertTimesheet({
@@ -188,7 +188,7 @@ async function deleteTimesheet(timesheetId, user) {
   const result = await timesheetRepository.deleteTimesheet(timesheetId, user.user_id);
 
   if (!result) {
-    throw serviceError("Timesheet non trovato o non autorizzato", 404);
+    throw serviceError("TIMESHEET_NOT_FOUND", "Timesheet not found or unauthorized", 404);
   }
 
   return result.timesheet_id;
@@ -209,7 +209,7 @@ async function submitTimesheets(timesheetIds, user) {
     }
 
     if (validTimesheets.length !== timesheetIds.length) {
-      throw serviceError("Alcuni timesheet non sono validi o già sottomessi", 400);
+      throw serviceError("TIMESHEET_INVALID_OR_SUBMITTED", "Some timesheets are invalid or already submitted", 400);
     }
 
     const snapshotId = await timesheetRepository.createSnapshot(user.user_id, user.company_id, client);
@@ -300,7 +300,7 @@ async function getPreviewSubmission(user) {
 
 async function getTMPlanning(startDate, endDate, user) {
   if (user.role_id !== "PM") {
-    throw serviceError("Accesso non autorizzato", 403);
+    throw serviceError("TIMESHEET_UNAUTHORIZED", "Unauthorized access", 403);
   }
 
   const rows = await timesheetRepository.getTMPlanningData(
@@ -384,21 +384,21 @@ async function getTMPlanning(startDate, endDate, user) {
 
 async function saveTimesheetForPM(data, user) {
   if (user.role_id !== "PM") {
-    throw serviceError("Accesso non autorizzato", 403);
+    throw serviceError("TIMESHEET_UNAUTHORIZED", "Unauthorized access", 403);
   }
 
   const taskOwner = await timesheetRepository.findTaskOwner(data.task_id);
   if (!taskOwner) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   const taskCompany = await timesheetRepository.findTaskCompany(data.task_id);
   if (!taskCompany) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   if (taskCompany.company_id !== user.company_id) {
-    throw serviceError("Non sei autorizzato a modificare questo task", 403);
+    throw serviceError("TIMESHEET_UNAUTHORIZED_MODIFY", "You are not authorized to modify this task", 403);
   }
 
   const result = await timesheetRepository.upsertTimesheet({

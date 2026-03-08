@@ -5,7 +5,7 @@ async function create(req, res) {
   try {
     const user = await userService.create(req.body, req.user);
     res.status(201).json({
-      message: "Utente creato correttamente",
+      message: "User created successfully",
       user,
     });
   } catch (err) {
@@ -17,7 +17,7 @@ async function update(req, res) {
   try {
     const user = await userService.update(req.params.user_id, req.body, req.user);
     res.status(200).json({
-      message: "Utente aggiornato correttamente",
+      message: "User updated successfully",
       user,
     });
   } catch (err) {
@@ -33,7 +33,7 @@ async function changePassword(req, res) {
       req.body.new_password
     );
     res.status(200).json({
-      message: "Password aggiornata correttamente",
+      message: "Password updated successfully",
     });
   } catch (err) {
     handleError(res, err, "CHANGE PASSWORD ERR");
@@ -48,7 +48,7 @@ async function resetPassword(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "Password reimpostata correttamente",
+      message: "Password reset successfully",
       user_id: userId,
     });
   } catch (err) {
@@ -60,7 +60,7 @@ async function remove(req, res) {
   try {
     const user = await userService.remove(req.params.user_id, req.user);
     res.status(200).json({
-      message: "Utente eliminato correttamente",
+      message: "User deleted successfully",
       user,
     });
   } catch (err) {

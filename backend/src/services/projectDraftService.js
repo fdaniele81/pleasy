@@ -17,15 +17,15 @@ async function createOrUpdate(data, user) {
   const userCompanyId = user.company_id;
 
   if (!estimate_id || !isValidUUID(estimate_id)) {
-    throw serviceError('estimate_id valido è obbligatorio', 400);
+    throw serviceError('DRAFT_ESTIMATE_ID_REQUIRED', 'Valid estimate_id is required', 400);
   }
 
   if (!client_id || !isValidUUID(client_id)) {
-    throw serviceError('client_id valido è obbligatorio', 400);
+    throw serviceError('DRAFT_CLIENT_ID_REQUIRED', 'Valid client_id is required', 400);
   }
 
   if (!project_key || project_key.trim() === '') {
-    throw serviceError('project_key è obbligatorio', 400);
+    throw serviceError('DRAFT_PROJECT_KEY_REQUIRED', 'project_key is required', 400);
   }
 
   await projectDraftRepository.beginTransaction();
@@ -35,13 +35,13 @@ async function createOrUpdate(data, user) {
 
     if (!estimate) {
       await projectDraftRepository.rollbackTransaction();
-      throw serviceError('Estimate non trovato', 404);
+      throw serviceError('DRAFT_ESTIMATE_NOT_FOUND', 'Estimate not found', 404);
     }
 
     if (userRole !== 'ADMIN') {
       if (estimate.company_id !== userCompanyId) {
         await projectDraftRepository.rollbackTransaction();
-        throw serviceError('Non hai i permessi per accedere a questo estimate', 403);
+        throw serviceError('DRAFT_ESTIMATE_ACCESS_DENIED', 'You don\'t have permission to access this estimate', 403);
       }
     }
 
@@ -64,7 +64,7 @@ async function createOrUpdate(data, user) {
 
       if (!projectDraft) {
         await projectDraftRepository.rollbackTransaction();
-        throw serviceError('Project draft non trovato o non appartiene a questo estimate', 404);
+        throw serviceError('DRAFT_NOT_FOUND', 'Project draft not found or does not belong to this estimate', 404);
       }
 
       if (tasks !== undefined) {
@@ -105,17 +105,17 @@ async function getById(projectDraftId, user) {
   const userCompanyId = user.company_id;
 
   if (!isValidUUID(projectDraftId)) {
-    throw serviceError('project_draft_id non valido', 400);
+    throw serviceError('DRAFT_INVALID_ID', 'Invalid project_draft_id', 400);
   }
 
   const projectDraft = await projectDraftRepository.getProjectDraftById(projectDraftId);
 
   if (!projectDraft) {
-    throw serviceError('Project draft non trovato', 404);
+    throw serviceError('DRAFT_NOT_FOUND', 'Project draft not found', 404);
   }
 
   if (userRole !== 'ADMIN' && projectDraft.company_id !== userCompanyId) {
-    throw serviceError('Non hai i permessi per accedere a questo project draft', 403);
+    throw serviceError('DRAFT_ACCESS_DENIED', 'You don\'t have permission to access this project draft', 403);
   }
 
   const tasks = await projectDraftRepository.getTaskDrafts(projectDraftId);
@@ -128,17 +128,17 @@ async function getByEstimateId(estimateId, user) {
   const userCompanyId = user.company_id;
 
   if (!isValidUUID(estimateId)) {
-    throw serviceError('estimate_id non valido', 400);
+    throw serviceError('DRAFT_INVALID_ESTIMATE_ID', 'Invalid estimate_id', 400);
   }
 
   const estimate = await projectDraftRepository.getEstimateWithCompany(estimateId);
 
   if (!estimate) {
-    throw serviceError('Estimate non trovato', 404);
+    throw serviceError('DRAFT_ESTIMATE_NOT_FOUND', 'Estimate not found', 404);
   }
 
   if (userRole !== 'ADMIN' && estimate.company_id !== userCompanyId) {
-    throw serviceError('Non hai i permessi per accedere a questo estimate', 403);
+    throw serviceError('DRAFT_ESTIMATE_ACCESS_DENIED', 'You don\'t have permission to access this estimate', 403);
   }
 
   const drafts = await projectDraftRepository.getProjectDraftsByEstimateId(estimateId);
@@ -162,17 +162,17 @@ async function remove(projectDraftId, user) {
   const userCompanyId = user.company_id;
 
   if (!isValidUUID(projectDraftId)) {
-    throw serviceError('project_draft_id non valido', 400);
+    throw serviceError('DRAFT_INVALID_ID', 'Invalid project_draft_id', 400);
   }
 
   const draftCheck = await projectDraftRepository.getDraftCompanyId(projectDraftId);
 
   if (!draftCheck) {
-    throw serviceError('Project draft non trovato', 404);
+    throw serviceError('DRAFT_NOT_FOUND', 'Project draft not found', 404);
   }
 
   if (userRole !== 'ADMIN' && draftCheck.company_id !== userCompanyId) {
-    throw serviceError('Non hai i permessi per eliminare questo project draft', 403);
+    throw serviceError('DRAFT_DELETE_DENIED', 'You don\'t have permission to delete this project draft', 403);
   }
 
   await projectDraftRepository.deleteProjectDraft(projectDraftId);
@@ -183,7 +183,7 @@ async function convert(projectDraftId, user) {
   const userCompanyId = user.company_id;
 
   if (!isValidUUID(projectDraftId)) {
-    throw serviceError('project_draft_id non valido', 400);
+    throw serviceError('DRAFT_INVALID_ID', 'Invalid project_draft_id', 400);
   }
 
   await projectDraftRepository.beginTransaction();
@@ -193,12 +193,12 @@ async function convert(projectDraftId, user) {
 
     if (!draft) {
       await projectDraftRepository.rollbackTransaction();
-      throw serviceError('Project draft non trovato', 404);
+      throw serviceError('DRAFT_NOT_FOUND', 'Project draft not found', 404);
     }
 
     if (userRole !== 'ADMIN' && draft.company_id !== userCompanyId) {
       await projectDraftRepository.rollbackTransaction();
-      throw serviceError('Non hai i permessi per convertire questo project draft', 403);
+      throw serviceError('DRAFT_CONVERT_DENIED', 'You don\'t have permission to convert this project draft', 403);
     }
 
     await clientNotExistsError(draft.client_id);
@@ -273,7 +273,7 @@ async function convert(projectDraftId, user) {
 
 async function checkProjectKey(projectKey) {
   if (!projectKey || projectKey.trim() === '') {
-    throw serviceError('project_key è obbligatorio', 400);
+    throw serviceError('DRAFT_PROJECT_KEY_REQUIRED', 'project_key is required', 400);
   }
 
   const result = await projectDraftRepository.getProjectWithTasksByKey(projectKey.trim());

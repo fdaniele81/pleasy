@@ -63,7 +63,8 @@ async function createTask(data, user) {
     const ownerCompanyId = await taskRepository.getCompanyIdFromUser(data.owner_id);
     if (ownerCompanyId !== projectCompanyId) {
       throw serviceError(
-        "L'utente selezionato non appartiene alla stessa azienda del progetto",
+        "TASK_USER_COMPANY_MISMATCH",
+        "Selected user does not belong to the same company as the project",
         400
       );
     }
@@ -98,7 +99,7 @@ async function createTask(data, user) {
 async function updateTask(taskId, data, user) {
   const existing = await taskRepository.findById(taskId);
   if (!existing) {
-    throw serviceError("Attività non trovata", 404);
+    throw serviceError("TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, existing.company_id);
@@ -108,7 +109,8 @@ async function updateTask(taskId, data, user) {
     const ownerCompanyId = await taskRepository.getCompanyIdFromUser(data.owner_id);
     if (ownerCompanyId !== existing.company_id) {
       throw serviceError(
-        "L'utente selezionato non appartiene alla stessa azienda del progetto",
+        "TASK_USER_COMPANY_MISMATCH",
+        "Selected user does not belong to the same company as the project",
         400
       );
     }
@@ -129,7 +131,7 @@ async function updateTask(taskId, data, user) {
 async function deleteTask(taskId, user) {
   const task = await taskRepository.findById(taskId);
   if (!task) {
-    throw serviceError("Attività non trovata", 404);
+    throw serviceError("TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
@@ -246,7 +248,7 @@ async function getAvailableUsers(projectId, user) {
 async function updateInitialActual(taskId, initialActual, user) {
   const task = await taskRepository.findById(taskId);
   if (!task) {
-    throw serviceError("Attività non trovata", 404);
+    throw serviceError("TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
@@ -257,7 +259,7 @@ async function updateInitialActual(taskId, initialActual, user) {
 async function updateTaskETC(taskId, etcHours, user) {
   const task = await taskRepository.findById(taskId);
   if (!task) {
-    throw serviceError("Attività non trovata", 404);
+    throw serviceError("TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
@@ -268,7 +270,7 @@ async function updateTaskETC(taskId, etcHours, user) {
 async function getTaskDetails(taskId, user) {
   const task = await taskRepository.getTaskDetailsFull(taskId);
   if (!task) {
-    throw serviceError("Attività non trovata", 404);
+    throw serviceError("TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
@@ -300,14 +302,15 @@ async function getTaskDetails(taskId, user) {
 async function getUserTaskDetails(taskId, user) {
   const task = await taskRepository.getTaskDetailsUser(taskId);
   if (!task) {
-    throw serviceError("Attività non trovata", 404);
+    throw serviceError("TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
 
   if (task.owner_id !== user.user_id) {
     throw serviceError(
-      "Non sei autorizzato a visualizzare i dettagli di questa attività",
+      "TASK_UNAUTHORIZED_VIEW",
+      "You are not authorized to view this task's details",
       403
     );
   }
@@ -327,14 +330,15 @@ async function getUserTaskDetails(taskId, user) {
 async function updateUserTaskDetails(taskId, taskDetails, user) {
   const task = await taskRepository.getTaskDetailsUser(taskId);
   if (!task) {
-    throw serviceError("Attività non trovata", 404);
+    throw serviceError("TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
 
   if (task.owner_id !== user.user_id) {
     throw serviceError(
-      "Non sei autorizzato a modificare i dettagli di questa attività",
+      "TASK_UNAUTHORIZED_MODIFY",
+      "You are not authorized to modify this task's details",
       403
     );
   }

@@ -9,7 +9,7 @@ function isWeekend(dateStr) {
 
 async function getByDateRange(startDate, endDate, user) {
   if (!startDate || !endDate) {
-    throw serviceError("start_date e end_date sono obbligatori", 400);
+    throw serviceError("TIMEOFF_DATES_REQUIRED", "start_date and end_date are required", 400);
   }
 
   const timeOffs = await timeoffRepository.getByUserAndDateRange(
@@ -41,21 +41,21 @@ async function save(data, user) {
   const { time_off_type_id, date, hours, details } = data;
 
   if (!time_off_type_id || !date || hours === undefined) {
-    throw serviceError("time_off_type_id, date e hours sono obbligatori", 400);
+    throw serviceError("TIMEOFF_REQUIRED_FIELDS", "time_off_type_id, date and hours are required", 400);
   }
 
   if (isWeekend(date)) {
-    throw serviceError("Non è possibile inserire ferie/permessi nei weekend", 400);
+    throw serviceError("TIMEOFF_WEEKEND_NOT_ALLOWED", "Cannot add time off on weekends", 400);
   }
 
   const isHoliday = await timeoffRepository.isHoliday(user.company_id, date);
   if (isHoliday) {
-    throw serviceError("Non è possibile inserire ferie/permessi nei giorni festivi", 400);
+    throw serviceError("TIMEOFF_HOLIDAY_NOT_ALLOWED", "Cannot add time off on public holidays", 400);
   }
 
   const typeExists = await timeoffRepository.timeOffTypeExists(time_off_type_id);
   if (!typeExists) {
-    throw serviceError("Tipo di time off non trovato", 404);
+    throw serviceError("TIMEOFF_TYPE_NOT_FOUND", "Time off type not found", 404);
   }
 
   if (hours === 0) {
@@ -93,7 +93,7 @@ async function remove(timeOffId, user) {
   const result = await timeoffRepository.deleteByIdAndUser(timeOffId, user.user_id);
 
   if (!result) {
-    throw serviceError("Time off non trovato o non autorizzato", 404);
+    throw serviceError("TIMEOFF_NOT_FOUND", "Time off not found or unauthorized", 404);
   }
 
   return result.time_off_id;
@@ -105,7 +105,7 @@ async function getTypes() {
 
 async function getTotals(startDate, endDate, user) {
   if (!startDate || !endDate) {
-    throw serviceError("start_date e end_date sono obbligatori", 400);
+    throw serviceError("TIMEOFF_DATES_REQUIRED", "start_date and end_date are required", 400);
   }
 
   const totals = await timeoffRepository.getTotalsByType(
@@ -147,7 +147,7 @@ async function getForCapacityPlanning(startDate, endDate, user) {
 
 async function getGanttDaily(startDate, endDate, user) {
   if (!startDate || !endDate) {
-    throw serviceError("start_date e end_date sono obbligatori", 400);
+    throw serviceError("TIMEOFF_DATES_REQUIRED", "start_date and end_date are required", 400);
   }
 
   const rows = await timeoffRepository.getGanttDaily(
@@ -166,7 +166,7 @@ async function getGanttDaily(startDate, endDate, user) {
 
 async function getCompanyPlan(startDate, endDate, user) {
   if (!startDate || !endDate) {
-    throw serviceError("start_date e end_date sono obbligatori", 400);
+    throw serviceError("TIMEOFF_DATES_REQUIRED", "start_date and end_date are required", 400);
   }
 
   const users = await timeoffRepository.getCompanyUsers(user.company_id);

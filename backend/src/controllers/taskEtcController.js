@@ -5,7 +5,7 @@ async function getByTaskId(req, res) {
   try {
     const etcList = await taskEtcService.getByTaskId(req.params.task_id, req.user);
     res.status(200).json({
-      message: "ETC recuperati correttamente",
+      message: "ETCs retrieved successfully",
       etc_list: etcList,
     });
   } catch (err) {
@@ -17,7 +17,7 @@ async function upsert(req, res) {
   try {
     const etc = await taskEtcService.upsert(req.body, req.user);
     res.status(201).json({
-      message: "ETC creato/aggiornato correttamente",
+      message: "ETC created/updated successfully",
       etc,
     });
   } catch (err) {
@@ -29,7 +29,7 @@ async function remove(req, res) {
   try {
     const result = await taskEtcService.remove(req.params.etc_id, req.user);
     res.status(200).json({
-      message: "ETC eliminato correttamente",
+      message: "ETC deleted successfully",
       etc_id: result.etc_id,
     });
   } catch (err) {

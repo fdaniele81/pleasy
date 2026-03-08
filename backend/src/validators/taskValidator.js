@@ -5,23 +5,23 @@ export function validateCreateTask(data) {
   const { project_id, title } = data;
 
   if (!project_id || !title) {
-    throw validationError("Progetto e titolo sono obbligatori");
+    throw validationError("TASK_PROJECT_TITLE_REQUIRED", "Project and title are required");
   }
 
   if (!isValidUUID(project_id)) {
-    throw validationError("project_id non valido");
+    throw validationError("ESTIMATE_INVALID_PROJECT_ID", "Invalid project_id");
   }
 
   if (data.start_date && isNaN(Date.parse(data.start_date))) {
-    throw validationError(`Data di inizio non valida: ${data.start_date}`);
+    throw validationError("TASK_INVALID_START_DATE", `Invalid start date: ${data.start_date}`);
   }
   if (data.end_date && isNaN(Date.parse(data.end_date))) {
-    throw validationError(`Data di fine non valida: ${data.end_date}`);
+    throw validationError("TASK_INVALID_END_DATE", `Invalid end date: ${data.end_date}`);
   }
   const status = data.task_status_id || "TODO";
   if (status === "IN PROGRESS") {
     if (!data.start_date || !data.end_date) {
-      throw validationError("Le date di inizio e fine sono obbligatorie quando si crea un task in IN PROGRESS");
+      throw validationError("TASK_DATES_REQUIRED_IN_PROGRESS", "Start and end dates are required for IN PROGRESS tasks");
     }
   }
 
@@ -45,14 +45,14 @@ export function validateCreateTask(data) {
 
 export function validateTaskId(taskId) {
   if (!taskId || !isValidUUID(taskId)) {
-    throw validationError("task_id non valido");
+    throw validationError("TIMESHEET_INVALID_TASK_ID", "Invalid task_id");
   }
   return taskId;
 }
 
 export function validateProjectId(projectId) {
   if (!projectId || !isValidUUID(projectId)) {
-    throw validationError("project_id non valido");
+    throw validationError("ESTIMATE_INVALID_PROJECT_ID", "Invalid project_id");
   }
   return projectId;
 }
@@ -78,14 +78,14 @@ export function validateUpdateTask(data, existingTask) {
   };
 
   if (final.start_date && isNaN(Date.parse(final.start_date))) {
-    throw validationError(`Data di inizio non valida: ${final.start_date}`);
+    throw validationError("TASK_INVALID_START_DATE", `Invalid start date: ${final.start_date}`);
   }
   if (final.end_date && isNaN(Date.parse(final.end_date))) {
-    throw validationError(`Data di fine non valida: ${final.end_date}`);
+    throw validationError("TASK_INVALID_END_DATE", `Invalid end date: ${final.end_date}`);
   }
   if (final.task_status_id === "IN PROGRESS") {
     if (!final.start_date || !final.end_date) {
-      throw validationError("Le date di inizio e fine sono obbligatorie quando il task è IN PROGRESS");
+      throw validationError("TASK_DATES_REQUIRED_IN_PROGRESS", "Start and end dates are required for IN PROGRESS tasks");
     }
   }
 
@@ -96,11 +96,11 @@ export function validateInitialActual(data) {
   const { initial_actual } = data;
 
   if (initial_actual === undefined || initial_actual === null) {
-    throw validationError("Il campo initial_actual è obbligatorio");
+    throw validationError("TASK_INITIAL_ACTUAL_REQUIRED", "The initial_actual field is required");
   }
 
   if (initial_actual < 0) {
-    throw validationError("Il valore di initial_actual non può essere negativo");
+    throw validationError("TASK_INITIAL_ACTUAL_NEGATIVE", "initial_actual cannot be negative");
   }
 
   return { initial_actual };
@@ -110,32 +110,32 @@ export function validateFTEReportParams(query) {
   const { data_inizio, data_fine, data_riferimento_etc } = query;
 
   if (!data_inizio || !data_fine) {
-    throw validationError("I parametri data_inizio e data_fine sono obbligatori");
+    throw validationError("TASK_DATE_RANGE_REQUIRED", "Start date and end date parameters are required");
   }
 
   const startDate = new Date(data_inizio);
   const endDate = new Date(data_fine);
 
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    throw validationError("Date non valide");
+    throw validationError("TASK_INVALID_DATES", "Invalid dates");
   }
 
   if (endDate <= startDate) {
-    throw validationError("La data_fine deve essere successiva alla data_inizio");
+    throw validationError("TASK_END_BEFORE_START", "End date must be after start date");
   }
 
   const diffTime = endDate - startDate;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays % 14 !== 0) {
-    throw validationError(`La differenza tra data_fine e data_inizio deve essere un multiplo di 14 giorni. Differenza attuale: ${diffDays} giorni`);
+    throw validationError("TASK_BIWEEKLY_RANGE", `Date range must be a multiple of 14 days. Current difference: ${diffDays} days`);
   }
 
   let etcReferenceDate = null;
   if (data_riferimento_etc) {
     etcReferenceDate = new Date(data_riferimento_etc);
     if (isNaN(etcReferenceDate.getTime())) {
-      throw validationError("data_riferimento_etc non valida");
+      throw validationError("TASK_INVALID_ETC_DATE", "data_riferimento_etc non valida");
     }
     etcReferenceDate.setHours(0, 0, 0, 0);
   }

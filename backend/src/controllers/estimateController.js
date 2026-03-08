@@ -8,7 +8,7 @@ async function create(req, res) {
     const result = await estimateService.createEstimate(data, req.user);
 
     res.status(201).json({
-      message: "Stima creata correttamente",
+      message: "Estimate created successfully",
       estimate: result.estimate
     });
   } catch (err) {
@@ -29,7 +29,7 @@ async function getAll(req, res) {
     );
 
     res.status(200).json({
-      message: "Stime recuperate correttamente",
+      message: "Estimates retrieved successfully",
       estimates,
       total: estimates.length
     });
@@ -44,7 +44,7 @@ async function getById(req, res) {
     const estimate = await estimateService.getEstimateById(estimateId, req.user);
 
     res.status(200).json({
-      message: "Stima recuperata correttamente",
+      message: "Estimate retrieved successfully",
       estimate
     });
   } catch (err) {
@@ -59,7 +59,7 @@ async function update(req, res) {
     const estimate = await estimateService.updateEstimate(estimateId, data, req.user);
 
     res.status(200).json({
-      message: "Stima aggiornata correttamente",
+      message: "Estimate updated successfully",
       estimate
     });
   } catch (err) {
@@ -73,7 +73,7 @@ async function remove(req, res) {
     const estimate = await estimateService.deleteEstimate(estimateId, req.user);
 
     res.status(200).json({
-      message: "Stima eliminata correttamente",
+      message: "Estimate deleted successfully",
       estimate
     });
   } catch (err) {
@@ -88,7 +88,7 @@ async function createTask(req, res) {
     const task = await estimateService.createTask(estimateId, data, req.user);
 
     res.status(201).json({
-      message: "Task creato correttamente",
+      message: "Task created successfully",
       task
     });
   } catch (err) {
@@ -106,7 +106,7 @@ async function updateTask(req, res) {
     const task = await estimateService.updateTask(estimateId, taskId, data, req.user);
 
     res.status(200).json({
-      message: "Task aggiornato correttamente",
+      message: "Task updated successfully",
       task
     });
   } catch (err) {
@@ -123,7 +123,7 @@ async function deleteTask(req, res) {
     const task = await estimateService.deleteTask(estimateId, taskId, req.user);
 
     res.status(200).json({
-      message: "Task eliminato correttamente",
+      message: "Task deleted successfully",
       task
     });
   } catch (err) {
@@ -138,7 +138,7 @@ async function clone(req, res) {
     const estimate = await estimateService.cloneEstimate(estimateId, title, project_key, req.user);
 
     res.status(201).json({
-      message: "Stima clonata correttamente",
+      message: "Estimate cloned successfully",
       estimate
     });
   } catch (err) {
@@ -153,7 +153,7 @@ async function convert(req, res) {
     const estimate = await estimateService.simpleConvert(estimateId, project_id, req.user);
 
     res.status(200).json({
-      message: "Stima convertita in progetto correttamente",
+      message: "Estimate converted to project successfully",
       estimate
     });
   } catch (err) {
@@ -168,7 +168,7 @@ async function saveDraftProject(req, res) {
     const result = await estimateService.saveDraftProject(estimateId, data, req.user);
 
     res.status(200).json({
-      message: "Bozza progetto salvata",
+      message: "Project draft saved",
       project_id: result.project_id,
       tasks_created: result.tasks_created
     });
@@ -195,7 +195,7 @@ async function convertToProject(req, res) {
     const result = await estimateService.convertToProject(estimateId, data, req.user);
 
     res.status(201).json({
-      message: "Stima convertita in progetto correttamente",
+      message: "Estimate converted to project successfully",
       project_id: result.project_id,
       tasks_created: result.tasks_created
     });
@@ -211,7 +211,7 @@ async function calculateFTE(req, res) {
     const result = await estimateService.calculateFTE(estimateId, data, req.user);
 
     res.status(200).json({
-      message: "FTE calcolati correttamente",
+      message: "FTE calculated successfully",
       ...result
     });
   } catch (err) {

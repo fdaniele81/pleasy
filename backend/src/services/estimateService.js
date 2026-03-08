@@ -51,7 +51,7 @@ function ensurePhaseConfigValues(config) {
 async function createEstimate(data, user) {
   const client = await estimateRepository.findClientById(data.client_id);
   if (!client) {
-    throw serviceError("Cliente non trovato", 404);
+    throw serviceError("ESTIMATE_CLIENT_NOT_FOUND", "Client not found", 404);
   }
 
   checkCompanyAccess(user, client.company_id);
@@ -61,10 +61,10 @@ async function createEstimate(data, user) {
   if (data.project_id) {
     const project = await estimateRepository.findProjectById(data.project_id);
     if (!project) {
-      throw serviceError("Progetto non trovato", 404);
+      throw serviceError("ESTIMATE_PROJECT_NOT_FOUND", "Project not found", 404);
     }
     if (project.client_id !== data.client_id) {
-      throw serviceError("Il progetto non appartiene al cliente specificato", 400);
+      throw serviceError("ESTIMATE_PROJECT_CLIENT_MISMATCH", "Project does not belong to the specified client", 400);
     }
   }
 
@@ -105,7 +105,7 @@ async function getEstimates(filters, user) {
 async function getEstimateById(estimateId, user) {
   const estimate = await estimateRepository.findById(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -170,7 +170,7 @@ function calculateTotals(tasks, contingencyPercentage) {
 async function updateEstimate(estimateId, data, user) {
   const estimate = await estimateRepository.findByIdMinimal(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -178,7 +178,7 @@ async function updateEstimate(estimateId, data, user) {
   if (data.project_id && data.project_id !== null) {
     const project = await estimateRepository.findProjectById(data.project_id);
     if (!project) {
-      throw serviceError("Progetto non trovato", 404);
+      throw serviceError("ESTIMATE_PROJECT_NOT_FOUND", "Project not found", 404);
     }
   }
 
@@ -188,7 +188,7 @@ async function updateEstimate(estimateId, data, user) {
 async function deleteEstimate(estimateId, user) {
   const estimate = await estimateRepository.findByIdMinimal(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -199,7 +199,7 @@ async function deleteEstimate(estimateId, user) {
 async function createTask(estimateId, data, user) {
   const estimate = await estimateRepository.findByIdMinimal(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -236,7 +236,7 @@ async function createTask(estimateId, data, user) {
 async function updateTask(estimateId, taskId, data, user) {
   const task = await estimateRepository.findTaskById(taskId, estimateId);
   if (!task) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
@@ -247,7 +247,7 @@ async function updateTask(estimateId, taskId, data, user) {
 async function deleteTask(estimateId, taskId, user) {
   const task = await estimateRepository.findTaskById(taskId, estimateId);
   if (!task) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, task.company_id);
@@ -258,7 +258,7 @@ async function deleteTask(estimateId, taskId, user) {
 async function cloneEstimate(estimateId, newTitle, projectKey, user) {
   const estimate = await estimateRepository.findById(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -269,22 +269,22 @@ async function cloneEstimate(estimateId, newTitle, projectKey, user) {
 async function simpleConvert(estimateId, projectId, user) {
   const estimate = await estimateRepository.findById(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   if (estimate.status === 'CONVERTED') {
-    throw serviceError("La stima è già stata convertita", 400);
+    throw serviceError("ESTIMATE_ALREADY_CONVERTED", "Estimate has already been converted", 400);
   }
 
   checkCompanyAccess(user, estimate.company_id);
 
   const project = await estimateRepository.findProjectById(projectId);
   if (!project) {
-    throw serviceError("Progetto non trovato", 404);
+    throw serviceError("ESTIMATE_PROJECT_NOT_FOUND", "Project not found", 404);
   }
 
   if (project.client_id !== estimate.client_id) {
-    throw serviceError("Il progetto deve appartenere allo stesso cliente della stima", 400);
+    throw serviceError("ESTIMATE_PROJECT_CLIENT_MISMATCH", "Project must belong to the same client as the estimate", 400);
   }
 
   return estimateRepository.update(estimateId, {
@@ -297,11 +297,11 @@ async function simpleConvert(estimateId, projectId, user) {
 async function saveDraftProject(estimateId, data, user) {
   const estimate = await estimateRepository.findById(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   if (estimate.status === 'CONVERTED') {
-    throw serviceError("La stima è già stata convertita", 400);
+    throw serviceError("ESTIMATE_ALREADY_CONVERTED", "Estimate has already been converted", 400);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -361,7 +361,7 @@ async function saveDraftProject(estimateId, data, user) {
 async function getDraftProject(estimateId, user) {
   const estimate = await estimateRepository.findById(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -383,11 +383,11 @@ async function getDraftProject(estimateId, user) {
 async function convertToProject(estimateId, data, user) {
   const estimate = await estimateRepository.findById(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   if (estimate.status === 'CONVERTED') {
-    throw serviceError("La stima è già stata convertita in progetto", 400);
+    throw serviceError("ESTIMATE_ALREADY_CONVERTED", "Estimate has already been converted to a project", 400);
   }
 
   checkCompanyAccess(user, estimate.company_id);
@@ -418,7 +418,7 @@ async function convertToProject(estimateId, data, user) {
     for (const pmUserId of data.project_managers) {
       const pm = await estimateRepository.findUserById(pmUserId, estimate.company_id);
       if (!pm) {
-        throw serviceError(`Project Manager non trovato o non autorizzato: ${pmUserId}`, 400);
+        throw serviceError("ESTIMATE_PM_NOT_FOUND", `Project Manager not found or unauthorized: ${pmUserId}`, 400);
       }
       await estimateRepository.addProjectManager(project_id, pmUserId);
     }
@@ -455,7 +455,7 @@ async function convertToProject(estimateId, data, user) {
 async function calculateFTE(estimateId, data, user) {
   const estimate = await estimateRepository.findById(estimateId);
   if (!estimate) {
-    throw serviceError("Stima non trovata", 404);
+    throw serviceError("ESTIMATE_NOT_FOUND", "Estimate not found", 404);
   }
 
   checkCompanyAccess(user, estimate.company_id);

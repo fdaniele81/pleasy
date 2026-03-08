@@ -7,7 +7,7 @@ async function getByTaskId(taskId, user) {
   const taskCompany = await taskEtcRepository.getTaskCompanyId(taskId);
 
   if (!taskCompany) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, taskCompany.company_id);
@@ -19,17 +19,17 @@ async function upsert(data, user) {
   const { task_id, etc_hours } = data;
 
   if (!task_id || etc_hours === undefined) {
-    throw serviceError("task_id e etc_hours sono obbligatori", 400);
+    throw serviceError("TASK_ETC_REQUIRED_FIELDS", "task_id and etc_hours are required", 400);
   }
 
   if (etc_hours < 0) {
-    throw serviceError("etc_hours non può essere negativo", 400);
+    throw serviceError("TASK_ETC_NEGATIVE_HOURS", "etc_hours cannot be negative", 400);
   }
 
   const taskCompany = await taskEtcRepository.getTaskCompanyId(task_id);
 
   if (!taskCompany) {
-    throw serviceError("Task non trovato", 404);
+    throw serviceError("TASK_ETC_TASK_NOT_FOUND", "Task not found", 404);
   }
 
   checkCompanyAccess(user, taskCompany.company_id);
@@ -42,7 +42,7 @@ async function remove(etcId, user) {
   const etc = await taskEtcRepository.getById(etcId);
 
   if (!etc) {
-    throw serviceError("ETC non trovato", 404);
+    throw serviceError("TASK_ETC_NOT_FOUND", "ETC not found", 404);
   }
 
   checkCompanyAccess(user, etc.company_id);

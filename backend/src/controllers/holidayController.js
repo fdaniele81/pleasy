@@ -5,7 +5,7 @@ async function getAll(req, res) {
   try {
     const holidays = await holidayService.getAll(req.user);
     res.status(200).json({
-      message: "Festività recuperate correttamente",
+      message: "Holidays retrieved successfully",
       holidays: holidays,
       total: holidays.length,
     });
@@ -18,7 +18,7 @@ async function create(req, res) {
   try {
     const holiday = await holidayService.create(req.body, req.user);
     res.status(201).json({
-      message: "Festività creata correttamente",
+      message: "Holiday created successfully",
       holiday,
     });
   } catch (err) {
@@ -30,7 +30,7 @@ async function update(req, res) {
   try {
     const holiday = await holidayService.update(req.params.holiday_id, req.body, req.user);
     res.status(200).json({
-      message: "Festività aggiornata correttamente",
+      message: "Holiday updated successfully",
       holiday,
     });
   } catch (err) {
@@ -42,7 +42,7 @@ async function remove(req, res) {
   try {
     const holidayId = await holidayService.remove(req.params.holiday_id, req.user);
     res.status(200).json({
-      message: "Festività eliminata correttamente",
+      message: "Holiday deleted successfully",
       holiday_id: holidayId,
     });
   } catch (err) {

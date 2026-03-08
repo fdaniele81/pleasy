@@ -6,7 +6,7 @@ async function getByDateRange(req, res) {
     const { start_date, end_date } = req.query;
     const result = await timeoffService.getByDateRange(start_date, end_date, req.user);
     res.status(200).json({
-      message: "Time off recuperati correttamente",
+      message: "Time off retrieved successfully",
       timeOffs: result.timeOffs,
       historicalTotals: result.historicalTotals,
     });
@@ -19,7 +19,7 @@ async function save(req, res) {
   try {
     const timeOff = await timeoffService.save(req.body, req.user);
     res.status(200).json({
-      message: timeOff ? "Time off salvato correttamente" : "Time off eliminato correttamente",
+      message: timeOff ? "Time off saved successfully" : "Time off deleted successfully",
       timeOff,
     });
   } catch (err) {
@@ -31,7 +31,7 @@ async function remove(req, res) {
   try {
     const timeOffId = await timeoffService.remove(req.params.time_off_id, req.user);
     res.status(200).json({
-      message: "Time off eliminato correttamente",
+      message: "Time off deleted successfully",
       time_off_id: timeOffId,
     });
   } catch (err) {
@@ -43,7 +43,7 @@ async function getTypes(req, res) {
   try {
     const types = await timeoffService.getTypes();
     res.status(200).json({
-      message: "Time off types recuperati correttamente",
+      message: "Time off types retrieved successfully",
       types,
     });
   } catch (err) {
@@ -56,7 +56,7 @@ async function getTotals(req, res) {
     const { start_date, end_date } = req.query;
     const totals = await timeoffService.getTotals(start_date, end_date, req.user);
     res.status(200).json({
-      message: "Totali time off recuperati correttamente",
+      message: "Time off totals retrieved successfully",
       totals,
     });
   } catch (err) {
@@ -69,7 +69,7 @@ async function getForCapacityPlanning(req, res) {
     const { start_date, end_date } = req.query;
     const userTimeOffs = await timeoffService.getForCapacityPlanning(start_date, end_date, req.user);
     res.status(200).json({
-      message: "Time off per capacity planning recuperati correttamente",
+      message: "Time off for capacity planning retrieved successfully",
       userTimeOffs,
     });
   } catch (err) {
@@ -82,7 +82,7 @@ async function getGanttDaily(req, res) {
     const { start_date, end_date } = req.query;
     const timeOffs = await timeoffService.getGanttDaily(start_date, end_date, req.user);
     res.status(200).json({
-      message: "Time off giornalieri per Gantt recuperati correttamente",
+      message: "Daily time off for Gantt retrieved successfully",
       timeOffs,
     });
   } catch (err) {
@@ -95,7 +95,7 @@ async function getCompanyPlan(req, res) {
     const { start_date, end_date } = req.query;
     const users = await timeoffService.getCompanyPlan(start_date, end_date, req.user);
     res.status(200).json({
-      message: "Piano ferie della company recuperato correttamente",
+      message: "Company vacation plan retrieved successfully",
       users,
     });
   } catch (err) {

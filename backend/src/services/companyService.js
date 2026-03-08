@@ -7,12 +7,12 @@ async function create(data) {
   const { company_key, legal_name, vat_number } = data;
 
   if (!company_key || !legal_name) {
-    throw serviceError("Il codice della company e il nome sono obbligatori", 400);
+    throw serviceError("COMPANY_REQUIRED_FIELDS", "Company code and name are required", 400);
   }
 
   const exists = await companyRepository.checkCompanyKeyExists(company_key);
   if (exists) {
-    throw serviceError("Codice Company già presente a sistema", 409);
+    throw serviceError("COMPANY_CODE_DUPLICATE", "Company code already exists", 409);
   }
 
   const company_id = uuidv4();
@@ -26,7 +26,7 @@ async function update(companyId, data) {
 
   const existingCompany = await companyRepository.getCompanyById(companyId);
   if (!existingCompany) {
-    throw serviceError("Company non trovata", 404);
+    throw serviceError("COMPANY_NOT_FOUND", "Company not found", 404);
   }
 
   const newLegalName = legal_name || existingCompany.legal_name;

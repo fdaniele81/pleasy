@@ -48,22 +48,22 @@ function formatUserResponse(user) {
 
 async function login(email, password) {
   if (!email || !password) {
-    throw serviceError("Email e password sono obbligatori", 400);
+    throw serviceError("AUTH_EMAIL_PASSWORD_REQUIRED", "Email and password are required", 400);
   }
 
   const user = await authRepository.getUserByEmail(email);
 
   if (!user) {
-    throw serviceError("Utente non trovato", 401);
+    throw serviceError("AUTH_USER_NOT_FOUND", "User not found", 401);
   }
 
   if (user.status_id !== STATUS.ACTIVE) {
-    throw serviceError("Utente non attivo", 401);
+    throw serviceError("AUTH_USER_INACTIVE", "User is not active", 401);
   }
 
   const match = await bcrypt.compare(password, user.password_hash);
   if (!match) {
-    throw serviceError("Credenziali non valide", 401);
+    throw serviceError("AUTH_INVALID_CREDENTIALS", "Invalid credentials", 401);
   }
 
   return {
@@ -75,36 +75,36 @@ async function login(email, password) {
 
 async function impersonate(adminEmail, adminPassword, targetEmail) {
   if (!adminEmail || !adminPassword || !targetEmail) {
-    throw serviceError("Parametri mancanti: adminEmail, adminPassword e targetEmail sono richiesti", 400);
+    throw serviceError("AUTH_IMPERSONATE_PARAMS_REQUIRED", "Missing parameters: adminEmail, adminPassword and targetEmail are required", 400);
   }
 
   const admin = await authRepository.getUserByEmail(adminEmail);
 
   if (!admin) {
-    throw serviceError("Credenziali admin non valide", 401);
+    throw serviceError("AUTH_ADMIN_INVALID_CREDENTIALS", "Invalid admin credentials", 401);
   }
 
   if (admin.role_id === ROLES.USER) {
-    throw serviceError("Accesso negato: solo admin e PM possono impersonare utenti", 403);
+    throw serviceError("AUTH_IMPERSONATE_ROLE_DENIED", "Access denied: only admins and PMs can impersonate users", 403);
   }
 
   if (admin.status_id !== STATUS.ACTIVE) {
-    throw serviceError("Admin non attivo", 401);
+    throw serviceError("AUTH_ADMIN_INACTIVE", "Admin is not active", 401);
   }
 
   const match = await bcrypt.compare(adminPassword, admin.password_hash);
   if (!match) {
-    throw serviceError("Credenziali admin non valide", 401);
+    throw serviceError("AUTH_ADMIN_INVALID_CREDENTIALS", "Invalid admin credentials", 401);
   }
 
   const targetUser = await authRepository.getUserByEmailForImpersonate(targetEmail);
 
   if (!targetUser) {
-    throw serviceError("Utente da impersonare non trovato", 404);
+    throw serviceError("AUTH_IMPERSONATE_USER_NOT_FOUND", "User to impersonate not found", 404);
   }
 
   if (admin.role_id === ROLES.PM && admin.company_id !== targetUser.company_id) {
-    throw serviceError("Accesso negato: i PM possono impersonare solo utenti della propria company", 403);
+    throw serviceError("AUTH_IMPERSONATE_COMPANY_MISMATCH", "Access denied: PMs can only impersonate users from their own company", 403);
   }
 
   logger.audit(AUDIT_EVENTS.IMPERSONATION, {
@@ -128,24 +128,24 @@ async function impersonate(adminEmail, adminPassword, targetEmail) {
 
 async function refreshAccessToken(refreshToken) {
   if (!refreshToken) {
-    throw serviceError("Refresh token mancante", 401);
+    throw serviceError("AUTH_REFRESH_TOKEN_MISSING", "Refresh token missing", 401);
   }
 
   try {
     const decoded = jwt.verify(refreshToken, JWT_SECRET);
 
     if (decoded.type !== "refresh") {
-      throw serviceError("Token non valido", 401);
+      throw serviceError("AUTH_TOKEN_INVALID", "Invalid token", 401);
     }
 
     const user = await authRepository.getUserById(decoded.user_id);
 
     if (!user) {
-      throw serviceError("Utente non trovato", 401);
+      throw serviceError("AUTH_USER_NOT_FOUND", "User not found", 401);
     }
 
     if (user.status_id !== STATUS.ACTIVE) {
-      throw serviceError("Utente non attivo", 401);
+      throw serviceError("AUTH_USER_INACTIVE", "User is not active", 401);
     }
 
     return {
@@ -156,14 +156,14 @@ async function refreshAccessToken(refreshToken) {
     if (err.statusCode) {
       throw err;
     }
-    throw serviceError("Refresh token non valido o scaduto", 401);
+    throw serviceError("AUTH_REFRESH_TOKEN_EXPIRED", "Refresh token expired or invalid", 401);
   }
 }
 
 async function getUserProfile(userId) {
   const user = await authRepository.getUserById(userId);
-  if (!user) throw serviceError("Utente non trovato", 404);
-  if (user.status_id !== STATUS.ACTIVE) throw serviceError("Utente non attivo", 401);
+  if (!user) throw serviceError("AUTH_USER_NOT_FOUND", "User not found", 404);
+  if (user.status_id !== STATUS.ACTIVE) throw serviceError("AUTH_USER_INACTIVE", "User is not active", 401);
   return formatUserResponse(user);
 }
 

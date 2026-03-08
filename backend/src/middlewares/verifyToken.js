@@ -17,14 +17,14 @@ function verifyToken(req, res, next) {
   }
 
   if (!token) {
-    return res.status(401).json({ error: "Token mancante" });
+    return res.status(401).json({ error: "AUTH_TOKEN_MISSING", message: "Token missing" });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     if (decoded.type && decoded.type !== "access") {
-      return res.status(401).json({ error: "Token non valido" });
+      return res.status(401).json({ error: "AUTH_TOKEN_INVALID", message: "Invalid token" });
     }
 
     req.user = decoded;
@@ -32,9 +32,9 @@ function verifyToken(req, res, next) {
 
   } catch (err) {
     if (process.env.NODE_ENV !== "production") {
-      console.error("Errore verifica token:", err.message);
+      console.error("Token verification error:", err.message);
     }
-    return res.status(401).json({ error: "Token non valido o scaduto" });
+    return res.status(401).json({ error: "AUTH_TOKEN_EXPIRED", message: "Token expired or invalid" });
   }
 }
 

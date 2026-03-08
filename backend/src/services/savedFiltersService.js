@@ -11,20 +11,20 @@ async function getFilters(userId) {
 
 async function saveFilter(userId, section, name, filters) {
   if (!VALID_SECTIONS.includes(section)) {
-    throw serviceError("Sezione non valida", 400);
+    throw serviceError("FILTER_INVALID_SECTION", "Invalid section", 400);
   }
   if (!name || !name.trim()) {
-    throw serviceError("Il nome del filtro è obbligatorio", 400);
+    throw serviceError("FILTER_NAME_REQUIRED", "Filter name is required", 400);
   }
   if (!filters || typeof filters !== "object") {
-    throw serviceError("I filtri sono obbligatori", 400);
+    throw serviceError("FILTER_DATA_REQUIRED", "Filters are required", 400);
   }
 
   const savedFilters = await userRepository.getSavedFilters(userId);
   const sectionFilters = savedFilters[section] || [];
 
   if (sectionFilters.length >= MAX_FILTERS_PER_SECTION) {
-    throw serviceError(`Massimo ${MAX_FILTERS_PER_SECTION} filtri per sezione`, 400);
+    throw serviceError("FILTER_MAX_PER_SECTION", `Maximum ${MAX_FILTERS_PER_SECTION} filters per section`, 400);
   }
 
   const newFilter = {
@@ -43,7 +43,7 @@ async function saveFilter(userId, section, name, filters) {
 
 async function updateFilter(userId, section, filterId, name, filters) {
   if (!VALID_SECTIONS.includes(section)) {
-    throw serviceError("Sezione non valida", 400);
+    throw serviceError("FILTER_INVALID_SECTION", "Invalid section", 400);
   }
 
   const savedFilters = await userRepository.getSavedFilters(userId);
@@ -51,7 +51,7 @@ async function updateFilter(userId, section, filterId, name, filters) {
 
   const filterIndex = sectionFilters.findIndex((f) => f.id === filterId);
   if (filterIndex === -1) {
-    throw serviceError("Filtro non trovato", 404);
+    throw serviceError("FILTER_NOT_FOUND", "Filter not found", 404);
   }
 
   if (name) sectionFilters[filterIndex].name = name.trim();
@@ -64,7 +64,7 @@ async function updateFilter(userId, section, filterId, name, filters) {
 
 async function deleteFilter(userId, section, filterId) {
   if (!VALID_SECTIONS.includes(section)) {
-    throw serviceError("Sezione non valida", 400);
+    throw serviceError("FILTER_INVALID_SECTION", "Invalid section", 400);
   }
 
   const savedFilters = await userRepository.getSavedFilters(userId);
@@ -72,7 +72,7 @@ async function deleteFilter(userId, section, filterId) {
 
   const filterIndex = sectionFilters.findIndex((f) => f.id === filterId);
   if (filterIndex === -1) {
-    throw serviceError("Filtro non trovato", 404);
+    throw serviceError("FILTER_NOT_FOUND", "Filter not found", 404);
   }
 
   sectionFilters.splice(filterIndex, 1);

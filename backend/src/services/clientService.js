@@ -11,7 +11,7 @@ async function create(data, user) {
   const { company_id, client_key, client_name, client_description, color, project_phases_config } = data;
 
   if (!company_id || !client_key || !client_name) {
-    throw serviceError("Company, codice cliente e nome sono obbligatori", 400);
+    throw serviceError("CLIENT_REQUIRED_FIELDS", "Company, client code and name are required", 400);
   }
 
   checkCompanyAccess(user, company_id);
@@ -19,7 +19,7 @@ async function create(data, user) {
 
   const exists = await clientRepository.checkClientKeyExists(company_id, client_key);
   if (exists) {
-    throw serviceError("Codice cliente già presente per questa company", 409);
+    throw serviceError("CLIENT_CODE_DUPLICATE", "Client code already exists for this company", 409);
   }
 
   const client_id = uuidv4();
@@ -57,7 +57,7 @@ async function update(clientId, data, user) {
   const { client_name, client_description, status_id, color, project_phases_config } = data;
 
   if (!client_name) {
-    throw serviceError("Nome cliente è obbligatorio", 400);
+    throw serviceError("CLIENT_NAME_REQUIRED", "Client name is required", 400);
   }
 
   await clientNotExistsError(clientId);
@@ -119,7 +119,7 @@ async function getPhasesConfig(clientId, user) {
 
 async function updatePhasesConfig(clientId, phasesConfig, user) {
   if (!phasesConfig) {
-    throw serviceError("Configurazione fasi progetto è obbligatoria", 400);
+    throw serviceError("CLIENT_PHASES_CONFIG_REQUIRED", "Project phases configuration is required", 400);
   }
 
   await clientNotExistsError(clientId);
@@ -186,7 +186,7 @@ async function getClientsWithProjects(user) {
 
 async function assignUser(clientId, userId, user) {
   if (!clientId || !userId) {
-    throw serviceError("Client ID e User ID sono obbligatori", 400);
+    throw serviceError("CLIENT_USER_IDS_REQUIRED", "Client ID and User ID are required", 400);
   }
 
   await clientNotExistsError(clientId);
@@ -197,7 +197,7 @@ async function assignUser(clientId, userId, user) {
 
   const tmProject = await clientRepository.getTMProjectByClientId(clientId);
   if (!tmProject) {
-    throw serviceError("Progetto T&M non trovato per questo cliente", 404);
+    throw serviceError("CLIENT_TM_PROJECT_NOT_FOUND", "T&M project not found for this client", 404);
   }
 
   const existingTask = await taskRepository.findByOwnerAndProject(userId, tmProject.project_id);
@@ -263,7 +263,7 @@ async function getTMDetails(clientId, user) {
   const rows = await clientRepository.getTMProjectDetails(clientId);
 
   if (rows.length === 0) {
-    throw serviceError("Progetto T&M non trovato per questo cliente", 404);
+    throw serviceError("CLIENT_TM_PROJECT_NOT_FOUND", "T&M project not found for this client", 404);
   }
 
   const projectId = rows[0].project_id;
@@ -304,7 +304,7 @@ async function getTMDetails(clientId, user) {
 
 async function unassignUser(clientId, userId, user) {
   if (!clientId || !userId) {
-    throw serviceError("Client ID e User ID sono obbligatori", 400);
+    throw serviceError("CLIENT_USER_IDS_REQUIRED", "Client ID and User ID are required", 400);
   }
 
   await clientNotExistsError(clientId);
@@ -315,13 +315,13 @@ async function unassignUser(clientId, userId, user) {
 
   const tmProject = await clientRepository.getTMProjectByClientId(clientId);
   if (!tmProject) {
-    throw serviceError("Progetto T&M non trovato per questo cliente", 404);
+    throw serviceError("CLIENT_TM_PROJECT_NOT_FOUND", "T&M project not found for this client", 404);
   }
 
   const existingTask = await taskRepository.findByOwnerAndProject(userId, tmProject.project_id, true);
 
   if (!existingTask) {
-    throw serviceError("Utente non assegnato a questo cliente", 404);
+    throw serviceError("CLIENT_USER_NOT_ASSIGNED", "User not assigned to this client", 404);
   }
 
   const deletedTask = await taskRepository.softDelete(existingTask.task_id);
@@ -336,7 +336,7 @@ async function unassignUser(clientId, userId, user) {
 
 async function assignPM(clientId, userId, user) {
   if (!clientId || !userId) {
-    throw serviceError("Client ID e User ID sono obbligatori", 400);
+    throw serviceError("CLIENT_USER_IDS_REQUIRED", "Client ID and User ID are required", 400);
   }
 
   await clientNotExistsError(clientId);
@@ -347,17 +347,17 @@ async function assignPM(clientId, userId, user) {
 
   const userInfo = await projectRepository.getUserInfo(userId);
   if (!userInfo || (userInfo.role_id !== 'PM' && userInfo.role_id !== 'ADMIN')) {
-    throw serviceError("L'utente deve avere ruolo PM o ADMIN", 400);
+    throw serviceError("PROJECT_PM_ROLE_REQUIRED", "User must have PM or ADMIN role", 400);
   }
 
   const tmProject = await clientRepository.getTMProjectByClientId(clientId);
   if (!tmProject) {
-    throw serviceError("Progetto T&M non trovato per questo cliente", 404);
+    throw serviceError("CLIENT_TM_PROJECT_NOT_FOUND", "T&M project not found for this client", 404);
   }
 
   const alreadyAssigned = await projectRepository.checkProjectManagerExists(tmProject.project_id, userId);
   if (alreadyAssigned) {
-    throw serviceError("PM già assegnato a questo cliente", 409);
+    throw serviceError("CLIENT_PM_ALREADY_ASSIGNED", "PM already assigned to this client", 409);
   }
 
   await projectRepository.addProjectManager(tmProject.project_id, userId);
@@ -372,7 +372,7 @@ async function assignPM(clientId, userId, user) {
 
 async function unassignPM(clientId, userId, user) {
   if (!clientId || !userId) {
-    throw serviceError("Client ID e User ID sono obbligatori", 400);
+    throw serviceError("CLIENT_USER_IDS_REQUIRED", "Client ID and User ID are required", 400);
   }
 
   await clientNotExistsError(clientId);
@@ -383,12 +383,12 @@ async function unassignPM(clientId, userId, user) {
 
   const tmProject = await clientRepository.getTMProjectByClientId(clientId);
   if (!tmProject) {
-    throw serviceError("Progetto T&M non trovato per questo cliente", 404);
+    throw serviceError("CLIENT_TM_PROJECT_NOT_FOUND", "T&M project not found for this client", 404);
   }
 
   const isAssigned = await projectRepository.checkProjectManagerExists(tmProject.project_id, userId);
   if (!isAssigned) {
-    throw serviceError("PM non assegnato a questo cliente", 404);
+    throw serviceError("CLIENT_PM_NOT_ASSIGNED", "PM not assigned to this client", 404);
   }
 
   await projectRepository.removeProjectManager(tmProject.project_id, userId);
@@ -401,7 +401,7 @@ async function unassignPM(clientId, userId, user) {
 
 async function updateTMReconciliation(clientId, reconciliationRequired, user) {
   if (reconciliationRequired === undefined || reconciliationRequired === null) {
-    throw serviceError("Il campo reconciliation_required è obbligatorio", 400);
+    throw serviceError("CLIENT_RECONCILIATION_REQUIRED", "The reconciliation_required field is required", 400);
   }
 
   await clientNotExistsError(clientId);
@@ -411,7 +411,7 @@ async function updateTMReconciliation(clientId, reconciliationRequired, user) {
 
   const result = await clientRepository.updateTMReconciliation(clientId, reconciliationRequired);
   if (!result) {
-    throw serviceError("Progetto T&M non trovato per questo cliente", 404);
+    throw serviceError("CLIENT_TM_PROJECT_NOT_FOUND", "T&M project not found for this client", 404);
   }
 
   return result;

@@ -8,7 +8,7 @@ async function getTimesheets(req, res) {
     const result = await timesheetService.getTimesheets(start_date, end_date, req.user);
 
     res.status(200).json({
-      message: "Timesheet recuperati correttamente",
+      message: "Timesheets retrieved successfully",
       projects: result.projects
     });
   } catch (err) {
@@ -22,7 +22,7 @@ async function saveTimesheet(req, res) {
     const timesheet = await timesheetService.saveTimesheet(data, req.user);
 
     res.status(200).json({
-      message: "Timesheet salvato correttamente",
+      message: "Timesheet saved successfully",
       timesheet
     });
   } catch (err) {
@@ -36,7 +36,7 @@ async function deleteTimesheet(req, res) {
     const deletedId = await timesheetService.deleteTimesheet(timesheetId, req.user);
 
     res.status(200).json({
-      message: "Timesheet eliminato correttamente",
+      message: "Timesheet deleted successfully",
       timesheet_id: deletedId
     });
   } catch (err) {
@@ -57,7 +57,7 @@ async function submitTimesheets(req, res) {
     }
 
     res.status(200).json({
-      message: `${result.count} timesheet sottomessi correttamente`,
+      message: `${result.count} timesheets submitted successfully`,
       count: result.count,
       snapshot_id: result.snapshot_id
     });
@@ -97,7 +97,7 @@ async function getSnapshots(req, res) {
     const snapshots = await timesheetService.getSnapshots(start_date, end_date, req.user);
 
     res.status(200).json({
-      message: "Snapshot recuperati correttamente",
+      message: "Snapshots retrieved successfully",
       snapshots
     });
   } catch (err) {
@@ -111,7 +111,7 @@ async function getSnapshotDetails(req, res) {
     const result = await timesheetService.getSnapshotDetails(snapshotId, req.user);
 
     res.status(200).json({
-      message: "Dettagli snapshot recuperati correttamente",
+      message: "Snapshot details retrieved successfully",
       ...result
     });
   } catch (err) {
@@ -125,13 +125,13 @@ async function getPreviewSubmission(req, res) {
 
     if (tasks.length === 0) {
       return res.status(200).json({
-        message: "Nessun consuntivo da sottomettere",
+        message: "No timesheets to submit",
         tasks: []
       });
     }
 
     res.status(200).json({
-      message: "Anteprima sottomissione recuperata correttamente",
+      message: "Submission preview retrieved successfully",
       tasks
     });
   } catch (err) {
@@ -145,7 +145,7 @@ async function reopenSnapshot(req, res) {
     const result = await timesheetService.reopenSnapshot(snapshotId, req.user);
 
     res.status(200).json({
-      message: `Snapshot riaperto correttamente. ${result.timesheets_reopened} timesheet sono ora modificabili`,
+      message: `Snapshot reopened successfully. ${result.timesheets_reopened} timesheets are now editable`,
       snapshot_id: result.snapshot_id,
       timesheets_reopened: result.timesheets_reopened
     });
@@ -160,7 +160,7 @@ async function getTMPlanning(req, res) {
     const data = await timesheetService.getTMPlanning(start_date, end_date, req.user);
 
     res.status(200).json({
-      message: "Dati T&M Planning recuperati correttamente",
+      message: "T&M Planning data retrieved successfully",
       ...data
     });
   } catch (err) {
@@ -174,7 +174,7 @@ async function saveTimesheetForPM(req, res) {
     const timesheet = await timesheetService.saveTimesheetForPM(data, req.user);
 
     res.status(200).json({
-      message: "Timesheet salvato correttamente",
+      message: "Timesheet saved successfully",
       timesheet
     });
   } catch (err) {
@@ -189,7 +189,7 @@ async function getTaskHistory(req, res) {
     const result = await timesheetService.getTaskHistory(taskId, req.user, allUsers);
 
     res.status(200).json({
-      message: "Storico task recuperato correttamente",
+      message: "Task history retrieved successfully",
       ...result
     });
   } catch (err) {

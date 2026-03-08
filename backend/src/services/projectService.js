@@ -13,7 +13,7 @@ async function create(data, user) {
   const { client_id, project_key, title, description, status_id, project_details, project_managers } = data;
 
   if (!client_id || !project_key || !title) {
-    throw serviceError("Cliente, codice progetto e titolo sono obbligatori", 400);
+    throw serviceError("PROJECT_REQUIRED_FIELDS", "Client, project code and title are required", 400);
   }
 
   await clientNotExistsError(client_id);
@@ -26,7 +26,7 @@ async function create(data, user) {
 
   const exists = await projectRepository.checkProjectKeyExistsByCompany(user.company_id, project_key);
   if (exists) {
-    throw serviceError("Codice progetto già presente per questa company", 409);
+    throw serviceError("PROJECT_CODE_DUPLICATE", "Project code already exists for this company", 409);
   }
 
   const project_id = uuidv4();
@@ -58,7 +58,7 @@ async function update(projectId, data, user) {
   const { title, description, status_id, project_details } = data;
 
   if (!title) {
-    throw serviceError("Titolo progetto è obbligatorio", 400);
+    throw serviceError("PROJECT_TITLE_REQUIRED", "Project title is required", 400);
   }
 
   await projectNotExistsError(projectId);
@@ -87,7 +87,7 @@ async function addManager(projectId, userId, user) {
 
   const userRole = await projectRepository.getUserRole(userId);
   if (userRole !== 'PM' && userRole !== 'ADMIN') {
-    throw serviceError("L'utente deve avere ruolo PM o ADMIN", 400);
+    throw serviceError("PROJECT_PM_ROLE_REQUIRED", "User must have PM or ADMIN role", 400);
   }
 
   const projectCompanyId = await projectRepository.getProjectCompanyId(projectId);
@@ -95,12 +95,12 @@ async function addManager(projectId, userId, user) {
 
   const userCompanyId = await projectRepository.getUserCompanyId(userId);
   if (userCompanyId !== projectCompanyId) {
-    throw serviceError("L'utente deve appartenere alla stessa company del progetto", 403);
+    throw serviceError("PROJECT_PM_COMPANY_MISMATCH", "User must belong to the same company as the project", 403);
   }
 
   const exists = await projectRepository.checkProjectManagerExists(projectId, userId);
   if (exists) {
-    throw serviceError("Utente già assegnato come PM a questo progetto", 409);
+    throw serviceError("PROJECT_PM_ALREADY_ASSIGNED", "User already assigned as PM to this project", 409);
   }
 
   await projectRepository.addProjectManager(projectId, userId);
@@ -116,7 +116,7 @@ async function removeManager(projectId, userId, user) {
 
   const exists = await projectRepository.checkProjectManagerExists(projectId, userId);
   if (!exists) {
-    throw serviceError("Utente non assegnato come PM a questo progetto", 404);
+    throw serviceError("PROJECT_PM_NOT_ASSIGNED", "User not assigned as PM to this project", 404);
   }
 
   await projectRepository.removeProjectManager(projectId, userId);
@@ -134,7 +134,7 @@ async function getManagers(projectId, user) {
 
 async function updateManagers(projectId, projectManagers, user) {
   if (!Array.isArray(projectManagers)) {
-    throw serviceError("project_managers deve essere un array", 400);
+    throw serviceError("PROJECT_PM_MUST_BE_ARRAY", "project_managers must be an array", 400);
   }
 
   await projectNotExistsError(projectId);
@@ -152,12 +152,12 @@ async function updateManagers(projectId, projectManagers, user) {
 
       const userRole = await projectRepository.getUserRole(userId);
       if (userRole !== 'PM' && userRole !== 'ADMIN') {
-        throw serviceError("Tutti gli utenti devono avere ruolo PM o ADMIN", 400);
+        throw serviceError("PROJECT_PM_ROLE_REQUIRED", "All users must have PM or ADMIN role", 400);
       }
 
       const userCompanyId = await projectRepository.getUserCompanyId(userId);
       if (userCompanyId !== projectCompanyId) {
-        throw serviceError("Tutti gli utenti devono appartenere alla stessa company del progetto", 403);
+        throw serviceError("PROJECT_PM_COMPANY_MISMATCH", "All users must belong to the same company as the project", 403);
       }
 
       await projectRepository.addProjectManager(projectId, userId);
@@ -220,7 +220,7 @@ function generateKeyCandidates(title) {
 
 async function generateKey(title, user) {
   if (!title || !title.trim()) {
-    throw serviceError("Il titolo del progetto è obbligatorio per generare il codice", 400);
+    throw serviceError("PROJECT_TITLE_REQUIRED_FOR_KEY", "Project title is required to generate the code", 400);
   }
 
   const companyId = user.company_id;
@@ -243,12 +243,12 @@ async function generateKey(title, user) {
     }
   }
 
-  throw serviceError("Impossibile generare un codice progetto univoco", 500);
+  throw serviceError("PROJECT_KEY_GENERATION_FAILED", "Unable to generate a unique project code", 500);
 }
 
 async function validateKey(projectKey, user) {
   if (!projectKey) {
-    throw serviceError("Codice progetto è obbligatorio", 400);
+    throw serviceError("PROJECT_CODE_REQUIRED", "Project code is required", 400);
   }
 
   const companyId = user.company_id;
@@ -269,7 +269,7 @@ async function validateKey(projectKey, user) {
     }
   }
 
-  throw serviceError("Impossibile generare un codice progetto univoco", 500);
+  throw serviceError("PROJECT_KEY_GENERATION_FAILED", "Unable to generate a unique project code", 500);
 }
 
 export {

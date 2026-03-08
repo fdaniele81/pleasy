@@ -15,7 +15,7 @@ async function saveFilter(req, res) {
     const { section, name, filters } = req.body;
     const newFilter = await savedFiltersService.saveFilter(req.user.user_id, section, name, filters);
     res.status(201).json({
-      message: "Filtro salvato correttamente",
+      message: "Filter saved successfully",
       filter: newFilter,
     });
   } catch (err) {
@@ -30,7 +30,7 @@ async function updateFilter(req, res) {
       req.user.user_id, section, req.params.filterId, name, filters
     );
     res.status(200).json({
-      message: "Filtro aggiornato correttamente",
+      message: "Filter updated successfully",
       filter: updated,
     });
   } catch (err) {
@@ -43,7 +43,7 @@ async function deleteFilter(req, res) {
     const { section } = req.body;
     await savedFiltersService.deleteFilter(req.user.user_id, section, req.params.filterId);
     res.status(200).json({
-      message: "Filtro eliminato correttamente",
+      message: "Filter deleted successfully",
     });
   } catch (err) {
     handleError(res, err, "DELETE FILTER ERR");

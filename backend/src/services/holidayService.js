@@ -15,16 +15,16 @@ async function create(data, user) {
   const { name, date, is_recurring } = data;
 
   if (!name || !date) {
-    throw serviceError("Nome e data sono obbligatori", 400);
+    throw serviceError("HOLIDAY_REQUIRED_FIELDS", "Name and date are required", 400);
   }
 
   if (!validateDateFormat(date)) {
-    throw serviceError("Formato data non valido (usa YYYY-MM-DD)", 400);
+    throw serviceError("HOLIDAY_INVALID_DATE_FORMAT", "Invalid date format (use YYYY-MM-DD)", 400);
   }
 
   const exists = await holidayRepository.checkExists(name, date, user.company_id);
   if (exists) {
-    throw serviceError("Festività con questo nome e data già presente", 409);
+    throw serviceError("HOLIDAY_DUPLICATE", "Holiday with this name and date already exists", 409);
   }
 
   const holiday_id = uuidv4();
@@ -36,11 +36,11 @@ async function update(holidayId, data, user) {
 
   const existing = await holidayRepository.getByIdAndCompany(holidayId, user.company_id);
   if (!existing) {
-    throw serviceError("Festività non trovata o non appartiene alla tua azienda", 404);
+    throw serviceError("HOLIDAY_NOT_FOUND", "Holiday not found or does not belong to your company", 404);
   }
 
   if (date && !validateDateFormat(date)) {
-    throw serviceError("Formato data non valido (usa YYYY-MM-DD)", 400);
+    throw serviceError("HOLIDAY_INVALID_DATE_FORMAT", "Invalid date format (use YYYY-MM-DD)", 400);
   }
 
   return await holidayRepository.update(holidayId, name, date, is_recurring);
@@ -49,7 +49,7 @@ async function update(holidayId, data, user) {
 async function remove(holidayId, user) {
   const existing = await holidayRepository.getByIdAndCompany(holidayId, user.company_id);
   if (!existing) {
-    throw serviceError("Festività non trovata o non appartiene alla tua azienda", 404);
+    throw serviceError("HOLIDAY_NOT_FOUND", "Holiday not found or does not belong to your company", 404);
   }
 
   await holidayRepository.remove(holidayId);

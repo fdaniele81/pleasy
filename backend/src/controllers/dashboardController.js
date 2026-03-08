@@ -5,7 +5,7 @@ async function getProjects(req, res) {
   try {
     const { projects, owners } = await dashboardService.getProjects(req.user);
     res.status(200).json({
-      message: "Progetti dashboard recuperati correttamente",
+      message: "Dashboard projects retrieved successfully",
       projects: projects,
       owners: owners,
       total: projects.length,
@@ -19,7 +19,7 @@ async function getEstimates(req, res) {
   try {
     const estimates = await dashboardService.getEstimates(req.user);
     res.status(200).json({
-      message: "Stime dashboard recuperate correttamente",
+      message: "Dashboard estimates retrieved successfully",
       estimates: estimates,
       total: estimates.length,
     });
@@ -32,7 +32,7 @@ async function getTMActivities(req, res) {
   try {
     const { tmActivities, totals } = await dashboardService.getTMActivities(req.user);
     res.status(200).json({
-      message: "Attività TM recuperate correttamente",
+      message: "TM tasks retrieved successfully",
       tmActivities: tmActivities,
       totals: totals,
       total: tmActivities.length,

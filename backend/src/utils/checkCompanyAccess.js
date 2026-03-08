@@ -6,8 +6,9 @@ export default function checkCompanyAccess(user, targetCompanyId, options = {}) 
       return;
     }
     const error = new Error(
-      "Accesso negato: company_id mancante o non valido"
+      "Access denied: missing or invalid company_id"
     );
+    error.code = "COMPANY_ACCESS_MISSING";
     error.statusCode = 400;
     throw error;
   }
@@ -18,8 +19,9 @@ export default function checkCompanyAccess(user, targetCompanyId, options = {}) 
 
   if (targetCompanyId !== user.company_id) {
     const error = new Error(
-      "Accesso negato: non puoi operare su altre company"
+      "Access denied: you cannot operate on other companies"
     );
+    error.code = "COMPANY_ACCESS_DENIED";
     error.statusCode = 403;
     error.details = {
       your_company: user.company_id,

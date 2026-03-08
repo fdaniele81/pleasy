@@ -5,7 +5,7 @@ async function create(req, res) {
   try {
     const company = await companyService.create(req.body);
     res.status(201).json({
-      message: "Company Creata correttamente",
+      message: "Company created successfully",
       company,
     });
   } catch (err) {
@@ -17,7 +17,7 @@ async function update(req, res) {
   try {
     const company = await companyService.update(req.params.company_id, req.body);
     res.status(200).json({
-      message: "Company aggiornata correttamente",
+      message: "Company updated successfully",
       company,
     });
   } catch (err) {
@@ -29,7 +29,7 @@ async function getCompaniesWithUsers(req, res) {
   try {
     const companies = await companyService.getCompaniesWithUsers(req.user);
     res.status(200).json({
-      message: "Companies recuperate correttamente",
+      message: "Companies retrieved successfully",
       companies,
       total: companies.length
     });
@@ -42,7 +42,7 @@ async function remove(req, res) {
   try {
     const company = await companyService.remove(req.params.company_id);
     res.status(200).json({
-      message: "Company e utenti associati eliminati correttamente",
+      message: "Company and associated users deleted successfully",
       company,
     });
   } catch (err) {

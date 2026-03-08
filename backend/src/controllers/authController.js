@@ -82,7 +82,7 @@ async function refresh(req, res) {
 
 async function logout(req, res) {
   clearAuthCookies(res);
-  res.json({ message: "Logout effettuato con successo" });
+  res.json({ message: "Logout successful" });
 }
 
 async function me(req, res) {

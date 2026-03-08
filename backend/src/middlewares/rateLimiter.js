@@ -13,7 +13,8 @@ function createRateLimiter(options = {}) {
   const {
     windowMs = 15 * 60 * 1000,
     maxRequests = 5,
-    message = "Troppi tentativi. Riprova più tardi."
+    message = "Too many attempts. Try again later.",
+    code = "RATE_LIMIT_EXCEEDED"
   } = options;
 
   return (req, res, next) => {
@@ -38,7 +39,8 @@ function createRateLimiter(options = {}) {
       const retryAfter = Math.ceil((record.resetTime - now) / 1000);
       res.set("Retry-After", retryAfter);
       return res.status(429).json({
-        error: message,
+        error: code,
+        message: message,
         retryAfter: retryAfter
       });
     }
@@ -50,13 +52,15 @@ function createRateLimiter(options = {}) {
 const loginRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   maxRequests: 5,
-  message: "Troppi tentativi di login. Riprova tra 15 minuti."
+  message: "Too many login attempts. Try again in 15 minutes.",
+  code: "RATE_LIMIT_LOGIN"
 });
 
 const impersonateRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   maxRequests: 3,
-  message: "Troppi tentativi di impersonificazione. Riprova tra 15 minuti."
+  message: "Too many impersonation attempts. Try again in 15 minutes.",
+  code: "RATE_LIMIT_IMPERSONATE"
 });
 
 export {

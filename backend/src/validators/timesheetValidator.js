@@ -5,7 +5,7 @@ export function validateDateRange(query) {
   const { start_date, end_date } = query;
 
   if (!start_date || !end_date) {
-    throw validationError("start_date e end_date sono obbligatori");
+    throw validationError("TIMESHEET_DATES_REQUIRED", "start_date and end_date are required");
   }
 
   return { start_date, end_date };
@@ -15,11 +15,11 @@ export function validateTimesheetInput(data) {
   const { task_id, work_date, hours_worked, details, external_key } = data;
 
   if (!task_id || !work_date || hours_worked === undefined) {
-    throw validationError("task_id, work_date e hours_worked sono obbligatori");
+    throw validationError("TIMESHEET_FIELDS_REQUIRED", "task_id, work_date and hours_worked are required");
   }
 
   if (!isValidUUID(task_id)) {
-    throw validationError("task_id non valido");
+    throw validationError("TIMESHEET_INVALID_TASK_ID", "Invalid task_id");
   }
 
   return {
@@ -33,14 +33,14 @@ export function validateTimesheetInput(data) {
 
 export function validateTimesheetId(timesheetId) {
   if (!timesheetId || !isValidUUID(timesheetId)) {
-    throw validationError("timesheet_id non valido");
+    throw validationError("TIMESHEET_INVALID_TIMESHEET_ID", "Invalid timesheet_id");
   }
   return timesheetId;
 }
 
 export function validateSnapshotId(snapshotId) {
   if (!snapshotId || !isValidUUID(snapshotId)) {
-    throw validationError("snapshot_id non valido");
+    throw validationError("TIMESHEET_INVALID_SNAPSHOT_ID", "Invalid snapshot_id");
   }
   return snapshotId;
 }
@@ -49,12 +49,12 @@ export function validateSubmitTimesheetsInput(data) {
   const { timesheet_ids } = data;
 
   if (!timesheet_ids || !Array.isArray(timesheet_ids) || timesheet_ids.length === 0) {
-    throw validationError("timesheet_ids deve essere un array non vuoto");
+    throw validationError("TIMESHEET_IDS_REQUIRED", "timesheet_ids must be a non-empty array");
   }
 
   for (const id of timesheet_ids) {
     if (!isValidUUID(id)) {
-      throw validationError(`timesheet_id non valido: ${id}`);
+      throw validationError("TIMESHEET_INVALID_ID_IN_ARRAY", `Invalid timesheet_id: ${id}`);
     }
   }
 

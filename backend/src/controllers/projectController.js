@@ -5,7 +5,7 @@ async function create(req, res) {
   try {
     const project = await projectService.create(req.body, req.user);
     res.status(201).json({
-      message: "Progetto creato correttamente",
+      message: "Project created successfully",
       project,
     });
   } catch (err) {
@@ -17,7 +17,7 @@ async function update(req, res) {
   try {
     const project = await projectService.update(req.params.project_id, req.body, req.user);
     res.status(200).json({
-      message: "Progetto aggiornato correttamente",
+      message: "Project updated successfully",
       project,
     });
   } catch (err) {
@@ -29,7 +29,7 @@ async function remove(req, res) {
   try {
     const project = await projectService.remove(req.params.project_id, req.user);
     res.status(200).json({
-      message: "Progetto eliminato correttamente",
+      message: "Project deleted successfully",
       project,
     });
   } catch (err) {
@@ -45,7 +45,7 @@ async function addManager(req, res) {
       req.user
     );
     res.status(201).json({
-      message: "Project Manager aggiunto correttamente",
+      message: "Project Manager added successfully",
       project_manager: projectManager,
     });
   } catch (err) {
@@ -61,7 +61,7 @@ async function removeManager(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "Project Manager rimosso correttamente",
+      message: "Project Manager removed successfully",
       project_id: result.project_id,
       user_id: result.user_id,
     });
@@ -74,7 +74,7 @@ async function getManagers(req, res) {
   try {
     const managers = await projectService.getManagers(req.params.project_id, req.user);
     res.status(200).json({
-      message: "Project Manager recuperati correttamente",
+      message: "Project Managers retrieved successfully",
       project_id: req.params.project_id,
       managers,
     });
@@ -91,7 +91,7 @@ async function updateManagers(req, res) {
       req.user
     );
     res.status(200).json({
-      message: "Project Manager aggiornati correttamente",
+      message: "Project Managers updated successfully",
       project_id: req.params.project_id,
       managers,
     });
@@ -104,7 +104,7 @@ async function getAvailableManagers(req, res) {
   try {
     const managers = await projectService.getAvailableManagers(req.params.client_id, req.user);
     res.status(200).json({
-      message: "Project Manager disponibili recuperati correttamente",
+      message: "Available Project Managers retrieved successfully",
       managers,
     });
   } catch (err) {
@@ -116,7 +116,7 @@ async function generateKey(req, res) {
   try {
     const result = await projectService.generateKey(req.query.title, req.user);
     res.status(200).json({
-      message: "Codice progetto generato correttamente",
+      message: "Project code generated successfully",
       ...result,
     });
   } catch (err) {
@@ -128,7 +128,7 @@ async function validateKey(req, res) {
   try {
     const result = await projectService.validateKey(req.query.projectKey, req.user);
     res.status(200).json({
-      message: "Codice progetto verificato correttamente",
+      message: "Project code validated successfully",
       ...result,
     });
   } catch (err) {

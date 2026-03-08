@@ -81,7 +81,8 @@ function TimesheetSnapshots() {
       setToast({ message: result.message, type: 'success' });
       setConfirmReopenId(null);
     } catch (err) {
-      setToast({ message: err?.data?.error || t('timesheetsnapshots:reopenError'), type: 'error' });
+      const { translateError } = await import('../../utils/translateError');
+      setToast({ message: translateError(err?.data, t('timesheetsnapshots:reopenError')), type: 'error' });
     }
   };
 

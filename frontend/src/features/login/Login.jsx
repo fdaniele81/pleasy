@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useLoginMutation, useImpersonateMutation } from './api/authEndpoints';
 import { apiSlice } from '../../api/apiSlice';
 import logger from '../../utils/logger';
+import { translateError } from '../../utils/translateError';
 import {
   selectIsAuthenticated,
   selectCurrentUser
@@ -23,7 +24,7 @@ function Login() {
 
   const loading = loginLoading || impersonateLoading;
   const errorData = loginError?.data || impersonateError?.data;
-  const error = typeof errorData === 'string' ? errorData : errorData?.error || errorData?.message;
+  const error = errorData ? translateError(errorData) : null;
 
   const [impersonateMode, setImpersonateMode] = useState(false);
   const [formData, setFormData] = useState({

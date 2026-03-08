@@ -17,6 +17,7 @@ import PageHeader from "../../shared/ui/PageHeader";
 import { useAuth } from "../../hooks";
 import { ROLES } from "../../constants";
 import { addToast } from "../../store/slices/toastSlice";
+import { translateError } from "../../utils/translateError";
 
 const validateSqlQuery = (query, t) => {
   if (!query || typeof query !== 'string') {
@@ -116,7 +117,7 @@ function TemplateConfiguration() {
       setExcelFile(null);
     } catch (error) {
       dispatch(addToast({
-        message: error?.data?.error || t('templateconfig:stagingLoadError'),
+        message: translateError(error?.data, t('templateconfig:stagingLoadError')),
         type: "error",
       }));
     }
@@ -150,7 +151,7 @@ function TemplateConfiguration() {
       dispatch(addToast({ message: t('templateconfig:templateUpdated'), type: "success" }));
     } catch (error) {
       dispatch(addToast({
-        message: error?.data?.error || t('templateconfig:saveError'),
+        message: translateError(error?.data, t('templateconfig:saveError')),
         type: "error",
       }));
     }
@@ -164,7 +165,7 @@ function TemplateConfiguration() {
       setExcelFile(null);
     } catch (error) {
       dispatch(addToast({
-        message: error?.data?.error || t('templateconfig:deleteError'),
+        message: translateError(error?.data, t('templateconfig:deleteError')),
         type: "error",
       }));
     }
@@ -192,7 +193,7 @@ function TemplateConfiguration() {
       setQueryTested(true);
     } catch (error) {
       dispatch(addToast({
-        message: error?.data?.error || t('templateconfig:queryError'),
+        message: translateError(error?.data, t('templateconfig:queryError')),
         type: "error",
       }));
     }
@@ -212,7 +213,7 @@ function TemplateConfiguration() {
       await triggerPreviewStaging().unwrap();
     } catch (error) {
       dispatch(addToast({
-        message: error?.data?.error || t('templateconfig:stagingTableError'),
+        message: translateError(error?.data, t('templateconfig:stagingTableError')),
         type: "error",
       }));
       setShowStagingModal(false);
@@ -224,7 +225,7 @@ function TemplateConfiguration() {
       await triggerPreviewUsers().unwrap();
     } catch (error) {
       dispatch(addToast({
-        message: error?.data?.error || t('templateconfig:usersLoadError'),
+        message: translateError(error?.data, t('templateconfig:usersLoadError')),
         type: "error",
       }));
     }

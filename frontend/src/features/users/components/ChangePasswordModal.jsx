@@ -69,7 +69,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         }, 2000);
       } catch (err) {
         logger.error('Errore cambio password:', err);
-        throw new Error(err.data?.error || err.message || 'Errore durante il cambio password');
+        const { translateError } = await import('../../../utils/translateError');
+        throw new Error(translateError(err.data, err.message || 'Errore durante il cambio password'));
       }
     },
     entity: null,

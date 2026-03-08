@@ -7,6 +7,7 @@ import TimesheetGridTable from '../../../shared/components/TimesheetGridTable';
 import { useGetSnapshotDetailsQuery } from '../api/snapshotEndpoints';
 import { useGetHolidaysQuery } from '../../holidays/api/holidayEndpoints';
 import { useLocale } from '../../../hooks/useLocale';
+import { translateError } from '../../../utils/translateError';
 
 const SnapshotDetailsModal = ({ isOpen, onClose, snapshotId }) => {
   const { t } = useTranslation(['timesheetsnapshots', 'common']);
@@ -70,7 +71,7 @@ const SnapshotDetailsModal = ({ isOpen, onClose, snapshotId }) => {
 
       {detailsError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center gap-3">
-          <span>{detailsError?.data?.error || t('timesheetsnapshots:loadError')}</span>
+          <span>{detailsError?.data ? translateError(detailsError.data, t('timesheetsnapshots:loadError')) : t('timesheetsnapshots:loadError')}</span>
         </div>
       )}
 

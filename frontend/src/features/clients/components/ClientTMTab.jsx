@@ -12,6 +12,7 @@ import {
 import { useGetAvailableManagersQuery } from '../../projects/api/projectEndpoints';
 import { useGetAvailableUsersQuery } from '../../planning/api/taskEndpoints';
 import UserAssignmentPanel from '../../../shared/components/UserAssignmentPanel';
+import { translateError } from '../../../utils/translateError';
 
 const ClientTMTab = forwardRef(({ client, onHasChanges }, ref) => {
   const { t } = useTranslation(['clients', 'common', 'errors']);
@@ -88,7 +89,7 @@ const ClientTMTab = forwardRef(({ client, onHasChanges }, ref) => {
           try {
             await assignPMToClient({ clientId: client.client_id, userId }).unwrap();
           } catch (err) {
-            errors.push(`${t('errors:addPmError')}: ${err.data?.message || err.message}`);
+            errors.push(`${t('errors:addPmError')}: ${translateError(err.data, err.message)}`);
           }
         }
 
@@ -96,7 +97,7 @@ const ClientTMTab = forwardRef(({ client, onHasChanges }, ref) => {
           try {
             await unassignPMFromClient({ clientId: client.client_id, userId }).unwrap();
           } catch (err) {
-            errors.push(`${t('errors:removePmError')}: ${err.data?.message || err.message}`);
+            errors.push(`${t('errors:removePmError')}: ${translateError(err.data, err.message)}`);
           }
         }
 
@@ -104,7 +105,7 @@ const ClientTMTab = forwardRef(({ client, onHasChanges }, ref) => {
           try {
             await assignUserToClient({ clientId: client.client_id, userId }).unwrap();
           } catch (err) {
-            errors.push(`${t('errors:addUserError')}: ${err.data?.message || err.message}`);
+            errors.push(`${t('errors:addUserError')}: ${translateError(err.data, err.message)}`);
           }
         }
 
@@ -112,7 +113,7 @@ const ClientTMTab = forwardRef(({ client, onHasChanges }, ref) => {
           try {
             await unassignUserFromClient({ clientId: client.client_id, userId }).unwrap();
           } catch (err) {
-            errors.push(`${t('errors:removeUserError')}: ${err.data?.message || err.message}`);
+            errors.push(`${t('errors:removeUserError')}: ${translateError(err.data, err.message)}`);
           }
         }
 
@@ -124,7 +125,7 @@ const ClientTMTab = forwardRef(({ client, onHasChanges }, ref) => {
             }).unwrap();
             setOriginalReconciliation(localReconciliation);
           } catch (err) {
-            errors.push(`${t('errors:updateReconciliationError')}: ${err.data?.message || err.message}`);
+            errors.push(`${t('errors:updateReconciliationError')}: ${translateError(err.data, err.message)}`);
           }
         }
 

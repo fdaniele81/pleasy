@@ -1,6 +1,7 @@
 import { isRejectedWithValue } from '@reduxjs/toolkit';
 import { addToast } from '../slices/toastSlice';
 import i18next from 'i18next';
+import { translateError } from '../../utils/translateError';
 
 function getErrorMessage(payload, error) {
   if (!payload) {
@@ -30,21 +31,25 @@ function getErrorMessage(payload, error) {
         return payload.data.errors[0]?.message || i18next.t('errors:invalidData');
       }
       if (payload.data?.error) {
-        return payload.data.error;
+        return translateError(payload.data, i18next.t('errors:invalidDataSubmitted'));
       }
       return i18next.t('errors:invalidDataSubmitted');
     }
 
     if (status === 403) {
-      return i18next.t('errors:noPermission');
+      return translateError(payload.data, i18next.t('errors:noPermission'));
     }
 
     if (status === 404) {
-      return i18next.t('errors:notFound');
+      return translateError(payload.data, i18next.t('errors:notFound'));
     }
 
     if (status === 409) {
-      return payload.data?.error || i18next.t('errors:conflict');
+      return translateError(payload.data, i18next.t('errors:conflict'));
+    }
+
+    if (status === 429) {
+      return translateError(payload.data, i18next.t('errors:serverError'));
     }
 
     if (status >= 500) {
@@ -52,13 +57,7 @@ function getErrorMessage(payload, error) {
     }
   }
 
-  return (
-    payload.data?.error ||
-    payload.data?.message ||
-    payload.error ||
-    error?.message ||
-    i18next.t('errors:operationFailed')
-  );
+  return translateError(payload.data, payload.error || error?.message || i18next.t('errors:operationFailed'));
 }
 
 function getToastType(status) {

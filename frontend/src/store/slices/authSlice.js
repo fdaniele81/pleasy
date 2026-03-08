@@ -81,7 +81,7 @@ const authSlice = createSlice({
           state.loading = false;
           state.isAuthenticated = false;
           state.user = null;
-          state.error = action.payload?.data || 'Login fallito';
+          state.error = action.payload?.data || { error: 'AUTH_LOGIN_FAILED', message: 'Login fallito' };
         }
       )
       .addMatcher(
@@ -107,7 +107,7 @@ const authSlice = createSlice({
           state.loading = false;
           state.isAuthenticated = false;
           state.user = null;
-          state.error = action.payload?.data || 'Impersonificazione fallita';
+          state.error = action.payload?.data || { error: 'AUTH_IMPERSONATE_FAILED', message: 'Impersonificazione fallita' };
         }
       )
       .addMatcher(

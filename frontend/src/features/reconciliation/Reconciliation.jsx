@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle, AlertCircle, Loader2, FileSpreadsheet, ChevronDown, ChevronRight } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import logger from '../../utils/logger';
+import { translateError } from '../../utils/translateError';
 import { useReconciliationData } from './hooks/useReconciliationData';
 import { useUploadReconciliationFileMutation } from '../templateconfiguration/api/reconciliationEndpoints';
 import PageHeader from '../../shared/ui/PageHeader';
@@ -151,7 +152,7 @@ function Reconciliation() {
       setTimeout(() => refetch(), 1000);
     } catch (err) {
       const data = err.data || {};
-      let errorText = data.error || t('reconciliation:uploadError');
+      let errorText = translateError(data, t('reconciliation:uploadError'));
       if (data.detail) {
         errorText += ` - ${data.detail}`;
       }

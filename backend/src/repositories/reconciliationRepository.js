@@ -1,4 +1,5 @@
 import db from "../db.js";
+import { readonlyPool } from "../db.js";
 
 function sanitizeIdentifier(identifier) {
   if (!identifier || typeof identifier !== 'string') {
@@ -79,10 +80,11 @@ async function createUsersView(viewName, companyId, client) {
     throw new Error('Invalid company_id format');
   }
 
+  const escapedCompanyId = companyId.replace(/'/g, "''");
   await client.query(`
     CREATE VIEW ${safeName} AS
     SELECT user_id, email, full_name, role_id, company_id
-    FROM users WHERE company_id = '${companyId}'
+    FROM users WHERE company_id = '${escapedCompanyId}'
   `);
 }
 
@@ -145,7 +147,18 @@ async function updateLastUploadDate(pmId, client) {
 }
 
 async function executeQuery(query, client) {
-  return client.query(query);
+  // When called within a transaction (client provided), use the transaction client
+  // so the query can see uncommitted staging data (TRUNCATE + INSERT).
+  // Otherwise fall back to readonlyPool for safety.
+  if (client) {
+    return await client.query(query);
+  }
+  const readonlyClient = await readonlyPool.connect();
+  try {
+    return await readonlyClient.query(query);
+  } finally {
+    readonlyClient.release();
+  }
 }
 
 async function deleteReconciliationData(pmId, client) {
@@ -157,6 +170,20 @@ async function insertReconciliation(data, client) {
     `INSERT INTO timesheet_reconciliation (company_id, external_key, total_hours, user_id, pm_id, timestamp_reconciliation)
      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
     [data.companyId, data.externalKey, data.totalHours, data.userId, data.pmId]
+  );
+}
+
+async function bulkInsertReconciliation(rows, client) {
+  if (rows.length === 0) return;
+  const cols = 5;
+  const placeholders = rows
+    .map((_, i) => `($${i * cols + 1}, $${i * cols + 2}, $${i * cols + 3}, $${i * cols + 4}, $${i * cols + 5}, CURRENT_TIMESTAMP)`)
+    .join(", ");
+  const values = rows.flatMap(r => [r.companyId, r.externalKey, r.totalHours, r.userId, r.pmId]);
+  await client.query(
+    `INSERT INTO timesheet_reconciliation (company_id, external_key, total_hours, user_id, pm_id, timestamp_reconciliation)
+     VALUES ${placeholders}`,
+    values
   );
 }
 
@@ -326,6 +353,7 @@ export {
   executeQuery,
   deleteReconciliationData,
   insertReconciliation,
+  bulkInsertReconciliation,
   deleteTemplate,
   getSyncStatus,
   getUsersFromView,
@@ -352,6 +380,7 @@ export default {
   executeQuery,
   deleteReconciliationData,
   insertReconciliation,
+  bulkInsertReconciliation,
   deleteTemplate,
   getSyncStatus,
   getUsersFromView,

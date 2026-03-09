@@ -53,7 +53,8 @@ async function getCompaniesWithUsers(userRole, companyId) {
        u.email,
        u.full_name,
        u.role_id,
-       u.status_id as user_status_id
+       u.status_id as user_status_id,
+       u.must_change_password
      FROM company c
      LEFT JOIN users u ON u.company_id = c.company_id AND u.status_id != 'DELETED'`;
 

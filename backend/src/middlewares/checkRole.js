@@ -12,9 +12,7 @@ function checkRole(allowedRoles) {
     if (!allowedRoles.includes(req.user.role_id)) {
       return res.status(403).json({
         error: "AUTH_ROLE_DENIED",
-        message: "Access denied: unauthorized role",
-        required_roles: allowedRoles,
-        your_role: req.user.role_id
+        message: "Access denied: insufficient permissions"
       });
     }
 

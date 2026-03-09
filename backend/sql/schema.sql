@@ -131,7 +131,9 @@ CREATE TABLE public.users (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     full_name character varying,
-    saved_filters jsonb DEFAULT '{}'::jsonb
+    saved_filters jsonb DEFAULT '{}'::jsonb,
+    token_version integer DEFAULT 0 NOT NULL,
+    must_change_password boolean DEFAULT false NOT NULL
 );
 
 COMMENT ON TABLE public.users IS 'User accounts associated with companies';
@@ -592,7 +594,7 @@ ALTER TABLE ONLY public.users ADD CONSTRAINT fk_user_status FOREIGN KEY (status_
 ALTER TABLE ONLY public.client ADD CONSTRAINT fk_client_company FOREIGN KEY (company_id) REFERENCES public.company(company_id) ON DELETE CASCADE;
 
 -- Project
-ALTER TABLE ONLY public.project ADD CONSTRAINT fk_project_client FOREIGN KEY (client_id) REFERENCES public.client(client_id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.project ADD CONSTRAINT fk_project_client FOREIGN KEY (client_id) REFERENCES public.client(client_id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.project ADD CONSTRAINT fk_project_status FOREIGN KEY (status_id) REFERENCES public.status(status_id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.project ADD CONSTRAINT fk_project_type FOREIGN KEY (project_type_id) REFERENCES public.project_type(project_type_id) ON DELETE RESTRICT;
 
@@ -704,7 +706,7 @@ INSERT INTO public.company (company_id, company_key, legal_name, vat_number, sta
 VALUES ('1a4c130e-864c-4c34-a3b6-39814534d518', 'SYS', 'System', 'n/a', 'ACTIVE')
 ON CONFLICT (company_key) DO NOTHING;
 
-INSERT INTO public.users (user_id, company_id, email, password_hash, role_id, status_id, full_name)
+INSERT INTO public.users (user_id, company_id, email, password_hash, role_id, status_id, full_name, must_change_password)
 VALUES (
   '2e9c3a99-1da6-4843-bd96-81a7d2f03823',
   '1a4c130e-864c-4c34-a3b6-39814534d518',
@@ -712,7 +714,8 @@ VALUES (
   '$2b$10$CkAm1XpjTk9hrVRdQs9dh.UU9nvdylxH7tK9mUtfiP0L5ilVAoy7q',
   'ADMIN',
   'ACTIVE',
-  'Admin'
+  'Admin',
+  true
 )
 ON CONFLICT (email) DO NOTHING;
 
@@ -727,5 +730,9 @@ CREATE TABLE IF NOT EXISTS public.schema_migrations (
 
 -- Seed: mark all migrations included in this schema as already applied
 INSERT INTO public.schema_migrations (filename) VALUES
-    ('001_add_saved_filters.sql')
+    ('001_add_saved_filters.sql'),
+    ('002_add_token_version.sql'),
+    ('003_create_readonly_user.sql'),
+    ('004_add_must_change_password.sql'),
+    ('005_project_client_cascade.sql')
 ON CONFLICT DO NOTHING;

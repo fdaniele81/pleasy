@@ -89,9 +89,34 @@ export async function parseExcelFile(fileBuffer) {
   }
 }
 
-export function generateCreateTableSQL(tableName, columns) {
+function inferColumnType(rows, colName) {
+  const values = rows.map((r) => r[colName]).filter((v) => v != null && v !== '');
+  if (values.length === 0) return 'TEXT';
+
+  const allNumeric = values.every((v) => {
+    if (typeof v === 'number') return true;
+    if (typeof v === 'string') return /^-?\d+(\.\d+)?$/.test(v.trim());
+    return false;
+  });
+  if (allNumeric) {
+    const hasDecimal = values.some((v) =>
+      typeof v === 'number' ? !Number.isInteger(v) : /\./.test(String(v))
+    );
+    return hasDecimal ? 'NUMERIC' : 'BIGINT';
+  }
+
+  const allDates = values.every((v) => v instanceof Date || (typeof v === 'string' && !isNaN(Date.parse(v)) && /^\d{4}-\d{2}/.test(v)));
+  if (allDates) return 'TIMESTAMPTZ';
+
+  const allBool = values.every((v) => typeof v === 'boolean' || (typeof v === 'string' && /^(true|false)$/i.test(v.trim())));
+  if (allBool) return 'BOOLEAN';
+
+  return 'TEXT';
+}
+
+export function generateCreateTableSQL(tableName, columns, rows = []) {
   const columnDefinitions = columns
-    .map((col) => `${col} TEXT`)
+    .map((col) => `${col} ${inferColumnType(rows, col)}`)
     .join(",\n    ");
 
   return `

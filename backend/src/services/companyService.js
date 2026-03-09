@@ -60,7 +60,8 @@ async function getCompaniesWithUsers(user) {
         full_name: row.full_name,
         email: row.email,
         role_id: row.role_id,
-        status_id: row.user_status_id
+        status_id: row.user_status_id,
+        must_change_password: !!row.must_change_password
       });
     }
   });

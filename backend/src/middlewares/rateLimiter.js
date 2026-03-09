@@ -1,5 +1,7 @@
 const rateLimitStore = new Map();
 
+const MAX_STORE_SIZE = 10000;
+
 setInterval(() => {
   const now = Date.now();
   for (const [key, value] of rateLimitStore.entries()) {
@@ -9,22 +11,31 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
+function getClientIp(req) {
+  return req.ip || req.connection?.remoteAddress || "unknown";
+}
+
 function createRateLimiter(options = {}) {
   const {
     windowMs = 15 * 60 * 1000,
     maxRequests = 5,
     message = "Too many attempts. Try again later.",
-    code = "RATE_LIMIT_EXCEEDED"
+    code = "RATE_LIMIT_EXCEEDED",
+    keyGenerator = null
   } = options;
 
   return (req, res, next) => {
-    const ip = req.ip || req.connection.remoteAddress || "unknown";
-    const key = `${ip}:${req.path}`;
+    const ip = getClientIp(req);
+    const key = keyGenerator ? keyGenerator(req, ip) : `${ip}:${req.path}`;
     const now = Date.now();
 
     let record = rateLimitStore.get(key);
 
     if (!record || now > record.resetTime) {
+      if (rateLimitStore.size >= MAX_STORE_SIZE) {
+        const oldestKey = rateLimitStore.keys().next().value;
+        rateLimitStore.delete(oldestKey);
+      }
       record = {
         count: 1,
         resetTime: now + windowMs
@@ -63,8 +74,17 @@ const impersonateRateLimiter = createRateLimiter({
   code: "RATE_LIMIT_IMPERSONATE"
 });
 
+const globalApiRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 100,
+  message: "Too many requests. Please slow down.",
+  code: "RATE_LIMIT_GLOBAL",
+  keyGenerator: (req, ip) => `global:${ip}`
+});
+
 export {
   createRateLimiter,
   loginRateLimiter,
-  impersonateRateLimiter
+  impersonateRateLimiter,
+  globalApiRateLimiter
 };

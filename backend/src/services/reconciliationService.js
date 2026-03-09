@@ -1,4 +1,5 @@
 import reconciliationRepository from "../repositories/reconciliationRepository.js";
+import { readonlyPool } from "../db.js";
 import { parseExcelFile, generateCreateTableSQL, generateInsertSQL } from "../utils/excelParser.js";
 import { validateReconciliationQuery } from "../utils/sqlQueryValidator.js";
 import { serviceError } from "../utils/errorHandler.js";
@@ -10,13 +11,17 @@ async function getTemplate(user) {
 async function uploadFile(file, templateName, user) {
   const pmId = user.user_id;
   const companyId = user.company_id;
+
+  // Parse Excel BEFORE acquiring a DB connection/transaction
+  const { columns, originalColumns, columnMapping, rows } = await parseExcelFile(file.buffer);
+
   const pool = reconciliationRepository.getPool();
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
+    await client.query("SET LOCAL lock_timeout = '10s'");
 
-    const { columns, originalColumns, columnMapping, rows } = await parseExcelFile(file.buffer);
     const stagingTableName = `pm_staging_${pmId.replace(/-/g, "_")}`;
 
     const existingTemplate = await reconciliationRepository.getTemplateByPmId(pmId, client);
@@ -28,7 +33,7 @@ async function uploadFile(file, templateName, user) {
         await reconciliationRepository.dropTable(stagingTableName, client);
       }
 
-      const createTableSQL = generateCreateTableSQL(stagingTableName, columns);
+      const createTableSQL = generateCreateTableSQL(stagingTableName, columns, rows);
       await reconciliationRepository.createTable(createTableSQL, client);
 
       const usersViewName = `pm_users_view_${pmId.replace(/-/g, "_")}`;
@@ -102,15 +107,18 @@ async function uploadFile(file, templateName, user) {
         await reconciliationRepository.deleteReconciliationData(pmId, client);
 
         let insertedCount = 0;
-        for (const row of queryResult.rows) {
-          await reconciliationRepository.insertReconciliation({
-            companyId,
-            externalKey: row.external_key,
-            totalHours: row.total_hours,
-            userId: row.user_id,
-            pmId
-          }, client);
-          insertedCount++;
+        if (queryResult.rows.length > 0) {
+          await reconciliationRepository.bulkInsertReconciliation(
+            queryResult.rows.map(row => ({
+              companyId,
+              externalKey: row.external_key,
+              totalHours: row.total_hours,
+              userId: row.user_id,
+              pmId
+            })),
+            client
+          );
+          insertedCount = queryResult.rows.length;
         }
 
         await reconciliationRepository.updateLastUploadDate(pmId, client);
@@ -151,24 +159,31 @@ async function configureTemplate(templateName, sqlQuery, file, user) {
     throw serviceError("RECONCILIATION_QUERY_INVALID", validation.error, 400);
   }
 
+  // Parse Excel BEFORE acquiring a DB connection/transaction
+  let parsedFile = null;
+  if (file) {
+    parsedFile = await parseExcelFile(file.buffer);
+  }
+
   const pool = reconciliationRepository.getPool();
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
+    await client.query("SET LOCAL lock_timeout = '10s'");
 
     const existingTemplate = await reconciliationRepository.getTemplateByPmId(pmId, client);
 
     if (existingTemplate) {
       if (file) {
-        const { columns, originalColumns, columnMapping } = await parseExcelFile(file.buffer);
+        const { columns, originalColumns, columnMapping, rows: parsedRows } = parsedFile;
         const stagingTableName = `pm_staging_${pmId.replace(/-/g, "_")}`;
 
         if (await reconciliationRepository.tableExists(stagingTableName, client)) {
           await reconciliationRepository.dropTable(stagingTableName, client);
         }
 
-        const createTableSQL = generateCreateTableSQL(stagingTableName, columns);
+        const createTableSQL = generateCreateTableSQL(stagingTableName, columns, parsedRows);
         await reconciliationRepository.createTable(createTableSQL, client);
 
         const result = await reconciliationRepository.updateTemplateWithColumns({
@@ -191,14 +206,14 @@ async function configureTemplate(templateName, sqlQuery, file, user) {
         throw serviceError("RECONCILIATION_FILE_REQUIRED", "File Excel obbligatorio per creare un nuovo template", 400);
       }
 
-      const { columns, originalColumns, columnMapping } = await parseExcelFile(file.buffer);
+      const { columns, originalColumns, columnMapping, rows: parsedRows } = parsedFile;
       const stagingTableName = `pm_staging_${pmId.replace(/-/g, "_")}`;
 
       if (await reconciliationRepository.tableExists(stagingTableName, client)) {
         await reconciliationRepository.dropTable(stagingTableName, client);
       }
 
-      const createTableSQL = generateCreateTableSQL(stagingTableName, columns);
+      const createTableSQL = generateCreateTableSQL(stagingTableName, columns, parsedRows);
       await reconciliationRepository.createTable(createTableSQL, client);
 
       const result = await reconciliationRepository.createTemplateWithQuery({
@@ -228,6 +243,7 @@ async function deleteTemplate(user) {
 
   try {
     await client.query("BEGIN");
+    await client.query("SET LOCAL lock_timeout = '5s'");
 
     const template = await reconciliationRepository.getTemplateByPmId(pmId, client);
     if (!template) {
@@ -264,11 +280,11 @@ async function previewQuery(query, user) {
     throw serviceError("RECONCILIATION_QUERY_INVALID", validation.error, 400);
   }
 
-  const pool = reconciliationRepository.getPool();
-  const client = await pool.connect();
+  const client = await readonlyPool.connect();
 
   try {
-    const previewQuery = `${query} LIMIT 100`;
+    const sanitizedQuery = query.trim().replace(/;\s*$/, '');
+    const previewQuery = `${sanitizedQuery} LIMIT 100`;
     const result = await client.query(previewQuery);
 
     if (result.rows.length > 0) {
@@ -277,11 +293,19 @@ async function previewQuery(query, user) {
       if (resultColumns.includes("user_id")) {
         const userIds = result.rows.map(row => row.user_id).filter(Boolean);
         if (userIds.length > 0) {
-          const wrongCompanyCount = await reconciliationRepository.checkUsersCompany(
-            userIds,
-            user.company_id,
-            client
-          );
+          // Il check cross-company usa il pool principale (il readonly potrebbe non avere accesso a `users`)
+          const mainPool = reconciliationRepository.getPool();
+          const mainClient = await mainPool.connect();
+          let wrongCompanyCount;
+          try {
+            wrongCompanyCount = await reconciliationRepository.checkUsersCompany(
+              userIds,
+              user.company_id,
+              mainClient
+            );
+          } finally {
+            mainClient.release();
+          }
 
           if (wrongCompanyCount > 0) {
             throw serviceError(

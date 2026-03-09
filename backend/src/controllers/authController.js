@@ -41,7 +41,10 @@ async function login(req, res) {
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    res.json({ user: result.user });
+    res.json({
+      user: result.user,
+      ...(result.must_change_password && { must_change_password: true }),
+    });
   } catch (err) {
     handleError(res, err, "LOGIN ERR");
   }
@@ -49,8 +52,8 @@ async function login(req, res) {
 
 async function impersonate(req, res) {
   try {
-    const { adminEmail, adminPassword, targetEmail } = req.body;
-    const result = await authService.impersonate(adminEmail, adminPassword, targetEmail);
+    const { targetEmail } = req.body;
+    const result = await authService.impersonate(req.user, targetEmail);
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
@@ -68,10 +71,7 @@ async function refresh(req, res) {
     const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE];
     const result = await authService.refreshAccessToken(refreshToken);
 
-    res.cookie(ACCESS_TOKEN_COOKIE, result.accessToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: ACCESS_TOKEN_MAX_AGE,
-    });
+    setAuthCookies(res, result.accessToken, result.refreshToken);
 
     res.json({ user: result.user });
   } catch (err) {

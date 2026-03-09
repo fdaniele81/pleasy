@@ -4,6 +4,34 @@ function removeComments(query) {
   return cleaned;
 }
 
+function removeStringLiterals(query) {
+  return query.replace(/'(?:[^'\\]|\\.)*'/g, "''");
+}
+
+function extractAllTableReferences(query) {
+  const tables = new Set();
+
+  const fromJoinRegex = /\b(?:FROM|JOIN)\s+([a-zA-Z_][a-zA-Z0-9_.]*)/gi;
+  let match;
+  while ((match = fromJoinRegex.exec(query)) !== null) {
+    const tableName = match[1].split('.').pop().toLowerCase();
+    tables.add(tableName);
+  }
+
+  const fromClauseRegex = /\bFROM\s+([a-zA-Z_][a-zA-Z0-9_.]*(?:\s+(?:AS\s+)?[a-zA-Z_][a-zA-Z0-9_]*)?\s*(?:,\s*([a-zA-Z_][a-zA-Z0-9_.]*(?:\s+(?:AS\s+)?[a-zA-Z_][a-zA-Z0-9_]*)?))*)/gi;
+  while ((match = fromClauseRegex.exec(query)) !== null) {
+    const fullFromClause = match[0];
+    const commaTableRegex = /,\s*([a-zA-Z_][a-zA-Z0-9_.]*)/gi;
+    let commaMatch;
+    while ((commaMatch = commaTableRegex.exec(fullFromClause)) !== null) {
+      const tableName = commaMatch[1].split('.').pop().toLowerCase();
+      tables.add(tableName);
+    }
+  }
+
+  return tables;
+}
+
 export function validateReconciliationQuery(query, options = {}) {
   if (!query || typeof query !== 'string') {
     return { valid: false, error: 'Query non fornita' };
@@ -31,7 +59,8 @@ export function validateReconciliationQuery(query, options = {}) {
     'COPY', 'VACUUM', 'ANALYZE', 'REINDEX', 'CLUSTER',
     'LOCK', 'UNLISTEN', 'NOTIFY', 'LISTEN', 'LOAD',
     'DO', 'BEGIN', 'COMMIT', 'ROLLBACK', 'SAVEPOINT',
-    'PREPARE', 'DEALLOCATE', 'DISCARD', 'RESET'
+    'PREPARE', 'DEALLOCATE', 'DISCARD', 'RESET',
+    'INTO'
   ];
 
   for (const keyword of dangerousKeywords) {
@@ -39,6 +68,10 @@ export function validateReconciliationQuery(query, options = {}) {
     if (regex.test(cleanedQuery)) {
       return { valid: false, error: `Keyword non permessa: ${keyword}` };
     }
+  }
+
+  if (/\bUNION\b/i.test(cleanedQuery)) {
+    return { valid: false, error: 'Keyword non permessa: UNION' };
   }
 
   const systemTables = [
@@ -72,9 +105,6 @@ export function validateReconciliationQuery(query, options = {}) {
     return { valid: false, error: 'Sequenze di escape non permesse' };
   }
 
-  if (/\bUNION\b/i.test(cleanedQuery)) {
-  }
-
   if (!queryUpper.includes('FROM')) {
     return { valid: false, error: 'La query deve contenere FROM' };
   }
@@ -103,16 +133,23 @@ export function validateReconciliationQuery(query, options = {}) {
       `pm_users_view_${sanitizedPmId}`
     ];
 
-    const tableMatches = cleanedQuery.match(/\b(?:FROM|JOIN)\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi) || [];
+    const queryWithoutStrings = removeStringLiterals(cleanedQuery);
+    const referencedTables = extractAllTableReferences(queryWithoutStrings);
 
-    for (const match of tableMatches) {
-      const tableName = match.replace(/^(FROM|JOIN)\s+/i, '').toLowerCase();
+    for (const tableName of referencedTables) {
       if (!allowedTables.includes(tableName)) {
         return {
           valid: false,
           error: `Tabella non permessa: ${tableName}. Usa solo: ${allowedTables.join(', ')}`
         };
       }
+    }
+
+    if (referencedTables.size === 0) {
+      return {
+        valid: false,
+        error: 'Nessuna tabella riconosciuta nella query'
+      };
     }
   }
 

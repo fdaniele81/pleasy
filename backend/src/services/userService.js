@@ -10,9 +10,10 @@ import {
   userNotExistsError,
 } from "../utils/dbValidations.js";
 import { serviceError } from "../utils/errorHandler.js";
+import { validatePassword } from "../validators/passwordValidator.js";
 
 async function create(data, requestingUser) {
-  const { company_id, email, password, role_id, full_name } = data;
+  const { company_id, email, password, role_id, full_name, must_change_password } = data;
 
   if (!company_id || !email || !role_id || !password || !full_name) {
     throw serviceError("USER_REQUIRED_FIELDS", "Company, email, role, name and password are required", 400);
@@ -24,6 +25,11 @@ async function create(data, requestingUser) {
 
   checkCompanyAccess(requestingUser, company_id);
 
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.valid) {
+    throw serviceError("USER_PASSWORD_WEAK", passwordValidation.error, 400);
+  }
+
   await emailExistsError(email);
   await companyNotExistsError(company_id);
   await roleNotExistsError(role_id);
@@ -31,11 +37,11 @@ async function create(data, requestingUser) {
   const user_id = uuidv4();
   const password_hash = await bcrypt.hash(password, 10);
 
-  return await userRepository.createUser(user_id, company_id, email, password_hash, role_id, full_name);
+  return await userRepository.createUser(user_id, company_id, email, password_hash, role_id, full_name, !!must_change_password);
 }
 
 async function update(userId, data, requestingUser) {
-  const { email, role_id, status_id, full_name } = data;
+  const { email, role_id, status_id, full_name, must_change_password } = data;
 
   await userNotExistsError(userId);
 
@@ -54,12 +60,22 @@ async function update(userId, data, requestingUser) {
   await statusNotExistsError(status_id);
   if (email !== user.email) await emailExistsError(email);
 
-  return await userRepository.updateUser(userId, email, role_id, status_id, full_name);
+  // Solo Admin può settare must_change_password
+  const mustChangePwd = requestingUser.role_id === "ADMIN" && must_change_password !== undefined
+    ? !!must_change_password
+    : undefined;
+
+  return await userRepository.updateUser(userId, email, role_id, status_id, full_name, mustChangePwd);
 }
 
 async function changePassword(userId, currentPassword, newPassword) {
   if (!currentPassword || !newPassword) {
     throw serviceError("USER_PASSWORDS_REQUIRED", "Current password and new password are required", 400);
+  }
+
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.valid) {
+    throw serviceError("USER_PASSWORD_WEAK", passwordValidation.error, 400);
   }
 
   await userNotExistsError(userId);
@@ -68,7 +84,7 @@ async function changePassword(userId, currentPassword, newPassword) {
 
   const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
   if (!isValidPassword) {
-    throw serviceError("USER_CURRENT_PASSWORD_WRONG", "Current password is incorrect", 401);
+    throw serviceError("USER_CURRENT_PASSWORD_WRONG", "Current password is incorrect", 400);
   }
 
   const newPasswordHash = await bcrypt.hash(newPassword, 10);
@@ -79,6 +95,11 @@ async function changePassword(userId, currentPassword, newPassword) {
 async function resetPassword(targetUserId, newPassword, requestingUser) {
   if (!newPassword) {
     throw serviceError("USER_NEW_PASSWORD_REQUIRED", "New password is required", 400);
+  }
+
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.valid) {
+    throw serviceError("USER_PASSWORD_WEAK", passwordValidation.error, 400);
   }
 
   const user = await userRepository.getUserById(targetUserId);

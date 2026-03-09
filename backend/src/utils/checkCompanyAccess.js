@@ -23,10 +23,6 @@ export default function checkCompanyAccess(user, targetCompanyId, options = {}) 
     );
     error.code = "COMPANY_ACCESS_DENIED";
     error.statusCode = 403;
-    error.details = {
-      your_company: user.company_id,
-      target_company: targetCompanyId,
-    };
     throw error;
   }
 }

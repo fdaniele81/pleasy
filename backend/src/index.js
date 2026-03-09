@@ -8,6 +8,9 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import logger from "./utils/logger.js";
+import { globalApiRateLimiter } from "./middlewares/rateLimiter.js";
+import requirePasswordChanged from "./middlewares/requirePasswordChanged.js";
+import verifyToken from "./middlewares/verifyToken.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const { version } = JSON.parse(readFileSync(join(__dirname, "../../version.json"), "utf-8"));
@@ -40,6 +43,8 @@ if (missingEnvVars.length > 0) {
 const app = express();
 const port = process.env.PORT;
 
+app.set("trust proxy", 1);
+
 const normalizeOrigin = (o) => o.trim().replace(/:80$/, '').replace(/:443$/, '');
 
 const allowedOrigins = process.env.CORS_ORIGINS
@@ -60,7 +65,8 @@ app.use(helmet({
     }
   },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
 
 app.use(compression());
@@ -69,7 +75,12 @@ app.use(cookieParser());
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      if (process.env.NODE_ENV === "production") {
+        return callback(new Error("Origin header required"));
+      }
+      return callback(null, true);
+    }
 
     if (allowedOrigins.includes(normalizeOrigin(origin))) {
       callback(null, true);
@@ -83,13 +94,26 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: "50kb" }));
+
+app.use("/api", globalApiRateLimiter);
 
 app.get("/api/version", (_req, res) => res.json({ version }));
 
 app.use("/api/auth", authRoutes);
-app.use("/api/company", companyRoutes);
+
+// Blocca tutte le API protette se l'utente deve cambiare password.
+// Esente: /api/auth/* (montata sopra) e /api/user/change-password.
+// verifyToken setta req.user (necessario per requirePasswordChanged).
+app.use("/api", (req, res, next) => {
+  if (req.path === "/user/change-password") return next();
+  verifyToken(req, res, () => {
+    requirePasswordChanged(req, res, next);
+  });
+});
+
 app.use("/api/user", userRoutes);
+app.use("/api/company", companyRoutes);
 app.use("/api/client", clientRoutes);
 app.use("/api/project", projectRoutes);
 app.use("/api/task", taskRoutes);

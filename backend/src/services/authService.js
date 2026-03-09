@@ -17,7 +17,8 @@ function generateAccessToken(user) {
       role_id: user.role_id,
       role_des: user.description || user.role_des,
       company_id: user.company_id,
-      type: "access"
+      type: "access",
+      ...(user.must_change_password && { must_change_password: true })
     },
     JWT_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRY }
@@ -28,6 +29,7 @@ function generateRefreshToken(user) {
   return jwt.sign(
     {
       user_id: user.user_id,
+      token_version: user.token_version || 0,
       type: "refresh"
     },
     JWT_SECRET,
@@ -70,41 +72,29 @@ async function login(email, password) {
     accessToken: generateAccessToken(user),
     refreshToken: generateRefreshToken(user),
     user: formatUserResponse(user),
+    must_change_password: !!user.must_change_password,
   };
 }
 
-async function impersonate(adminEmail, adminPassword, targetEmail) {
-  if (!adminEmail || !adminPassword || !targetEmail) {
-    throw serviceError("AUTH_IMPERSONATE_PARAMS_REQUIRED", "Missing parameters: adminEmail, adminPassword and targetEmail are required", 400);
+async function impersonate(requestingUser, targetEmail) {
+  if (!targetEmail) {
+    throw serviceError("AUTH_IMPERSONATE_PARAMS_REQUIRED", "Missing parameter: targetEmail is required", 400);
   }
 
-  const admin = await authRepository.getUserByEmail(adminEmail);
+  const admin = await authRepository.getUserById(requestingUser.user_id);
 
   if (!admin) {
-    throw serviceError("AUTH_ADMIN_INVALID_CREDENTIALS", "Invalid admin credentials", 401);
+    throw serviceError("AUTH_ADMIN_INVALID_CREDENTIALS", "Admin not found", 401);
   }
 
-  if (admin.role_id === ROLES.USER) {
-    throw serviceError("AUTH_IMPERSONATE_ROLE_DENIED", "Access denied: only admins and PMs can impersonate users", 403);
-  }
-
-  if (admin.status_id !== STATUS.ACTIVE) {
-    throw serviceError("AUTH_ADMIN_INACTIVE", "Admin is not active", 401);
-  }
-
-  const match = await bcrypt.compare(adminPassword, admin.password_hash);
-  if (!match) {
-    throw serviceError("AUTH_ADMIN_INVALID_CREDENTIALS", "Invalid admin credentials", 401);
+  if (admin.role_id !== ROLES.ADMIN) {
+    throw serviceError("AUTH_IMPERSONATE_ROLE_DENIED", "Access denied: only admins can impersonate users", 403);
   }
 
   const targetUser = await authRepository.getUserByEmailForImpersonate(targetEmail);
 
   if (!targetUser) {
     throw serviceError("AUTH_IMPERSONATE_USER_NOT_FOUND", "User to impersonate not found", 404);
-  }
-
-  if (admin.role_id === ROLES.PM && admin.company_id !== targetUser.company_id) {
-    throw serviceError("AUTH_IMPERSONATE_COMPANY_MISMATCH", "Access denied: PMs can only impersonate users from their own company", 403);
   }
 
   logger.audit(AUDIT_EVENTS.IMPERSONATION, {
@@ -148,8 +138,15 @@ async function refreshAccessToken(refreshToken) {
       throw serviceError("AUTH_USER_INACTIVE", "User is not active", 401);
     }
 
+    const currentTokenVersion = user.token_version || 0;
+    const tokenVersion = decoded.token_version ?? 0;
+    if (tokenVersion !== currentTokenVersion) {
+      throw serviceError("AUTH_TOKEN_REVOKED", "Token has been revoked", 401);
+    }
+
     return {
       accessToken: generateAccessToken(user),
+      refreshToken: generateRefreshToken(user),
       user: formatUserResponse(user),
     };
   } catch (err) {

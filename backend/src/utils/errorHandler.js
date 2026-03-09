@@ -13,9 +13,10 @@ export function handleError(res, err, defaultMessage) {
       message: err.message,
     });
   }
+  const isProduction = process.env.NODE_ENV === "production";
   res.status(500).json({
     error: "INTERNAL_ERROR",
-    message: err.message || defaultMessage,
+    message: isProduction ? "An internal error occurred" : (err.message || defaultMessage),
   });
 }
 

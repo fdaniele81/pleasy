@@ -38,7 +38,7 @@ src/
 
 ```bash
 createdb pleasy
-psql -d pleasy -f backend/schema.sql   # dalla root del monorepo
+psql -d pleasy -f backend/sql/schema.sql   # dalla root del monorepo
 ```
 
 ### 2. Configura e avvia
@@ -111,7 +111,7 @@ curl http://localhost:5001/api/project \
 
 ## Database
 
-Lo schema completo è in [schema.sql](schema.sql).
+Lo schema completo è in [schema.sql](sql/schema.sql).
 
 ### Tabelle principali
 

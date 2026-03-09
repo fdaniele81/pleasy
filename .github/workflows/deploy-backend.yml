@@ -47,10 +47,20 @@ jobs:
     environment: Production
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+
+      - name: Copy SQL scripts to server
+        run: |
+          scp -o StrictHostKeyChecking=no \
+            backend/sql/reset_demo_env.sql \
+            backend/sql/seed_example_toon-studios.sql \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/srv/pleasy/sql/
 
       - name: Deploy to VPS
         run: |
@@ -59,5 +69,6 @@ jobs:
           docker compose pull
           docker compose down
           docker compose up -d --force-recreate --remove-orphans
+          docker exec pleasy_backend npm run migrate
           docker system prune -f
           EOF

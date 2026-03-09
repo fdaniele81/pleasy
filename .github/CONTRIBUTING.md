@@ -43,11 +43,7 @@ npm run dev
 
 2. **Sviluppa** la tua modifica seguendo le convenzioni del progetto
 
-3. **Testa** le tue modifiche:
-   ```bash
-   npm run test
-   npm run lint
-   ```
+3. **Testa** le tue modifiche e allega un'evidenza dei test effettuati (screenshot, log, o descrizione dei casi testati) nella Pull Request
 
 4. **Committa** con messaggi chiari (usiamo [Conventional Commits](https://www.conventionalcommits.org/)):
    ```
@@ -66,7 +62,7 @@ npm run dev
 - **Lingua del codice**: inglese (variabili, funzioni, commenti nel codice)
 - **Lingua della UI**: italiano (con supporto i18n per future traduzioni)
 - **Formattazione**: ESLint + Prettier (configurati nel progetto)
-- **Test**: aggiungi test per nuove feature e bug fix
+- **Test**: al momento non ci sono test automatici; includi evidenza manuale dei test nella PR
 
 ## 🏷️ Come Gestiamo le Issue
 
@@ -88,7 +84,7 @@ npm run dev
 
 1. Ogni PR viene revisionata prima del merge
 2. Ci impegniamo a dare un primo feedback entro **48 ore**
-3. Le PR devono passare tutti i check automatici (lint, test, build)
+3. Le PR devono includere evidenza dei test effettuati (screenshot, log, o descrizione dei casi testati)
 4. Modifiche significative richiedono almeno 1 review approvata
 
 ## 💡 Altre Modalità di Contributo

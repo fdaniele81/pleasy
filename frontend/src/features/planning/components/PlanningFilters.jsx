@@ -10,8 +10,7 @@ import {
   SavedFiltersDropdown,
   useDropdownManager,
 } from '../../../shared/ui/filters';
-
-const statusOptions = ['NEW', 'IN PROGRESS', 'DONE'];
+import { statusOptions, getStatusLabels } from '../utils/helpers';
 
 function PlanningFilters({
   searchTerm,
@@ -50,11 +49,7 @@ function PlanningFilters({
   const { t } = useTranslation(['planning', 'common']);
   const { toggleDropdown, isDropdownOpen, getDropdownRef } = useDropdownManager();
 
-  const statusLabels = {
-    'NEW': t('planning:statusNew'),
-    'IN PROGRESS': t('planning:statusInProgress'),
-    'DONE': t('planning:statusDone')
-  };
+  const statusLabels = getStatusLabels(t);
 
   const clearAllFilters = useCallback(() => {
     setFilterUserIds([]);

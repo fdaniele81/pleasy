@@ -239,7 +239,7 @@ export const PlanningTable = memo(function PlanningTable({
                     color="white"
                   />
                 </th>
-                <th className="border-t border-r border-gray-300 px-2 py-2 text-left font-semibold w-[200px] max-w-[200px] bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-2 py-2 text-left font-semibold w-[130px] max-w-[130px] xl:w-[200px] xl:max-w-[200px] bg-cyan-700">
                   {t('planning:projectActivity')}
                 </th>
                 <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-10 xl:w-16 bg-cyan-700">
@@ -254,25 +254,25 @@ export const PlanningTable = memo(function PlanningTable({
                 <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-10 xl:w-[90px] bg-cyan-700">
                   %
                 </th>
-                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-12 xl:w-[50px] bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-14 xl:w-[60px] bg-cyan-700">
                   {t('planning:bdg')}
                 </th>
-                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-12 xl:w-[50px] bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-14 xl:w-[60px] bg-cyan-700">
                   {t('planning:act')}
                 </th>
-                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-12 xl:w-[50px] bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-14 xl:w-[60px] bg-cyan-700">
                   {t('planning:etc')}
                 </th>
-                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-12 xl:w-[50px] bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-14 xl:w-[60px] bg-cyan-700">
                   {t('planning:eac')}
                 </th>
-                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-12 xl:w-[50px] bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-1 py-2 text-right font-semibold w-16 xl:w-[68px] bg-cyan-700">
                   {t('planning:delta')}
                 </th>
-                <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-20 md:w-24 xl:w-20 bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-[72px] xl:w-20 bg-cyan-700">
                   {t('planning:start')}
                 </th>
-                <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-20 md:w-24 xl:w-20 bg-cyan-700">
+                <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-[72px] xl:w-20 bg-cyan-700">
                   {t('planning:end')}
                 </th>
                 <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-8 bg-cyan-700"></th>
@@ -360,33 +360,33 @@ export const PlanningTable = memo(function PlanningTable({
                 </TotalsRow.Cell>
                 <TotalsRow.Cell
                   align="right"
-                  className="font-bold text-xs bg-cyan-700"
+                  className="font-bold text-xs bg-cyan-700 whitespace-nowrap"
                 >
                   {formatHours(grandTotals.budget, showInDays)}
                   {getUnitLabel(showInDays)}
                 </TotalsRow.Cell>
                 <TotalsRow.Cell
                   align="right"
-                  className="font-bold text-xs bg-cyan-700"
+                  className="font-bold text-xs bg-cyan-700 whitespace-nowrap"
                 >
                   {formatHours(grandTotals.actual, showInDays)}
                   {getUnitLabel(showInDays)}
                 </TotalsRow.Cell>
                 <TotalsRow.Cell
                   align="right"
-                  className="font-bold text-xs bg-cyan-700"
+                  className="font-bold text-xs bg-cyan-700 whitespace-nowrap"
                 >
                   {formatHours(grandTotals.etc, showInDays)}
                   {getUnitLabel(showInDays)}
                 </TotalsRow.Cell>
                 <TotalsRow.Cell
                   align="right"
-                  className="font-bold text-xs bg-cyan-700"
+                  className="font-bold text-xs bg-cyan-700 whitespace-nowrap"
                 >
                   {formatHours(grandTotals.eac, showInDays)}
                   {getUnitLabel(showInDays)}
                 </TotalsRow.Cell>
-                <TotalsRow.Cell className="bg-cyan-700">
+                <TotalsRow.Cell className="bg-cyan-700 whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1">
                     <span className="text-xs font-bold text-white">
                       {grandTotals.delta > 0 ? "+" : ""}

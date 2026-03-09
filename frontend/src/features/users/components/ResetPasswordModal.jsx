@@ -63,6 +63,7 @@ const ResetPasswordModal = ({ isOpen, onClose, onConfirm, userName }) => {
       isSubmitting={isSubmitting}
       confirmButtonColor="cyan"
     >
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       <div className="space-y-4">
         <div className="p-3 bg-blue-50 rounded-lg">
           <p className="text-sm text-gray-600">
@@ -127,6 +128,7 @@ const ResetPasswordModal = ({ isOpen, onClose, onConfirm, userName }) => {
           </p>
         </div>
       </div>
+      </form>
     </BaseModal>
   );
 };

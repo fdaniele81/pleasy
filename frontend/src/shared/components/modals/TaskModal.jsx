@@ -4,7 +4,7 @@ import { ListTodo } from 'lucide-react';
 import BaseModal from '../BaseModal';
 import RichTextEditor from '../RichTextEditorLazy';
 import { useFormModal } from '../../../hooks/useFormModal';
-import { statusOptions, statusLabels } from '../../../features/planning/utils/helpers';
+import { statusOptions, getStatusLabels } from '../../../features/planning/utils/helpers';
 import { formatDateISO } from '../../../utils/date/dateUtils';
 
 const TaskModal = ({
@@ -20,6 +20,7 @@ const TaskModal = ({
   readOnlyView = false
 }) => {
   const { t } = useTranslation(['planning', 'validation', 'common']);
+  const statusLabels = getStatusLabels(t);
   const isEditMode = !!task;
 
   const {

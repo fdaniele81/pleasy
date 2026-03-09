@@ -246,7 +246,7 @@ function ProjectsSimple() {
 
               <div className="space-y-2">
                 {groupedByClient.map((group) => {
-                  const isExpanded = !!expandedClients[group.client_id];
+                  const isExpanded = !!expandedClients[group.client_id] || !!searchTerm.trim();
                   return (
                     <div key={group.client_id} className="bg-white rounded-lg shadow-md overflow-hidden">
                       {/* Client group header */}

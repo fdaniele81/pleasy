@@ -107,8 +107,8 @@ export const statusColors = {
 
 export const statusOptions = ['NEW', 'IN PROGRESS', 'DONE'];
 
-export const statusLabels = {
-  'NEW': 'Nuovo',
-  'IN PROGRESS': 'In corso',
-  'DONE': 'Fatto'
-};
+export const getStatusLabels = (t) => ({
+  'NEW': t('planning:statusNew'),
+  'IN PROGRESS': t('planning:statusInProgress'),
+  'DONE': t('planning:statusDone')
+});

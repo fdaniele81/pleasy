@@ -33,7 +33,8 @@ const UserModal = ({
       password: '',
       role_id: ROLES.USER,
       status_id: 'ACTIVE',
-      company_id: selectedCompanyId || ''
+      company_id: selectedCompanyId || '',
+      must_change_password: false
     },
     entity: user,
     isOpen,
@@ -49,7 +50,8 @@ const UserModal = ({
         email: user.email || '',
         role_id: user.role_id || ROLES.USER,
         status_id: user.status_id || 'ACTIVE',
-        company_id: user.company_id || ''
+        company_id: user.company_id || '',
+        must_change_password: !!user.must_change_password
       };
     },
     validate: (data) => {
@@ -98,6 +100,10 @@ const UserModal = ({
         userData.password = data.password;
       }
 
+      if (isAdmin) {
+        userData.must_change_password = !!data.must_change_password;
+      }
+
       onConfirm(userData);
       onClose();
     }
@@ -123,6 +129,7 @@ const UserModal = ({
       isSubmitting={isSubmitting}
       confirmButtonColor="cyan"
     >
+      <form onSubmit={(e) => { e.preventDefault(); handleConfirmClick(); }}>
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -186,6 +193,21 @@ const UserModal = ({
           </div>
         )}
 
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="must_change_password"
+              checked={formData.must_change_password}
+              onChange={(e) => handleChange('must_change_password', e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+            />
+            <label htmlFor="must_change_password" className="text-sm text-gray-700">
+              {t('users:mustChangePasswordLabel')}
+            </label>
+          </div>
+        )}
+
         {isAdmin && !isEditMode && companies.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -239,6 +261,7 @@ const UserModal = ({
           </div>
         </div>
       </div>
+      </form>
     </BaseModal>
   );
 };

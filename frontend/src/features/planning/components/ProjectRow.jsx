@@ -128,22 +128,22 @@ export const ProjectRow = memo(function ProjectRow({
           </td>
 
           {/* Budget */}
-          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200">
+          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200 whitespace-nowrap">
             {formattedBudget}{getUnitLabel(showInDays)}
           </td>
 
           {/* Actual */}
-          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200">
+          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200 whitespace-nowrap">
             {formattedActual}{getUnitLabel(showInDays)}
           </td>
 
           {/* ETC */}
-          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200">
+          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200 whitespace-nowrap">
             {formattedEtc}{getUnitLabel(showInDays)}
           </td>
 
           {/* EAC */}
-          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200">
+          <td className="border-b border-r border-gray-300 px-1 py-2 text-right font-bold text-gray-700 text-xs bg-gray-100 group-hover:bg-gray-200 whitespace-nowrap">
             {formattedEac}{getUnitLabel(showInDays)}
           </td>
 

@@ -14,9 +14,6 @@ export const projectDraftEndpoints = apiSlice.injectEndpoints({
         ...(draftData.project_draft_id
           ? [{ type: TAG_TYPES.PROJECT_DRAFT, id: draftData.project_draft_id }]
           : []),
-        ...(draftData.estimate_id
-          ? [{ type: TAG_TYPES.ESTIMATE, id: draftData.estimate_id }]
-          : []),
       ],
     }),
 

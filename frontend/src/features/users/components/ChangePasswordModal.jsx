@@ -42,8 +42,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         newErrors.confirm_password = t('users:confirmPasswordRequired');
       }
 
-      if (data.new_password && data.new_password.length < 4) {
-        newErrors.new_password = t('users:newPasswordMinLength');
+      if (data.new_password && (data.new_password.length < 8 || !/[A-Z]/.test(data.new_password) || !/[a-z]/.test(data.new_password) || !/[0-9]/.test(data.new_password))) {
+        newErrors.new_password = t('users:passwordMinLengthHint');
       }
 
       if (data.new_password && data.confirm_password && data.new_password !== data.confirm_password) {

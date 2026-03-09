@@ -1,26 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLoginMutation, useImpersonateMutation } from './api/authEndpoints';
+import { useLogoutMutation } from './api/authEndpoints';
 import { apiSlice } from '../../api/apiSlice';
 import logger from '../../utils/logger';
 import { translateError } from '../../utils/translateError';
 import {
   selectIsAuthenticated,
-  selectCurrentUser
+  selectCurrentUser,
+  selectMustChangePassword,
 } from '../../store/slices/authSlice';
 import { getDefaultRouteForRole } from '../../constants';
+import ForceChangePasswordModal from './components/ForceChangePasswordModal';
+
+const DEMO_USERS = {
+  pm: { email: 'topolino.detopi@paperopoly.it', password: 'admin123' },
+  user: { email: 'paperino.paperinik@paperopoly.it', password: 'admin123' },
+};
 
 function Login() {
   const { t } = useTranslation(['users', 'common']);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
+  const mustChangePassword = useSelector(selectMustChangePassword);
+  const isDemoMode = searchParams.get('demo') === '1';
 
   const [login, { isLoading: loginLoading, error: loginError, reset: resetLogin }] = useLoginMutation();
   const [impersonateFn, { isLoading: impersonateLoading, error: impersonateError, reset: resetImpersonate }] = useImpersonateMutation();
+  const [logout] = useLogoutMutation();
 
   const loading = loginLoading || impersonateLoading;
   const errorData = loginError?.data || impersonateError?.data;
@@ -38,11 +50,11 @@ function Login() {
   });
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !mustChangePassword) {
       const defaultRoute = getDefaultRouteForRole(user.role_id);
       navigate(defaultRoute);
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, mustChangePassword, navigate]);
 
   useEffect(() => {
     return () => {
@@ -83,8 +95,30 @@ function Login() {
     }
   };
 
+  const handleDemoLogin = async (role) => {
+    resetLogin();
+    resetImpersonate();
+    const credentials = DEMO_USERS[role];
+    setFormData(credentials);
+    try {
+      await login(credentials).unwrap();
+      dispatch(apiSlice.util.resetApiState());
+    } catch (err) {
+      logger.error('Demo login failed:', err);
+    }
+  };
+
+  const handleForcePasswordChanged = async () => {
+    await logout();
+    dispatch(apiSlice.util.resetApiState());
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <ForceChangePasswordModal
+        isOpen={mustChangePassword}
+        onPasswordChanged={handleForcePasswordChanged}
+      />
       <div className="bg-white rounded-lg shadow-md w-full max-w-md p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{t('common:login')}</h1>
@@ -104,6 +138,32 @@ function Login() {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
+          </div>
+        )}
+
+        {isDemoMode && !impersonateMode && (
+          <div className="mb-6 p-4 bg-cyan-50 border border-cyan-200 rounded-lg">
+            <p className="text-sm font-medium text-cyan-800 mb-3">
+              {t('users:demoQuickAccess')}
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleDemoLogin('pm')}
+                className="flex-1 py-2 px-3 bg-cyan-600 text-white text-sm font-medium rounded-md hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {t('users:demoLoginPm')}
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleDemoLogin('user')}
+                className="flex-1 py-2 px-3 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {t('users:demoLoginUser')}
+              </button>
+            </div>
           </div>
         )}
 
@@ -202,7 +262,7 @@ function Login() {
                 ? 'bg-gray-400 cursor-not-allowed'
                 : impersonateMode
                   ? 'bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500'
-                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  : 'bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
             }`}
           >
             {loading ? t('users:loggingIn') : impersonateMode ? t('users:impersonate') : t('users:signIn')}

@@ -15,7 +15,7 @@ import {
   isValidDate,
   statusColors,
   statusOptions,
-  statusLabels
+  getStatusLabels
 } from '../utils/helpers';
 
 export const TaskRow = memo(function TaskRow({
@@ -44,6 +44,7 @@ export const TaskRow = memo(function TaskRow({
   refetchPlanning
 }) {
   const { t } = useTranslation(['planning', 'common']);
+  const statusLabels = getStatusLabels(t);
   const [updateTask] = useUpdateTaskMutation();
   const barRef = useRef(null);
 
@@ -211,7 +212,7 @@ export const TaskRow = memo(function TaskRow({
       </td>
 
       {/* Project/Activity - always shown */}
-      <td className="border-b border-r border-gray-300 px-2 py-0 w-[200px] max-w-[200px]">
+      <td className="border-b border-r border-gray-300 px-2 py-0 w-[130px] max-w-[130px] xl:w-[200px] xl:max-w-[200px]">
         <div className="flex items-center gap-1 overflow-hidden">
           <span className="font-mono text-xs text-gray-500">
             {project.project_key}-{task.task_number}
@@ -505,7 +506,7 @@ export const TaskRow = memo(function TaskRow({
           </td>
 
           {/* Budget */}
-          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700">
+          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700 whitespace-nowrap">
             {isEditingBudget ? (
               <input
                 type="number"
@@ -530,7 +531,7 @@ export const TaskRow = memo(function TaskRow({
           </td>
 
           {/* Actual */}
-          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700">
+          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700 whitespace-nowrap">
             <span
               className="cursor-pointer hover:text-cyan-600 hover:underline"
               onClick={() => handleInitialActualClick({
@@ -548,7 +549,7 @@ export const TaskRow = memo(function TaskRow({
           </td>
 
           {/* ETC */}
-          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700 bg-yellow-50">
+          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700 bg-yellow-50 whitespace-nowrap">
             {isEditingEtc ? (
               <input
                 type="number"
@@ -573,7 +574,7 @@ export const TaskRow = memo(function TaskRow({
           </td>
 
           {/* EAC */}
-          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700">
+          <td className="border-b border-r border-gray-300 px-1 py-0 text-right text-xs font-medium text-gray-700 whitespace-nowrap">
             {formattedEac}{getUnitLabel(showInDays)}
           </td>
 

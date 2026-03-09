@@ -28,8 +28,8 @@ export function useReconciliationData() {
 
   const refetch = useCallback(() => {
     refetchTemplate();
-    refetchSync();
-  }, [refetchTemplate, refetchSync]);
+    if (hasTemplate) refetchSync();
+  }, [refetchTemplate, refetchSync, hasTemplate]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {

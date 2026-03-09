@@ -3,6 +3,7 @@ import { authEndpoints } from "../../features/login/api/authEndpoints";
 import logger from "../../utils/logger";
 
 const USER_KEY = 'auth_user';
+const MUST_CHANGE_PWD_KEY = 'auth_must_change_password';
 
 const isValidUserSchema = (user) => {
   return (
@@ -36,13 +37,17 @@ export const getStoredUser = () => {
 };
 
 const setStoredUser = (user) => localStorage.setItem(USER_KEY, JSON.stringify(user));
-const clearStoredUser = () => localStorage.removeItem(USER_KEY);
+const clearStoredUser = () => {
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(MUST_CHANGE_PWD_KEY);
+};
 
 const authSlice = createSlice({
   name: "auth",
   initialState: {
     user: getStoredUser(),
     isAuthenticated: !!getStoredUser(),
+    mustChangePassword: localStorage.getItem(MUST_CHANGE_PWD_KEY) === 'true',
     loading: false,
     error: null,
   },
@@ -53,7 +58,12 @@ const authSlice = createSlice({
     localLogout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      state.mustChangePassword = false;
       clearStoredUser();
+    },
+    clearMustChangePassword: (state) => {
+      state.mustChangePassword = false;
+      localStorage.removeItem(MUST_CHANGE_PWD_KEY);
     },
   },
   extraReducers: (builder) => {
@@ -71,8 +81,14 @@ const authSlice = createSlice({
           state.loading = false;
           state.isAuthenticated = true;
           state.user = action.payload.user;
+          state.mustChangePassword = !!action.payload.must_change_password;
           state.error = null;
           setStoredUser(action.payload.user);
+          if (action.payload.must_change_password) {
+            localStorage.setItem(MUST_CHANGE_PWD_KEY, 'true');
+          } else {
+            localStorage.removeItem(MUST_CHANGE_PWD_KEY);
+          }
         }
       )
       .addMatcher(
@@ -122,6 +138,7 @@ const authSlice = createSlice({
           state.loading = false;
           state.isAuthenticated = false;
           state.user = null;
+          state.mustChangePassword = false;
           state.error = null;
           clearStoredUser();
         }
@@ -132,6 +149,7 @@ const authSlice = createSlice({
           state.loading = false;
           state.isAuthenticated = false;
           state.user = null;
+          state.mustChangePassword = false;
           state.error = null;
           clearStoredUser();
         }
@@ -139,11 +157,12 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, localLogout } = authSlice.actions;
+export const { clearError, localLogout, clearMustChangePassword } = authSlice.actions;
 
 export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectCurrentUser = (state) => state.auth.user;
+export const selectMustChangePassword = (state) => state.auth.mustChangePassword;
 
 export default authSlice.reducer;

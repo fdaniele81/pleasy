@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -53,6 +53,10 @@ function ConvertEstimateToProject() {
     restoreState: conversion,
     saveDraftFn: saveDraftRef,
   });
+
+  // Debounce timer for draft saves
+  const saveDraftTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(saveDraftTimerRef.current), []);
 
   // Page state
   const [selectedEstimate, setSelectedEstimate] = useState(null);
@@ -166,47 +170,50 @@ function ConvertEstimateToProject() {
   }, [getEstimate, getDraftsByEstimate, generateProjectKey, createOrUpdateDraft, conversion, currentUser, dispatch, t, clearStacks]);
 
   /**
-   * Save current task rows to draft (auto-save).
+   * Save current task rows to draft (auto-save, debounced 500ms).
    */
-  const saveDraft = useCallback(async (rows) => {
-    if (!selectedEstimate) return;
+  const saveDraft = useCallback((rows) => {
+    clearTimeout(saveDraftTimerRef.current);
+    saveDraftTimerRef.current = setTimeout(async () => {
+      if (!selectedEstimate) return;
 
-    const draftData = {
-      ...(projectDraftId ? { project_draft_id: projectDraftId } : {}),
-      estimate_id: selectedEstimate.estimate_id,
-      client_id: selectedEstimate.client_id,
-      project_key: projectKey.trim().toUpperCase(),
-      title: selectedEstimate.title,
-      description: t('estimator:projectFromEstimate', { title: selectedEstimate.title }),
-      status_id: null,
-      project_details: {
-        project_managers: [currentUser.user_id],
-        source: 'estimate_conversion',
-      },
-      tasks: rows.map((row, index) => ({
-        task_number: index + 1,
-        title: row.title || t('estimator:' + (row.titleKey || 'phaseAnalysis')),
-        description: t('estimateConversion:taskFromConversion'),
-        budget: row.budget,
-        task_status_id: 'NEW',
-        task_details: {
-          id: row.id,
-          phase_keys: row.phaseKeys,
-          selected_cells: row.selectedCells || [],
-          task_color: row.color,
-          source: row.source,
+      const draftData = {
+        ...(projectDraftId ? { project_draft_id: projectDraftId } : {}),
+        estimate_id: selectedEstimate.estimate_id,
+        client_id: selectedEstimate.client_id,
+        project_key: projectKey.trim().toUpperCase(),
+        title: selectedEstimate.title,
+        description: t('estimator:projectFromEstimate', { title: selectedEstimate.title }),
+        status_id: null,
+        project_details: {
+          project_managers: [currentUser.user_id],
+          source: 'estimate_conversion',
         },
-      })),
-    };
+        tasks: rows.map((row, index) => ({
+          task_number: index + 1,
+          title: row.title || t('estimator:' + (row.titleKey || 'phaseAnalysis')),
+          description: t('estimateConversion:taskFromConversion'),
+          budget: row.budget,
+          task_status_id: 'NEW',
+          task_details: {
+            id: row.id,
+            phase_keys: row.phaseKeys,
+            selected_cells: row.selectedCells || [],
+            task_color: row.color,
+            source: row.source,
+          },
+        })),
+      };
 
-    try {
-      const result = await createOrUpdateDraft(draftData).unwrap();
-      if (!projectDraftId && result.projectDraft) {
-        setProjectDraftId(result.projectDraft.project_draft_id);
+      try {
+        const result = await createOrUpdateDraft(draftData).unwrap();
+        if (!projectDraftId && result.projectDraft) {
+          setProjectDraftId(result.projectDraft.project_draft_id);
+        }
+      } catch (error) {
+        logger.error('Error saving draft:', error);
       }
-    } catch (error) {
-      logger.error('Error saving draft:', error);
-    }
+    }, 500);
   }, [selectedEstimate, projectDraftId, projectKey, currentUser, createOrUpdateDraft, t]);
 
   saveDraftRef.current = saveDraft;

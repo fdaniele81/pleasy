@@ -102,6 +102,7 @@ app.get("/api/version", (_req, res) => res.json({ version }));
 
 app.use("/api/auth", authRoutes);
 
+// TEST FIX #45
 // Blocca tutte le API protette se l'utente deve cambiare password.
 // Esente: /api/auth/* (montata sopra) e /api/user/change-password.
 // verifyToken setta req.user (necessario per requirePasswordChanged).

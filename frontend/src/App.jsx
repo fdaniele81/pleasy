@@ -41,9 +41,13 @@ const PageLoader = () => {
 };
 
 function ProtectedRoute({ children, allowedRoles }) {
-  const { isAuthenticated, user } = useSelector(state => state.auth);
+  const { isAuthenticated, user, mustChangePassword } = useSelector(state => state.auth);
 
   if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (mustChangePassword) {
     return <Navigate to="/login" replace />;
   }
 
@@ -108,8 +112,10 @@ function App() {
     );
   }
 
+  const { mustChangePassword } = useSelector(state => state.auth);
+
   const HomeRedirect = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || mustChangePassword) {
       return <Navigate to={ROUTES.LOGIN} replace />;
     }
 

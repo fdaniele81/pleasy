@@ -28,7 +28,7 @@ Pensata per team di consulenza e software house che gestiscono progetti a corpo 
 ## Quick Start con Docker
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/pleasy.git
+git clone https://github.com/fdaniele81/pleasy.git
 cd pleasy
 cp .env.example .env
 # Modifica .env con password sicure e JWT secret

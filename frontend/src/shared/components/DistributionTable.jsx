@@ -154,6 +154,7 @@ const DistributionTable = ({
                         step={step}
                         value={distribution[phase.key]?.[catKey] ?? 0}
                         onChange={(e) => handleCellChange(phase.key, catKey, e.target.value)}
+                        onFocus={(e) => e.target.select()}
                         onWheel={(e) => e.target.blur()}
                         className="w-full px-2 py-1 text-center border border-gray-200 rounded text-sm focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />

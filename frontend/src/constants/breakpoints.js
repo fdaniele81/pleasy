@@ -6,10 +6,10 @@ export const BREAKPOINTS = {
 };
 
 export const COLUMN_COUNTS = {
-  [BREAKPOINTS.SM]: 12,
-  [BREAKPOINTS.MD]: 12,
-  [BREAKPOINTS.LG]: 18,
-  [BREAKPOINTS.XL]: 24
+  [BREAKPOINTS.SM]: 14,
+  [BREAKPOINTS.MD]: 16,
+  [BREAKPOINTS.LG]: 22,
+  [BREAKPOINTS.XL]: 28
 };
 
 export const getColumnCountForWidth = (width = window.innerWidth) => {

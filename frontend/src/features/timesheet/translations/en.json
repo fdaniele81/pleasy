@@ -101,6 +101,8 @@
   "excelTotal": "TOTAL",
   "excelNoData": "No data in the selected period",
   "noTimesheetInRange": "No timesheets in the selected period",
+  "hideEmptyDays": "Hide empty days",
+  "showEmptyDays": "Show empty days",
   "goToDate": "Go to date",
   "startDate": "Start date",
   "undoSuccess": "Undo: {{label}}",

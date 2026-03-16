@@ -60,7 +60,7 @@ function ProtectedRoute({ children, allowedRoles }) {
 
 function App() {
   const [isDesktop, setIsDesktop] = React.useState(window.innerWidth >= 1024);
-  const { user, isAuthenticated } = useSelector(state => state.auth);
+  const { user, isAuthenticated, mustChangePassword } = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation('common');
@@ -111,8 +111,6 @@ function App() {
       </div>
     );
   }
-
-  const { mustChangePassword } = useSelector(state => state.auth);
 
   const HomeRedirect = () => {
     if (!isAuthenticated || mustChangePassword) {

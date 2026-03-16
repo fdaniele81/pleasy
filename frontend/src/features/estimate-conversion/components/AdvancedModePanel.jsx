@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Save, RotateCcw, Merge, Scissors, Minus, Plus, AlertTriangle, Check } from 'lucide-react';
+import { ArrowLeft, Save, RotateCcw, Merge, Scissors } from 'lucide-react';
 import SelectableCellsTable, { PHASES } from '../../estimator/components/SelectableCellsTable';
 import Button from '../../../shared/ui/Button';
 import BaseModal from '../../../shared/components/BaseModal';
 import TaskNamePopup from './TaskNamePopup';
 import TaskRowsTable from './TaskRowsTable';
+import SplitModal from './SplitModal';
 
 /**
  * Advanced mode panel: same toolbar as simple mode (merge/split/reset)
@@ -43,8 +44,6 @@ function AdvancedModePanel({
 
   // Split popup state
   const [showSplitPopup, setShowSplitPopup] = useState(false);
-  const [splitCount, setSplitCount] = useState(2);
-  const [splitBudgets, setSplitBudgets] = useState([]);
   const [splitSourceRow, setSplitSourceRow] = useState(null);
 
   const selectedCount = selectedRowIds.size;
@@ -117,18 +116,6 @@ function AdvancedModePanel({
     }
   }, [showMergePopup]);
 
-  // Recalculate split budgets when splitCount changes
-  useEffect(() => {
-    if (splitSourceRow && splitCount >= 2) {
-      const total = splitSourceRow.budget;
-      const each = Math.round((total / splitCount) * 10) / 10;
-      const budgets = Array(splitCount).fill(each);
-      const sumOthers = budgets.slice(0, -1).reduce((s, v) => s + v, 0);
-      budgets[budgets.length - 1] = Math.round((total - sumOthers) * 10) / 10;
-      setSplitBudgets(budgets);
-    }
-  }, [splitCount, splitSourceRow]);
-
   const getRowTitle = (row) => {
     if (row.title) return row.title;
     if (row.titleKey) return t('estimator:' + row.titleKey);
@@ -168,25 +155,14 @@ function AdvancedModePanel({
     const row = taskRows.find(r => r.id === selectedId);
     if (!row) return;
     setSplitSourceRow(row);
-    setSplitCount(2);
     setShowSplitPopup(true);
   };
 
-  const handleSplitBudgetChange = (index, value) => {
-    const newBudgets = [...splitBudgets];
-    newBudgets[index] = parseFloat(value) || 0;
-    setSplitBudgets(newBudgets);
-  };
-
-  const handleConfirmSplit = () => {
-    if (!splitSourceRow || splitBudgets.length < 2) return;
+  const handleConfirmSplit = (splitCount, splitBudgets) => {
     onSplit(splitCount, splitBudgets);
     setShowSplitPopup(false);
     setSplitSourceRow(null);
   };
-
-  const splitBudgetSum = splitBudgets.reduce((s, v) => s + v, 0);
-  const splitBudgetOk = splitSourceRow ? Math.abs(splitBudgetSum - splitSourceRow.budget) < 0.1 : false;
 
   return (
     <div>
@@ -354,96 +330,14 @@ function AdvancedModePanel({
       </BaseModal>
 
       {/* Split popup */}
-      <BaseModal
+      <SplitModal
         isOpen={showSplitPopup}
         onClose={() => { setShowSplitPopup(false); setSplitSourceRow(null); }}
-        title={t('estimateConversion:splitTitle')}
-        icon={<Scissors className="text-cyan-600" size={24} />}
-        size="md"
-        customFooter={
-          <>
-            <Button onClick={() => { setShowSplitPopup(false); setSplitSourceRow(null); }} variant="outline" color="gray">
-              {t('common:cancel')}
-            </Button>
-            <Button onClick={handleConfirmSplit} color="cyan" disabled={!splitBudgetOk}>
-              {t('estimateConversion:split')}
-            </Button>
-          </>
-        }
-      >
-        {splitSourceRow && (
-          <div className="space-y-4">
-            <div className="bg-gray-50 rounded-lg px-3 py-2 flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{ backgroundColor: splitSourceRow.color }}
-              />
-              <span className="text-sm font-medium text-gray-800">
-                {getRowTitle(splitSourceRow)}
-              </span>
-              <span className="text-sm font-mono text-gray-600 ml-auto">
-                {formatValue(splitSourceRow.budget)}{unitLabel}
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('estimateConversion:splitCountLabel')}
-              </label>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSplitCount(Math.max(2, splitCount - 1))}
-                  disabled={splitCount <= 2}
-                  className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Minus size={14} />
-                </button>
-                <span className="text-lg font-semibold text-gray-800 w-8 text-center">{splitCount}</span>
-                <button
-                  onClick={() => setSplitCount(Math.min(10, splitCount + 1))}
-                  disabled={splitCount >= 10}
-                  className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('estimateConversion:splitBudgetLabel')}
-              </label>
-              <div className="space-y-2">
-                {splitBudgets.map((budget, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-6 text-right">{index + 1}.</span>
-                    <input
-                      type="number"
-                      value={budget}
-                      onChange={(e) => handleSplitBudgetChange(index, e.target.value)}
-                      className="w-28 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                      step="0.1"
-                      min="0"
-                    />
-                    <span className="text-xs text-gray-500">{unitLabel}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className={`mt-3 text-xs flex items-center gap-1 ${splitBudgetOk ? 'text-green-600' : 'text-amber-600'}`}>
-                {splitBudgetOk ? (
-                  <Check size={12} />
-                ) : (
-                  <AlertTriangle size={12} />
-                )}
-                <span>
-                  {t('common:total')}: {formatValue(splitBudgetSum)}{unitLabel} / {formatValue(splitSourceRow.budget)}{unitLabel}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </BaseModal>
+        onConfirm={handleConfirmSplit}
+        sourceRow={splitSourceRow}
+        showInDays={showInDays}
+        getRowTitle={getRowTitle}
+      />
     </div>
   );
 }

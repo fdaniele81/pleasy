@@ -13,28 +13,8 @@ export const isRequired = (value) => {
   return true;
 };
 
-export const isPositiveNumber = (value) => {
-  const num = Number(value);
-  return !isNaN(num) && num > 0;
-};
-
-export const isNonNegativeNumber = (value) => {
-  const num = Number(value);
-  return !isNaN(num) && num >= 0;
-};
-
 export const isValidNumber = (value) => {
   return !isNaN(Number(value));
-};
-
-export const hasMinLength = (value, minLength) => {
-  if (!value) return false;
-  return value.trim().length >= minLength;
-};
-
-export const hasMaxLength = (value, maxLength) => {
-  if (!value) return true;
-  return value.trim().length <= maxLength;
 };
 
 export const validatePassword = (password, options = {}) => {
@@ -78,67 +58,10 @@ export const passwordsMatch = (password, confirmPassword) => {
   return password === confirmPassword;
 };
 
-export const isValidUrl = (url) => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 export const isValidDate = (date) => {
   const d = new Date(date);
   return d instanceof Date && !isNaN(d);
 };
-
-export const isDateInFuture = (date) => {
-  if (!isValidDate(date)) return false;
-  return new Date(date) > new Date();
-};
-
-export const isDateInPast = (date) => {
-  if (!isValidDate(date)) return false;
-  return new Date(date) < new Date();
-};
-
-export class FormValidator {
-  constructor(rules) {
-    this.rules = rules;
-  }
-
-  validate(data) {
-    const errors = {};
-    let isValid = true;
-
-    for (const [field, fieldRules] of Object.entries(this.rules)) {
-      const value = data[field];
-
-      for (const { rule, message } of fieldRules) {
-        if (!rule(value)) {
-          errors[field] = message;
-          isValid = false;
-          break;
-        }
-      }
-    }
-
-    return { isValid, errors };
-  }
-
-  validateField(field, value) {
-    const fieldRules = this.rules[field];
-    if (!fieldRules) return null;
-
-    for (const { rule, message } of fieldRules) {
-      if (!rule(value)) {
-        return message;
-      }
-    }
-
-    return null;
-  }
-}
 
 export const errorMessages = {
   required: (fieldName) => i18next.t('validation:required', { field: fieldName }),

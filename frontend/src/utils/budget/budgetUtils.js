@@ -42,30 +42,3 @@ export const getTotalHoursForTimeOffType = (timeOffTypeId, timeOffHistoricalTota
   return historicalTotal?.total_hours || 0;
 };
 
-export const getTMTaskHours = (task) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
-
-  let pastHours = 0;
-  let futureHours = 0;
-
-  if (task.timesheets) {
-    for (const ts of task.timesheets) {
-      const workDate = ts.work_date.split('T')[0];
-      if (workDate < todayStr) {
-        pastHours += ts.hours_worked || 0;
-      } else {
-        futureHours += ts.hours_worked || 0;
-      }
-    }
-  }
-
-  pastHours += task.initial_actual || 0;
-
-  return {
-    pastHours,
-    futureHours,
-    totalHours: pastHours + futureHours
-  };
-};

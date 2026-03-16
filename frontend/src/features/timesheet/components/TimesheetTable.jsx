@@ -1,5 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from 'react-i18next';
+import { FileText } from "lucide-react";
 import TimesheetTaskRow from "./TimesheetTaskRow";
 import TimesheetTimeOffRow from "./TimesheetTimeOffRow";
 import TimesheetClosedTasksRow from "./TimesheetClosedTasksRow";
@@ -57,6 +59,53 @@ function TimesheetTable({
   const { t } = useTranslation(['timesheet', 'common']);
   const locale = useLocale();
   const { getDateInfo } = useTableDateHelpers(dateRange, holidays);
+
+  const [labelTooltip, setLabelTooltip] = useState(null);
+  const labelTooltipTimeout = useRef(null);
+  const tableRef = useRef(null);
+  const headerRowRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(48);
+
+  useEffect(() => {
+    if (!headerRowRef.current) return;
+    const measure = () => setHeaderHeight(headerRowRef.current.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(headerRowRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const scrollContainer = tableRef.current?.closest('.overflow-y-auto');
+    if (!scrollContainer) return;
+    const onScroll = () => {
+      clearTimeout(labelTooltipTimeout.current);
+      setLabelTooltip(null);
+    };
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const showLabelTooltip = useCallback((e, content) => {
+    clearTimeout(labelTooltipTimeout.current);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const above = rect.bottom + 60 > window.innerHeight;
+    labelTooltipTimeout.current = setTimeout(() => {
+      setLabelTooltip({
+        content,
+        x: rect.left + rect.width / 2,
+        y: above ? rect.top : rect.bottom,
+        above,
+      });
+    }, 350);
+  }, []);
+
+  const hideLabelTooltip = useCallback(() => {
+    clearTimeout(labelTooltipTimeout.current);
+    labelTooltipTimeout.current = setTimeout(() => {
+      setLabelTooltip(null);
+    }, 350);
+  }, []);
 
   const allSelected = filteredTasks.length > 0 &&
     filteredTasks.every((t) => selectedTasks[t.task_id]);
@@ -138,28 +187,19 @@ function TimesheetTable({
 
   return (
     <TableContainer maxHeight="calc(100vh - 280px)" className="rounded-lg">
-      <table className="w-full border-separate border-spacing-0">
+      <table ref={tableRef} className="w-full border-separate border-spacing-0">
         <thead>
-          <tr className="bg-cyan-700 text-white sticky top-0 z-40">
-            <th className="border-t border-r border-gray-300 px-1 py-1 text-center font-semibold sticky left-0 top-0 bg-cyan-700 z-50 w-8 min-w-8 max-w-8">
+          <tr ref={headerRowRef} className="bg-cyan-700 text-white sticky top-0 z-40">
+            <th className="border-t border-b border-r border-gray-300 px-1 py-1 text-center font-semibold sticky left-0 top-0 bg-cyan-700 z-50 w-8 min-w-8 max-w-8">
               <SelectionCheckbox
                 checked={allSelected}
                 onChange={handleSelectAll}
               />
             </th>
-            <th className="xl:hidden border-t border-r border-gray-300 px-2 py-1 text-left font-semibold sticky left-8 top-0 bg-cyan-700 z-50 w-24 min-w-24 max-w-24 shadow-[2px_0_0_0_rgb(8,145,178)] text-xs">
-              {t('timesheet:codeColumn')}
-            </th>
-            <th className="hidden xl:table-cell border-t border-r border-gray-300 px-2 py-1 text-left font-semibold sticky left-8 top-0 bg-cyan-700 z-50 xl:w-24 xl:min-w-24 xl:max-w-24 text-xs">
-              {t('timesheet:clientColumn')}
-            </th>
-            <th className="hidden xl:table-cell border-t border-r border-gray-300 px-2 py-1 text-left font-semibold sticky left-32 top-0 bg-cyan-700 z-50 xl:w-24 xl:min-w-24 xl:max-w-24 shadow-[2px_0_0_0_rgb(8,145,178)] text-xs">
-              {t('timesheet:projectColumn')}
-            </th>
-            <th className="border-t border-r border-gray-300 px-2 py-1 text-left font-semibold sticky left-32 xl:left-56 top-0 bg-cyan-700 z-50 w-36 min-w-36 max-w-36 xl:w-56 xl:min-w-56 xl:max-w-56 shadow-[2px_0_0_0_rgb(8,145,178)] text-xs">
+            <th className="border-t border-b border-r border-gray-300 px-2 py-1 text-left font-semibold sticky left-8 top-0 bg-cyan-700 z-50 w-44 min-w-44 max-w-44 xl:w-56 xl:min-w-56 xl:max-w-56 shadow-[2px_0_0_0_rgb(8,145,178)] text-xs">
               {t('timesheet:activityColumn')}
             </th>
-            <th className="border-t border-r border-gray-300 px-1 py-1 text-center font-semibold bg-cyan-700 sticky left-68 xl:left-112 top-0 z-50 w-20 min-w-20 max-w-20 text-xs">
+            <th className="border-t border-b border-r border-gray-300 px-1 py-1 text-center font-semibold bg-cyan-700 sticky left-52 xl:left-64 top-0 z-50 w-20 min-w-20 max-w-20 text-xs">
               {t('timesheet:totalColumn')}
             </th>
             {dateRange.map((date, idx) => {
@@ -180,16 +220,13 @@ function TimesheetTable({
             })}
           </tr>
 
-          <tr className="bg-cyan-700 text-white font-bold sticky top-14 z-30 shadow-[0_-1px_0_0_rgb(209,213,219)]">
-            <th className="border-t border-b border-r border-gray-300 px-1 py-1 text-center sticky left-0 top-14 bg-cyan-700 z-40 w-8 min-w-8 max-w-8"></th>
-            <th className="xl:hidden border-t border-b border-r border-gray-300 px-2 py-1 text-left sticky left-8 top-14 bg-cyan-700 z-40 w-60 min-w-60 max-w-60 shadow-[2px_0_0_0_rgb(8,145,178)] text-xs font-semibold" colSpan="2">
-              {t('timesheet:dailyTotal')}
-            </th>
-            <th className="hidden xl:table-cell border-t border-b border-r border-gray-300 px-2 py-1 text-left sticky left-8 top-14 bg-cyan-700 z-40 xl:w-104 xl:min-w-104 shadow-[2px_0_0_0_rgb(8,145,178)] text-xs font-semibold" colSpan="3">
+          <tr className="bg-cyan-700 text-white font-bold sticky z-35" style={{ top: headerHeight }}>
+            <th className="border-b border-r border-gray-300 px-1 py-1 text-center sticky left-0 bg-cyan-700 z-40 w-8 min-w-8 max-w-8" style={{ top: headerHeight }}></th>
+            <th className="border-b border-r border-gray-300 px-2 py-1 text-left sticky left-8 bg-cyan-700 z-40 w-44 min-w-44 max-w-44 xl:w-56 xl:min-w-56 xl:max-w-56 shadow-[2px_0_0_0_rgb(8,145,178)] text-xs font-semibold" style={{ top: headerHeight }}>
               {t('timesheet:dailyTotal')}
             </th>
 
-            <th className="border-t border-b border-r border-gray-300 px-1 py-1 text-center bg-cyan-700 sticky left-68 xl:left-112 top-14 z-40 w-20 min-w-20 max-w-20 text-xs font-bold">
+            <th className="border-b border-r border-gray-300 px-1 py-1 text-center bg-cyan-700 sticky left-52 xl:left-64 z-40 w-20 min-w-20 max-w-20 text-xs font-bold" style={{ top: headerHeight }}>
               {getGrandTotal().toFixed(1)}
             </th>
 
@@ -202,7 +239,7 @@ function TimesheetTable({
               const getBgClass = () => {
                 if (isOvertime) return "bg-red-500";
                 if (isFullDay) return "bg-green-500";
-                if (dateInfo.isToday) return "bg-cyan-500 text-white";
+                if (dateInfo.isToday) return "bg-cyan-700 text-white shadow-[inset_2px_0_0_0_#22d3ee,inset_-2px_0_0_0_#22d3ee]";
                 if (dateInfo.isNonWorking) return "bg-gray-600";
                 return "bg-cyan-700";
               };
@@ -210,7 +247,8 @@ function TimesheetTable({
               return (
                 <th
                   key={idx}
-                  className={`border-t border-b border-r border-gray-300 px-1 py-1 text-center text-xs font-semibold sticky top-14 z-30 text-white ${getBgClass()}`}
+                  className={`border-b border-r border-gray-300 px-1 py-1 text-center text-xs font-semibold sticky z-30 text-white ${getBgClass()}`}
+                  style={{ top: headerHeight }}
                 >
                   {total > 0 ? total.toFixed(1) : "-"}
                 </th>
@@ -227,7 +265,7 @@ function TimesheetTable({
             return (
               <>
                 <tr className="bg-cyan-900">
-                  <td colSpan={dateRange.length + 6} className="px-4 py-2 text-white font-bold text-sm tracking-wide">
+                  <td colSpan={dateRange.length + 4} className="px-4 py-2 text-white font-bold text-sm tracking-wide">
                     <div className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -264,6 +302,8 @@ function TimesheetTable({
                       onKeyDown={onKeyDown}
                       onEditValueChange={onEditValueChange}
                       onTaskHistoryClick={onTaskHistoryClick}
+                      onLabelTooltipHover={showLabelTooltip}
+                      onLabelTooltipLeave={hideLabelTooltip}
                     />
                   );
                 })}
@@ -278,10 +318,10 @@ function TimesheetTable({
             return (
               <>
                 <tr className="h-2">
-                  <td colSpan={dateRange.length + 6} className="bg-gray-300"></td>
+                  <td colSpan={dateRange.length + 4} className="bg-gray-300"></td>
                 </tr>
                 <tr className="bg-cyan-900">
-                  <td colSpan={dateRange.length + 6} className="px-4 py-2 text-white font-bold text-sm tracking-wide">
+                  <td colSpan={dateRange.length + 4} className="px-4 py-2 text-white font-bold text-sm tracking-wide">
                     <div className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -319,6 +359,8 @@ function TimesheetTable({
                       onKeyDown={onKeyDown}
                       onEditValueChange={onEditValueChange}
                       onTaskHistoryClick={onTaskHistoryClick}
+                      onLabelTooltipHover={showLabelTooltip}
+                      onLabelTooltipLeave={hideLabelTooltip}
                     />
                   );
                 })}
@@ -328,7 +370,7 @@ function TimesheetTable({
 
           <tr className="h-4">
             <td
-              colSpan={dateRange.length + 5}
+              colSpan={dateRange.length + 4}
               className="bg-gray-200"
             ></td>
           </tr>
@@ -352,7 +394,7 @@ function TimesheetTable({
               <>
                 <tr className="h-4">
                   <td
-                    colSpan={dateRange.length + 5}
+                    colSpan={dateRange.length + 4}
                     className="bg-gray-200"
                   ></td>
                 </tr>
@@ -556,6 +598,36 @@ function TimesheetTable({
         position={noteTooltipPosition}
         visible={!!hoveredNoteCell?.details}
       />
+
+      {labelTooltip && createPortal(
+        <div
+          className="fixed z-[9999] px-3 py-2.5 rounded-lg shadow-xl bg-gray-900 text-white text-xs min-w-48 max-w-sm border border-gray-600 pointer-events-none"
+          style={{
+            left: labelTooltip.x,
+            top: labelTooltip.above ? labelTooltip.y : labelTooltip.y + 4,
+            transform: labelTooltip.above
+              ? 'translate(-50%, calc(-100% - 4px))'
+              : 'translate(-50%, 0)',
+          }}
+        >
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: labelTooltip.content.color || '#6366F1' }} />
+              <span className="font-semibold text-gray-100">{labelTooltip.content.client}</span>
+            </div>
+            {labelTooltip.content.project && (
+              <div className="text-gray-300 pl-4">{labelTooltip.content.project}</div>
+            )}
+            {labelTooltip.content.task && (
+              <div className="flex items-center gap-1.5 pl-4 text-gray-200 text-xs">
+                <FileText className="h-3 w-3 text-gray-400 shrink-0" />
+                {labelTooltip.content.task}
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </TableContainer>
   );
 }

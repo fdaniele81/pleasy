@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { FileText, Clock, Eye } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
-import TimesheetGridTable from '../../../shared/components/TimesheetGridTable';
+import TransposedTimesheetGrid from '../../../shared/components/TransposedTimesheetGrid';
 import { useGetSnapshotDetailsQuery } from '../api/snapshotEndpoints';
 import { useGetHolidaysQuery } from '../../holidays/api/holidayEndpoints';
 import { useLocale } from '../../../hooks/useLocale';
@@ -47,6 +47,9 @@ const SnapshotDetailsModal = ({ isOpen, onClose, snapshotId }) => {
     });
   };
 
+  const taskCount = snapshotDetails?.tasks?.length || 0;
+  const modalSize = taskCount <= 3 ? 'xl' : taskCount <= 6 ? '2xl' : '3xl';
+
   const customFooter = (
     <Button onClick={handleClose} variant="outline" color="gray" size="md">
       {t('common:close')}
@@ -59,7 +62,7 @@ const SnapshotDetailsModal = ({ isOpen, onClose, snapshotId }) => {
       onClose={handleClose}
       title={t('timesheetsnapshots:submittedTimesheetDetails')}
       icon={<Eye className="text-cyan-600" size={28} />}
-      size="3xl"
+      size={modalSize}
       customFooter={customFooter}
       showFooter={true}
     >
@@ -84,31 +87,27 @@ const SnapshotDetailsModal = ({ isOpen, onClose, snapshotId }) => {
 
       {!detailsLoading && !detailsError && snapshotDetails && snapshotDetails.tasks?.length > 0 && (
         <div className="flex flex-col gap-4 h-full min-h-0">
-          <div className="bg-cyan-50 rounded-lg p-4 border border-cyan-100">
-            <div className="flex items-center gap-6 text-sm text-gray-700 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-cyan-600" />
-                <span className="font-medium">{t('timesheetsnapshots:submittedAt')}</span>
-                <span className="font-semibold">{formatDateTime(snapshotDetails.snapshot?.submitted_at)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-cyan-600" />
-                <span className="font-medium">{t('timesheetsnapshots:entries')}</span>
-                <span className="font-semibold">{getTotalTimesheets()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-cyan-600" />
-                <span className="font-medium">{t('timesheetsnapshots:totalHours')}</span>
-                <span className="font-semibold">{getTotalHours().toFixed(1)}h</span>
-              </div>
+          <div className="flex items-center gap-6 text-sm text-gray-600 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-gray-400" />
+              <span>{t('timesheetsnapshots:submittedAt')}</span>
+              <span className="font-semibold text-gray-800">{formatDateTime(snapshotDetails.snapshot?.submitted_at)}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <FileText className="h-4 w-4 text-gray-400" />
+              <span>{t('timesheetsnapshots:entries')}</span>
+              <span className="font-semibold text-gray-800">{getTotalTimesheets()}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-gray-400" />
+              <span>{t('timesheetsnapshots:totalHours')}</span>
+              <span className="font-semibold text-gray-800">{getTotalHours().toFixed(1)}h</span>
             </div>
           </div>
 
-          <TimesheetGridTable
+          <TransposedTimesheetGrid
             tasks={snapshotDetails.tasks}
             holidays={holidays}
-            selectable={false}
-            fill
           />
         </div>
       )}

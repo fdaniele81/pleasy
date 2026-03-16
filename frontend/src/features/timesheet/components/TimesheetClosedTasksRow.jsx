@@ -17,15 +17,7 @@ const TimesheetClosedTasksRow = memo(function TimesheetClosedTasksRow({
         <div className="w-4 h-4"></div>
       </td>
 
-      <td className="xl:hidden border-b border-r border-gray-300 px-2 py-1 sticky left-8 bg-purple-50 z-10 shadow-[2px_0_0_0_rgb(192,132,252)]" colSpan="2">
-        <div className="flex items-center gap-2">
-          <Archive size={18} className="text-purple-600" />
-          <div className="font-medium text-xs text-purple-700">
-            {t('timesheet:closedTasksTimesheets')}
-          </div>
-        </div>
-      </td>
-      <td className="hidden xl:table-cell border-b border-r border-gray-300 px-2 py-1 sticky left-8 bg-purple-50 z-10 shadow-[2px_0_0_0_rgb(192,132,252)]" colSpan="3">
+      <td className="border-b border-r border-gray-300 px-2 py-1 sticky left-8 bg-purple-50 z-10 w-44 min-w-44 max-w-44 xl:w-56 xl:min-w-56 xl:max-w-56 shadow-[2px_0_0_0_rgb(192,132,252)]">
         <div className="flex items-center gap-2">
           <Archive size={18} className="text-purple-600" />
           <div className="font-medium text-xs text-purple-700">
@@ -34,7 +26,7 @@ const TimesheetClosedTasksRow = memo(function TimesheetClosedTasksRow({
         </div>
       </td>
 
-      <td className="border-b border-r border-gray-300 px-1 py-1 text-center font-bold text-purple-700 bg-purple-50 sticky left-68 xl:left-112 z-10 w-20 min-w-20 max-w-20 text-xs">
+      <td className="border-b border-r border-gray-300 px-1 py-1 text-center font-bold text-purple-700 bg-purple-50 sticky left-52 xl:left-64 z-10 w-20 min-w-20 max-w-20 text-xs">
         {getClosedTasksGrandTotal().toFixed(1)}
       </td>
 
@@ -51,7 +43,7 @@ const TimesheetClosedTasksRow = memo(function TimesheetClosedTasksRow({
             key={dateIdx}
             className={`border-b border-r border-gray-300 px-1 py-1 text-center w-[45px] ${
               isToday
-                ? "bg-cyan-50"
+                ? "bg-cyan-50/40 shadow-[inset_2px_0_0_0_#22d3ee,inset_-2px_0_0_0_#22d3ee]"
                 : isHolidayDay || isWeekend
                 ? "bg-gray-100"
                 : "bg-purple-50"

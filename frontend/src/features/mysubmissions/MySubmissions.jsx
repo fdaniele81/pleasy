@@ -1,8 +1,9 @@
 import React, { useState, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetSnapshotsQuery } from '../timesheetsnapshots/api/snapshotEndpoints';
 import { useSubmitTimesheetsMutation } from '../timesheet/api/timesheetEndpoints';
-import { FileText, Calendar, Clock, Eye, Send } from 'lucide-react';
+import { FileText, Calendar, Clock, Eye, Send, ArrowLeft } from 'lucide-react';
 import PageHeader from '../../shared/ui/PageHeader';
 import DateInput from '../../shared/ui/DateInput';
 import { useAuth } from '../../hooks';
@@ -11,10 +12,9 @@ import { useLocale } from '../../hooks/useLocale';
 const SnapshotDetailsModal = lazy(() => import('../timesheetsnapshots/components/SnapshotDetailsModal'));
 const SubmissionPreviewModal = lazy(() => import('../timesheet/components/SubmissionPreviewModal'));
 
-const INITIAL_COUNT = 10;
-
 function MySubmissions() {
   const { t } = useTranslation(['mysubmissions', 'timesheetsnapshots', 'timesheet', 'common']);
+  const navigate = useNavigate();
   const locale = useLocale();
   const { user } = useAuth();
 
@@ -22,7 +22,7 @@ function MySubmissions() {
   const [endDate, setEndDate] = useState('');
   const [selectedSnapshotId, setSelectedSnapshotId] = useState(null);
   const [showSubmissionPreview, setShowSubmissionPreview] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const { data: allSnapshots = [], isLoading: loading } = useGetSnapshotsQuery(
     { startDate, endDate }
@@ -80,7 +80,7 @@ function MySubmissions() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
       <Suspense fallback={null}>
         <SnapshotDetailsModal
           isOpen={selectedSnapshotId !== null}
@@ -96,9 +96,17 @@ function MySubmissions() {
         />
       </Suspense>
 
-      <div className="p-4">
+      <div className="shrink-0 p-4 pb-0">
         <div className="max-w-full mx-auto">
           <div className="mt-16"></div>
+
+          <button
+            onClick={() => navigate('/timesheet')}
+            className="inline-flex items-center gap-1 text-sm text-cyan-600 hover:text-cyan-800 font-medium mb-2"
+          >
+            <ArrowLeft size={16} />
+            {t('mysubmissions:backToTimesheet')}
+          </button>
 
           <PageHeader
             icon={Send}
@@ -141,7 +149,11 @@ function MySubmissions() {
               </button>
             )}
           </div>
+        </div>
+      </div>
 
+      <div className="flex-1 min-h-0 px-4 pb-4">
+        <div className="max-w-full mx-auto h-full">
           {snapshots.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-12 text-center">
               <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
@@ -153,8 +165,8 @@ function MySubmissions() {
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-linear-to-r from-cyan-50 to-cyan-100 px-4 py-3 border-b border-cyan-200">
+            <div className="bg-white rounded-lg shadow-md flex flex-col h-full overflow-hidden">
+              <div className="shrink-0 bg-linear-to-r from-cyan-50 to-cyan-100 px-4 py-3 border-b border-cyan-200">
                 <div className="flex items-center justify-end space-x-4 text-xs text-gray-600">
                   <span>
                     {t('timesheetsnapshots:snapshotCount', { count: snapshots.length })}
@@ -168,9 +180,9 @@ function MySubmissions() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="flex-1 overflow-y-auto min-h-0">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                     <tr>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t('timesheetsnapshots:submissionDateHeader')}
@@ -231,7 +243,7 @@ function MySubmissions() {
               </div>
 
               {hasMore && (
-                <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-center">
+                <div className="shrink-0 bg-gray-50 px-4 py-3 border-t border-gray-200 text-center">
                   <button
                     onClick={() => setVisibleCount(prev => prev + 10)}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 rounded-lg transition-colors"

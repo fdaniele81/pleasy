@@ -101,6 +101,8 @@
   "excelTotal": "TOTALE",
   "excelNoData": "Nessun dato nel periodo selezionato",
   "noTimesheetInRange": "Nessun consuntivo nel periodo selezionato",
+  "hideEmptyDays": "Nascondi giorni vuoti",
+  "showEmptyDays": "Mostra giorni vuoti",
   "goToDate": "Vai a data",
   "startDate": "Data inizio",
   "undoSuccess": "Annullato: {{label}}",

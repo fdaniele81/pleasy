@@ -1,6 +1,38 @@
 import { useState, useCallback, useRef } from 'react';
-import { getKeyboardAction, preventNavigationDefault } from '../utils/keyboard/keyboardNavigation';
 import logger from '../utils/logger';
+
+const KEYS = {
+  ENTER: 'Enter',
+  TAB: 'Tab',
+  ESCAPE: 'Escape',
+  ARROW_UP: 'ArrowUp',
+  ARROW_DOWN: 'ArrowDown',
+  ARROW_LEFT: 'ArrowLeft',
+  ARROW_RIGHT: 'ArrowRight',
+};
+
+const ARROW_KEYS = [KEYS.ARROW_UP, KEYS.ARROW_DOWN, KEYS.ARROW_LEFT, KEYS.ARROW_RIGHT];
+
+function getKeyboardAction(event) {
+  const { key, shiftKey } = event;
+  if (key === KEYS.ENTER) return { action: 'navigate', direction: 'down' };
+  if (key === KEYS.TAB) return { action: 'navigate', direction: shiftKey ? 'left' : 'right', isTab: true };
+  if (ARROW_KEYS.includes(key)) {
+    const directions = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+    return { action: 'navigate', direction: directions[key] };
+  }
+  if (key === KEYS.ESCAPE) return { action: 'cancel' };
+  return { action: 'none' };
+}
+
+function preventNavigationDefault(event) {
+  const { key } = event;
+  if (key === KEYS.ENTER || key === KEYS.TAB || key === KEYS.ESCAPE || ARROW_KEYS.includes(key)) {
+    event.preventDefault();
+    return true;
+  }
+  return false;
+}
 
 export function useInlineEditCell({
   onSave,

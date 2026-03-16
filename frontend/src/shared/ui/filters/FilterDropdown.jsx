@@ -19,6 +19,7 @@ function FilterDropdown({
   selectedIds,
   toggleDropdown: externalToggle,
   onChange,
+  onClose,
   showCount = true,
   showClear = true,
   size = 'md',
@@ -30,6 +31,8 @@ function FilterDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   const resolvedEmptyMessage = emptyMessage || t('common:noItemsAvailable');
 
   const normalizedOptions = options || (items?.map(item => ({
@@ -52,6 +55,7 @@ function FilterDropdown({
         !buttonRef.current?.contains(event.target)
       ) {
         setIsOpen(false);
+        onCloseRef.current?.();
       }
     };
 

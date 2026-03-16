@@ -142,7 +142,15 @@ export function useTimesheetActions({
   }, [taskEditCell, timeOffEditCell]);
 
   useEffect(() => {
+    const dismissOnScroll = () => {
+      if (tooltipTimeoutRef.current) { clearTimeout(tooltipTimeoutRef.current); tooltipTimeoutRef.current = null; }
+      if (noteTooltipTimeoutRef.current) { clearTimeout(noteTooltipTimeoutRef.current); noteTooltipTimeoutRef.current = null; }
+      setHoveredTaskId(null);
+      setHoveredNoteCell(null);
+    };
+    window.addEventListener('scroll', dismissOnScroll, true);
     return () => {
+      window.removeEventListener('scroll', dismissOnScroll, true);
       if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
       if (noteTooltipTimeoutRef.current) clearTimeout(noteTooltipTimeoutRef.current);
     };
@@ -158,7 +166,7 @@ export function useTimesheetActions({
     tooltipTimeoutRef.current = setTimeout(() => {
       setTooltipPosition({ x: rect.right + 8, y: rect.top + rect.height / 2 });
       setHoveredTaskId(taskId);
-    }, 1000);
+    }, 200);
   }, []);
 
   const handleTooltipLeave = useCallback(() => {
@@ -172,7 +180,7 @@ export function useTimesheetActions({
     noteTooltipTimeoutRef.current = setTimeout(() => {
       setNoteTooltipPosition({ x: rect.left + rect.width / 2, y: rect.top - 8 });
       setHoveredNoteCell({ taskId, date, details, type });
-    }, 500);
+    }, 200);
   }, []);
 
   const handleNoteTooltipLeave = useCallback(() => {

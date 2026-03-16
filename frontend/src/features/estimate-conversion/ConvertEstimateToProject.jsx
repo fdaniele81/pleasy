@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { ArrowRightLeft, FolderKanban, Calculator, ChevronDown } from 'lucide-react';
+import { ArrowRightLeft, FolderKanban, Calculator, ChevronDown, ClipboardList } from 'lucide-react';
 import logger from '../../utils/logger';
 import { useLazyGetEstimateQuery } from '../estimator/api/estimateEndpoints';
 import {
@@ -31,7 +31,7 @@ import { useConversionUndo } from './hooks/useConversionUndo';
 import { calculatePhaseTotals } from './utils/phaseMapping';
 
 function ConvertEstimateToProject() {
-  const { t } = useTranslation(['estimateConversion', 'estimator', 'common']);
+  const { t } = useTranslation(['estimateConversion', 'estimator', 'common', 'navigation']);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const currentUser = useSelector(state => state.auth.user);
@@ -389,6 +389,11 @@ function ConvertEstimateToProject() {
           <PageHeader
             title={t('estimator:convertEstimate')}
             icon={ArrowRightLeft}
+            actionButton={{
+              label: t('navigation:mySubmissions'),
+              onClick: () => navigate('/my-submissions'),
+              icon: ClipboardList,
+            }}
           />
 
           {/* Estimate selection */}

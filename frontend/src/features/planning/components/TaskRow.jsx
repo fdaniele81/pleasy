@@ -515,6 +515,7 @@ export const TaskRow = memo(function TaskRow({
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={() => handleCellBlur(task.task_id, project.project_id, 'budget', formattedBudget.toString())}
                 onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'budget', formattedBudget.toString())}
+                onFocus={(e) => e.target.select()}
                 onWheel={(e) => e.target.blur()}
                 autoFocus
                 className="w-full px-1 py-1 border border-blue-300 rounded text-xs text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -558,6 +559,7 @@ export const TaskRow = memo(function TaskRow({
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={() => handleCellBlur(task.task_id, project.project_id, 'etc', formattedEtc.toString())}
                 onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'etc', formattedEtc.toString())}
+                onFocus={(e) => e.target.select()}
                 onWheel={(e) => e.target.blur()}
                 autoFocus
                 className="w-full px-1 py-1 border border-blue-300 rounded text-xs text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

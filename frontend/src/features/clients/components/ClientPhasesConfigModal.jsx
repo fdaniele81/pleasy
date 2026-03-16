@@ -386,6 +386,7 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
                               max="100"
                               value={parseFloat(phaseConfig.e2e_percentage) || 0}
                               onChange={(e) => handlePercentageChange(phase.key, e.target.value)}
+                              onFocus={(e) => e.target.select()}
                               onWheel={(e) => e.target.blur()}
                               className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
@@ -406,6 +407,7 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
                           max="100"
                           value={parseFloat(config?.contingency?.e2e_percentage || 0)}
                           onChange={(e) => handlePercentageChange('contingency', e.target.value)}
+                          onFocus={(e) => e.target.select()}
                           onWheel={(e) => e.target.blur()}
                           className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />

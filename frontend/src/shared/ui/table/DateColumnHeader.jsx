@@ -17,14 +17,14 @@ function DateColumnHeader({
   const weekDay = date.toLocaleDateString(locale, { weekday: 'short' });
 
   const getBgClass = () => {
-    if (isToday) return 'bg-cyan-500 text-white';
+    if (isToday) return 'bg-cyan-700 text-white';
     if (isWeekend || isHoliday) return 'bg-gray-500';
     return 'bg-cyan-700';
   };
 
   const baseClasses = [
-    'border-t border-r border-gray-300',
-    'px-1 py-3',
+    'border-t border-b border-r border-gray-300',
+    'px-1 py-2',
     'text-center font-semibold',
     'text-white',
     getBgClass(),
@@ -48,8 +48,17 @@ function DateColumnHeader({
       title={holidayName || undefined}
       onClick={onClick}
     >
-      <div className="text-xs font-semibold">{day}/{month}</div>
-      <div className="text-[10px]">{weekDay}</div>
+      {isToday ? (
+        <div className="bg-white text-cyan-800 rounded-md mx-auto px-1 py-px inline-block">
+          <div className="text-xs font-bold leading-tight">{day}/{month}</div>
+          <div className="text-[10px] font-semibold leading-tight">{weekDay}</div>
+        </div>
+      ) : (
+        <>
+          <div className="text-xs font-semibold leading-tight">{day}/{month}</div>
+          <div className="text-[10px] leading-tight">{weekDay}</div>
+        </>
+      )}
     </th>
   );
 }

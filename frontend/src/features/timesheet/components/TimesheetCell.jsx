@@ -34,7 +34,7 @@ const TimesheetCell = memo(function TimesheetCell({
   return (
     <td
       className={`border-b border-r border-gray-300 px-1 py-1 text-center w-[45px] ${
-        isToday ? "bg-cyan-50" : isHoliday || isWeekend ? "bg-gray-200" : ""
+        isToday ? "bg-cyan-50/40 shadow-[inset_2px_0_0_0_#22d3ee,inset_-2px_0_0_0_#22d3ee]" : isHoliday || isWeekend ? "bg-gray-200" : ""
       } ${
         isCellLocked ? "bg-cyan-50" : ""
       } ${topBorderClass}`}

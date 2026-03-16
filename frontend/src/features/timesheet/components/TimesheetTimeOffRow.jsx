@@ -41,15 +41,7 @@ const TimesheetTimeOffRow = memo(function TimesheetTimeOffRow({
         />
       </td>
 
-      <td className={`xl:hidden border-b border-r border-gray-300 px-2 py-1 sticky left-8 ${bgColor} z-10 ${shadowColor}`} colSpan="2">
-        <div className="flex items-center gap-2">
-          <Icon size={18} className={textColor} />
-          <div className={`font-medium text-xs ${textColor}`}>
-            {label}
-          </div>
-        </div>
-      </td>
-      <td className={`hidden xl:table-cell border-b border-r border-gray-300 px-2 py-1 sticky left-8 ${bgColor} z-10 ${shadowColor}`} colSpan="3">
+      <td className={`border-b border-r border-gray-300 px-2 py-1 sticky left-8 ${bgColor} z-10 w-44 min-w-44 max-w-44 xl:w-56 xl:min-w-56 xl:max-w-56 ${shadowColor}`}>
         <div className="flex items-center gap-2">
           <Icon size={18} className={textColor} />
           <div className={`font-medium text-xs ${textColor}`}>
@@ -58,7 +50,7 @@ const TimesheetTimeOffRow = memo(function TimesheetTimeOffRow({
         </div>
       </td>
 
-      <td className={`border-b border-r border-gray-300 px-1 py-1 text-center ${bgColor} sticky left-68 xl:left-112 z-10 w-20 min-w-20 max-w-20`}>
+      <td className={`border-b border-r border-gray-300 px-1 py-1 text-center ${bgColor} sticky left-52 xl:left-64 z-10 w-20 min-w-20 max-w-20`}>
         <button
           onClick={() => onTotalClick && onTotalClick(timeOffType)}
           className={`flex items-center justify-center gap-1 w-full ${textColor} hover:underline text-xs font-medium transition-colors`}
@@ -87,7 +79,7 @@ const TimesheetTimeOffRow = memo(function TimesheetTimeOffRow({
             key={dateIdx}
             className={`border-b border-r border-gray-300 px-1 py-1 text-center w-[45px] ${
               isToday
-                ? "bg-cyan-50"
+                ? "bg-cyan-50/40 shadow-[inset_2px_0_0_0_#22d3ee,inset_-2px_0_0_0_#22d3ee]"
                 : isHolidayDay || isWeekend
                 ? "bg-gray-100"
                 : bgColor

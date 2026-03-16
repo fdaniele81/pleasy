@@ -396,6 +396,8 @@ function TMPlanning() {
           onClose={() => setShowExportModal(false)}
           onExport={handleExport}
           title={t('tmplanning:exportTitle')}
+          defaultStartDate={state.startDate}
+          defaultEndDate={state.endDate}
         />
       </Suspense>
     </div>

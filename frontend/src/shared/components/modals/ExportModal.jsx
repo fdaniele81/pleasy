@@ -6,7 +6,14 @@ import DateInput from '../../ui/DateInput';
 import { useFormModal } from '../../../hooks/useFormModal';
 import { toISODate } from '../../../utils/date/dateUtils';
 
-const getDefaultDates = () => {
+const getDefaultDates = (defaultStartDate, defaultEndDate) => {
+  if (defaultStartDate && defaultEndDate) {
+    return {
+      start_date: defaultStartDate,
+      end_date: defaultEndDate
+    };
+  }
+
   const today = new Date();
   const oneMonthLater = new Date(today);
   oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
@@ -17,7 +24,7 @@ const getDefaultDates = () => {
   };
 };
 
-function ExportModal({ isOpen, onClose, onExport, title }) {
+function ExportModal({ isOpen, onClose, onExport, title, defaultStartDate, defaultEndDate }) {
   const { t } = useTranslation(['planning', 'validation', 'common']);
   const resolvedTitle = title || t('planning:exportExcel');
   const {
@@ -27,7 +34,7 @@ function ExportModal({ isOpen, onClose, onExport, title }) {
     handleSubmit,
     reset
   } = useFormModal({
-    initialValues: getDefaultDates(),
+    initialValues: getDefaultDates(defaultStartDate, defaultEndDate),
     validate: (data) => {
       const newErrors = {};
 

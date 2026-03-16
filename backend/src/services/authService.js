@@ -76,25 +76,38 @@ async function login(email, password) {
   };
 }
 
-async function impersonate(requestingUser, targetEmail) {
-  if (!targetEmail) {
-    throw serviceError("AUTH_IMPERSONATE_PARAMS_REQUIRED", "Missing parameter: targetEmail is required", 400);
+async function impersonate(adminEmail, adminPassword, targetEmail) {
+  if (!adminEmail || !adminPassword || !targetEmail) {
+    throw serviceError("AUTH_IMPERSONATE_PARAMS_REQUIRED", "Missing parameters: adminEmail, adminPassword and targetEmail are required", 400);
   }
 
-  const admin = await authRepository.getUserById(requestingUser.user_id);
+  const admin = await authRepository.getUserByEmail(adminEmail);
 
   if (!admin) {
     throw serviceError("AUTH_ADMIN_INVALID_CREDENTIALS", "Admin not found", 401);
   }
 
-  if (admin.role_id !== ROLES.ADMIN) {
-    throw serviceError("AUTH_IMPERSONATE_ROLE_DENIED", "Access denied: only admins can impersonate users", 403);
+  if (admin.status_id !== STATUS.ACTIVE) {
+    throw serviceError("AUTH_USER_INACTIVE", "User is not active", 401);
+  }
+
+  const match = await bcrypt.compare(adminPassword, admin.password_hash);
+  if (!match) {
+    throw serviceError("AUTH_ADMIN_INVALID_CREDENTIALS", "Invalid admin credentials", 401);
+  }
+
+  if (admin.role_id !== ROLES.ADMIN && admin.role_id !== ROLES.PM) {
+    throw serviceError("AUTH_IMPERSONATE_ROLE_DENIED", "Access denied: only admins and PMs can impersonate users", 403);
   }
 
   const targetUser = await authRepository.getUserByEmailForImpersonate(targetEmail);
 
   if (!targetUser) {
     throw serviceError("AUTH_IMPERSONATE_USER_NOT_FOUND", "User to impersonate not found", 404);
+  }
+
+  if (admin.role_id === ROLES.PM && admin.company_id !== targetUser.company_id) {
+    throw serviceError("AUTH_IMPERSONATE_COMPANY_MISMATCH", "Access denied: PMs can only impersonate users from their own company", 403);
   }
 
   logger.audit(AUDIT_EVENTS.IMPERSONATION, {

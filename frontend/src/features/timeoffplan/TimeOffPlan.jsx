@@ -120,9 +120,9 @@ function TimeOffPlan() {
   }, [startDate]);
 
   const getPeriodLabel = () => {
-    if (!startDate || !endDate) return '';
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    if (!queryDateRange.startDate || !queryDateRange.endDate) return '';
+    const start = new Date(queryDateRange.startDate);
+    const end = new Date(queryDateRange.endDate);
     const formatOptions = { day: 'numeric', month: 'short' };
     const startStr = start.toLocaleDateString(locale, formatOptions);
     const endStr = end.toLocaleDateString(locale, { ...formatOptions, year: 'numeric' });
@@ -280,6 +280,8 @@ function TimeOffPlan() {
           onClose={() => setShowExportModal(false)}
           onExport={handleExport}
           title={t('timeoffplan:exportTitle')}
+          defaultStartDate={queryDateRange.startDate}
+          defaultEndDate={queryDateRange.endDate}
         />
       </Suspense>
 

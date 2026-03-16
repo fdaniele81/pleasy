@@ -5,6 +5,7 @@ import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
 import DateInput from '../../../shared/ui/DateInput';
 import TimesheetGridTable from '../../../shared/components/TimesheetGridTable';
+import { formatDateLocal } from '../../../utils/table/tableUtils';
 import { useLazyGetPreviewSubmissionQuery } from '../api/timesheetEndpoints';
 import { useGetHolidaysQuery } from '../../holidays/api/holidayEndpoints';
 
@@ -51,7 +52,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       fetchPreview();
       setSelectedTimesheetIds(new Set());
       setFilterStartDate('');
-      setFilterEndDate('');
+      setFilterEndDate(formatDateLocal(new Date()));
     }
   }, [isOpen, fetchPreview]);
 

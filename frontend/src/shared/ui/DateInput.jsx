@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LOCALE_MAP } from '../../utils/date/dateUtils';
 
-const DateInput = ({ value, onChange, className = '', placeholder }) => {
+const DateInput = ({ value, onChange, className = '', placeholder, autoOpen = false, onDismiss, inputClassName }) => {
   const { t, i18n } = useTranslation('common');
   const locale = LOCALE_MAP[i18n.language] || 'it-IT';
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(autoOpen);
   const [viewYear, setViewYear] = useState(() => {
     const d = value ? new Date(value + 'T00:00:00') : new Date();
     return d.getFullYear();
@@ -18,6 +18,7 @@ const DateInput = ({ value, onChange, className = '', placeholder }) => {
     return d.getMonth();
   });
   const [dropdownStyle, setDropdownStyle] = useState({});
+  const didSelectRef = useRef(false);
 
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -37,14 +38,22 @@ const DateInput = ({ value, onChange, className = '', placeholder }) => {
   const updatePosition = useCallback(() => {
     if (!inputRef.current) return;
     const rect = inputRef.current.getBoundingClientRect();
-    const dropdownHeight = 340; // approximate height
+    const dropdownWidth = 288;
+    const dropdownHeight = 340;
     const spaceBelow = window.innerHeight - rect.bottom;
     const openAbove = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
 
+    // Clamp horizontal position to stay within viewport
+    let left = rect.left;
+    if (left + dropdownWidth > window.innerWidth - 8) {
+      left = window.innerWidth - dropdownWidth - 8;
+    }
+    if (left < 8) left = 8;
+
     setDropdownStyle({
       position: 'fixed',
-      left: rect.left,
-      width: 288, // w-72
+      left,
+      width: dropdownWidth,
       zIndex: 9999,
       ...(openAbove
         ? { bottom: window.innerHeight - rect.top + 4 }
@@ -66,21 +75,26 @@ const DateInput = ({ value, onChange, className = '', placeholder }) => {
         dropdownRef.current && !dropdownRef.current.contains(e.target)
       ) {
         setIsOpen(false);
+        if (!didSelectRef.current && onDismiss) onDismiss();
+        didSelectRef.current = false;
       }
     };
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);
-  }, [isOpen]);
+  }, [isOpen, onDismiss]);
 
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        if (onDismiss) onDismiss();
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, onDismiss]);
 
   const weekDays = useMemo(() => {
     const days = [];
@@ -144,6 +158,7 @@ const DateInput = ({ value, onChange, className = '', placeholder }) => {
   }, [value, locale]);
 
   const handleDayClick = (day) => {
+    didSelectRef.current = true;
     onChange(toISO(day.date));
     setIsOpen(false);
   };
@@ -170,6 +185,7 @@ const DateInput = ({ value, onChange, className = '', placeholder }) => {
     const now = new Date();
     setViewYear(now.getFullYear());
     setViewMonth(now.getMonth());
+    didSelectRef.current = true;
     onChange(todayISO);
     setIsOpen(false);
   };
@@ -263,7 +279,7 @@ const DateInput = ({ value, onChange, className = '', placeholder }) => {
           readOnly
           value={displayValue}
           placeholder={placeholder || t('selectDate')}
-          className="w-full px-3 py-2 bg-transparent rounded-lg cursor-pointer focus:outline-none text-sm"
+          className={inputClassName || "w-full px-3 py-2 bg-transparent rounded-lg cursor-pointer focus:outline-none text-sm"}
         />
         <Calendar size={16} className="mr-3 text-gray-400 shrink-0" />
       </div>

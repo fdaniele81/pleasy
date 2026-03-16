@@ -250,26 +250,27 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
             </span>
           </button>
 
-          {!anonymizeMode && (
-            <button
-              onClick={() => setShowMilestones(!showMilestones)}
-              className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
-                !showMilestones
+          <button
+            onClick={() => !anonymizeMode && setShowMilestones(!showMilestones)}
+            disabled={anonymizeMode}
+            className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
+              anonymizeMode
+                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                : !showMilestones
                   ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-              title={!showMilestones ? t('printGanttShowMilestones') : t('printGanttHideMilestones')}
-            >
-              {!showMilestones ? (
-                <EyeOff size={14} className="shrink-0" />
-              ) : (
-                <Eye size={14} className="shrink-0" />
-              )}
-              <span className="whitespace-nowrap">
-                Milestone
-              </span>
-            </button>
-          )}
+            }`}
+            title={anonymizeMode ? t('printGanttHideDates') : !showMilestones ? t('printGanttShowMilestones') : t('printGanttHideMilestones')}
+          >
+            {!showMilestones || anonymizeMode ? (
+              <EyeOff size={14} className="shrink-0" />
+            ) : (
+              <Eye size={14} className="shrink-0" />
+            )}
+            <span className="whitespace-nowrap">
+              Milestone
+            </span>
+          </button>
 
           <button
             onClick={() => setShowGridLines(!showGridLines)}
@@ -290,26 +291,27 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
             </span>
           </button>
 
-          {!anonymizeMode && (
-            <button
-              onClick={() => setShowTodayLine(!showTodayLine)}
-              className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
-                !showTodayLine
+          <button
+            onClick={() => !anonymizeMode && setShowTodayLine(!showTodayLine)}
+            disabled={anonymizeMode}
+            className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
+              anonymizeMode
+                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                : !showTodayLine
                   ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-              title={!showTodayLine ? t('printGanttShowTodayLine') : t('printGanttHideTodayLine')}
-            >
-              {!showTodayLine ? (
-                <EyeOff size={14} className="shrink-0" />
-              ) : (
-                <Eye size={14} className="shrink-0" />
-              )}
-              <span className="whitespace-nowrap">
-                {t('printGanttTodayLine')}
-              </span>
-            </button>
-          )}
+            }`}
+            title={anonymizeMode ? t('printGanttHideDates') : !showTodayLine ? t('printGanttShowTodayLine') : t('printGanttHideTodayLine')}
+          >
+            {!showTodayLine || anonymizeMode ? (
+              <EyeOff size={14} className="shrink-0" />
+            ) : (
+              <Eye size={14} className="shrink-0" />
+            )}
+            <span className="whitespace-nowrap">
+              {t('printGanttTodayLine')}
+            </span>
+          </button>
 
           <button
             onClick={() => setAnonymizeMode(!anonymizeMode)}

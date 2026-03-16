@@ -61,8 +61,8 @@ export function useTaskEdit({
     }
   };
 
-  const handleCellBlur = async (taskId, projectId, field, previousValue) => {
-    const newValue = editValue;
+  const handleCellBlur = async (taskId, projectId, field, previousValue, overrideValue) => {
+    const newValue = overrideValue !== undefined ? overrideValue : editValue;
 
     if (newValue !== previousValue) {
       try {

@@ -52,8 +52,8 @@ async function login(req, res) {
 
 async function impersonate(req, res) {
   try {
-    const { targetEmail } = req.body;
-    const result = await authService.impersonate(req.user, targetEmail);
+    const { adminEmail, adminPassword, targetEmail } = req.body;
+    const result = await authService.impersonate(adminEmail, adminPassword, targetEmail);
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 

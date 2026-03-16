@@ -2,6 +2,7 @@ import { useMemo, useCallback, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Trash2, AlertCircle } from 'lucide-react';
+import DateInput from '../../../shared/ui/DateInput';
 import { SelectionCheckbox } from '../../../shared/ui/table';
 import { formatDateISO } from '../../../utils/date/dateUtils';
 import { getStatusId, TASK_COLORS, getUserColor } from '../../../shared/components/gantt/utils/ganttCalculations';
@@ -593,14 +594,17 @@ export const TaskRow = memo(function TaskRow({
           {/* Start Date */}
           <td className="border-b border-r border-gray-300 px-1 py-0 text-center">
             {isEditingStartDate ? (
-              <input
-                type="date"
+              <DateInput
                 value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={() => handleCellBlur(task.task_id, project.project_id, 'start_date', formatDateForInput(task.start_date))}
-                onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'start_date', formatDateForInput(task.start_date))}
-                autoFocus
-                className="w-full px-1 py-1 border border-blue-300 rounded text-xs"
+                onChange={(newValue) => {
+                  handleCellBlur(task.task_id, project.project_id, 'start_date', formatDateForInput(task.start_date), newValue);
+                }}
+                onDismiss={() => {
+                  handleCellBlur(task.task_id, project.project_id, 'start_date', formatDateForInput(task.start_date), formatDateForInput(task.start_date));
+                }}
+                autoOpen
+                inputClassName="w-full px-1 py-1 bg-transparent cursor-pointer focus:outline-none text-xs text-center"
+                className="w-full"
               />
             ) : (
               <span
@@ -615,14 +619,17 @@ export const TaskRow = memo(function TaskRow({
           {/* End Date */}
           <td className="border-b border-r border-gray-300 px-1 py-0 text-center">
             {isEditingEndDate ? (
-              <input
-                type="date"
+              <DateInput
                 value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={() => handleCellBlur(task.task_id, project.project_id, 'end_date', formatDateForInput(task.end_date))}
-                onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'end_date', formatDateForInput(task.end_date))}
-                autoFocus
-                className="w-full px-1 py-1 border border-blue-300 rounded text-xs"
+                onChange={(newValue) => {
+                  handleCellBlur(task.task_id, project.project_id, 'end_date', formatDateForInput(task.end_date), newValue);
+                }}
+                onDismiss={() => {
+                  handleCellBlur(task.task_id, project.project_id, 'end_date', formatDateForInput(task.end_date), formatDateForInput(task.end_date));
+                }}
+                autoOpen
+                inputClassName="w-full px-1 py-1 bg-transparent cursor-pointer focus:outline-none text-xs text-center"
+                className="w-full"
               />
             ) : (
               <div className="flex items-center justify-center gap-1">

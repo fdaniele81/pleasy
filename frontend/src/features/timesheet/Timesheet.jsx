@@ -304,7 +304,7 @@ function Timesheet() {
         />
       )}
 
-      <Suspense fallback={null}><ExportModal isOpen={showExportModal} onClose={closeExportModal} onExport={handleExport} title={t('timesheet:exportTimesheets')} /></Suspense>
+      <Suspense fallback={null}><ExportModal isOpen={showExportModal} onClose={closeExportModal} onExport={handleExport} title={t('timesheet:exportTimesheets')} defaultStartDate={startDate} defaultEndDate={endDate} /></Suspense>
       <Suspense fallback={null}><SubmissionPreviewModal isOpen={showSubmissionPreview} onClose={closeSubmissionPreview} onConfirm={handleConfirmSubmission} /></Suspense>
       <Suspense fallback={null}><TaskModalTimesheet key={taskDetailsForModal?.task_id} isOpen={showTaskModal} onClose={handleCloseTaskModal} onConfirm={handleUpdateTask} task={taskDetailsForModal} projectTitle={selectedTaskForModal?.project_title} clientName={selectedTaskForModal?.client_name} clientKey={selectedTaskForModal?.client_key} /></Suspense>
       <Suspense fallback={null}><TimeOffModal isOpen={showTimeOffModal} onClose={handleTimeOffModalClose} onConfirm={handleTimeOffModalConfirm} timeOffData={timeOffModalData} date={timeOffModalDate} /></Suspense>

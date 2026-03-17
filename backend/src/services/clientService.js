@@ -8,7 +8,7 @@ import { DEFAULT_PROJECT_PHASES_CONFIG, isValidConfig } from "../config/projectP
 import { serviceError } from "../utils/errorHandler.js";
 
 async function create(data, user) {
-  const { company_id, client_key, client_name, client_description, color, project_phases_config } = data;
+  const { company_id, client_key, client_name, client_description, color, project_phases_config, symbol_letter, symbol_bg_color, symbol_letter_color } = data;
 
   if (!company_id || !client_key || !client_name) {
     throw serviceError("CLIENT_REQUIRED_FIELDS", "Company, client code and name are required", 400);
@@ -29,7 +29,7 @@ async function create(data, user) {
 
   try {
     const client = await clientRepository.createClient(
-      client_id, company_id, client_key, client_name, client_description, color, phasesConfig
+      client_id, company_id, client_key, client_name, client_description, color, phasesConfig, symbol_letter, symbol_bg_color, symbol_letter_color
     );
 
     const project_id = uuidv4();
@@ -54,7 +54,7 @@ async function create(data, user) {
 }
 
 async function update(clientId, data, user) {
-  const { client_name, client_description, status_id, color, project_phases_config } = data;
+  const { client_name, client_description, status_id, color, project_phases_config, symbol_letter, symbol_bg_color, symbol_letter_color } = data;
 
   if (!client_name) {
     throw serviceError("CLIENT_NAME_REQUIRED", "Client name is required", 400);
@@ -66,7 +66,7 @@ async function update(clientId, data, user) {
   checkCompanyAccess(user, companyId);
 
   const client = await clientRepository.updateClient(
-    clientId, client_name, client_description, status_id, color, project_phases_config
+    clientId, client_name, client_description, status_id, color, project_phases_config, symbol_letter, symbol_bg_color, symbol_letter_color
   );
 
   return {
@@ -148,6 +148,9 @@ async function getClientsWithProjects(user) {
         color: row.color,
         status_id: row.client_status_id,
         project_phases_config: isValidConfig(row.project_phases_config) ? row.project_phases_config : DEFAULT_PROJECT_PHASES_CONFIG,
+        symbol_letter: row.symbol_letter,
+        symbol_bg_color: row.symbol_bg_color,
+        symbol_letter_color: row.symbol_letter_color,
         projects: []
       });
     }

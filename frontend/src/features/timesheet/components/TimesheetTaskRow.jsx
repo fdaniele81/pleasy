@@ -1,6 +1,6 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, Hourglass, ExternalLink } from "lucide-react";
+import { AlertCircle, Hourglass, ExternalLink, Briefcase, FolderKanban, ListTodo } from "lucide-react";
 import TimesheetCell from "./TimesheetCell";
 import { SelectionCheckbox } from "../../../shared/ui/table";
 import {
@@ -124,23 +124,25 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
       >
         <div className="flex items-start gap-1.5 min-w-0">
           <div
-            className="w-1 min-h-7 rounded-sm shrink-0 mt-0.5"
+            className="w-5 h-5 rounded-full shrink-0 mt-0.5 flex items-center justify-center text-[10px] font-bold text-white"
             style={{ backgroundColor: task.client_color || "#6366F1" }}
-          />
+          >
+            {(task.client_name || '?')[0].toUpperCase()}
+          </div>
           {isTMTask ? (
             <div className="min-w-0 flex-1 flex items-center">
               <span className="text-xs text-gray-600 truncate">{task.client_name}</span>
             </div>
           ) : (
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] leading-tight text-gray-400 truncate">
-                {task.client_name}{' · '}<span className="text-gray-500">{task.project_title}</span>
+              <div className="text-[11px] leading-tight text-gray-400 truncate flex items-center gap-1">
+                <FolderKanban className="h-2.5 w-2.5 shrink-0 text-gray-500" /><span className="text-gray-500">{task.project_title}</span>
               </div>
               <div
-                className="text-xs leading-tight font-medium text-gray-800 truncate cursor-pointer hover:text-cyan-600 transition-colors"
+                className="text-xs leading-tight font-medium text-gray-800 truncate cursor-pointer hover:text-cyan-600 transition-colors flex items-center gap-1"
                 onClick={() => onTaskTitleClick && onTaskTitleClick(task)}
               >
-                {task.task_title}
+                <ListTodo className="h-3 w-3 shrink-0" />{task.task_title}
               </div>
             </div>
           )}

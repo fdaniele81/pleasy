@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { EyeOff, Eye, FileText } from 'lucide-react';
+import { EyeOff, Eye, Briefcase, FolderKanban, ListTodo } from 'lucide-react';
 import { isWeekend, isHoliday } from '../../utils/date/workingDays';
 import { useLocale } from '../../hooks/useLocale';
 
@@ -572,12 +572,16 @@ const TransposedTimesheetGrid = ({
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tooltip.content.color || '#0891B2' }} />
+                <Briefcase className="h-3 w-3 text-gray-400 shrink-0" />
                 <span className="font-semibold text-gray-100">{tooltip.content.client}</span>
               </div>
-              <div className="text-gray-300 pl-4">{tooltip.content.project}</div>
+              <div className="flex items-center gap-1.5 text-gray-300 pl-4">
+                <FolderKanban className="h-3 w-3 text-gray-400 shrink-0" />
+                {tooltip.content.project}
+              </div>
               {tooltip.content.task && (
                 <div className="flex items-center gap-1.5 pl-4 text-gray-200 text-xs">
-                  <FileText className="h-3 w-3 text-gray-400 shrink-0" />
+                  <ListTodo className="h-3 w-3 text-gray-400 shrink-0" />
                   {tooltip.content.task}
                 </div>
               )}

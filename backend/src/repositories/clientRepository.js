@@ -10,18 +10,18 @@ async function checkClientKeyExists(companyId, clientKey) {
   return result.rowCount > 0;
 }
 
-async function createClient(clientId, companyId, clientKey, clientName, clientDescription, color, phasesConfig) {
+async function createClient(clientId, companyId, clientKey, clientName, clientDescription, color, phasesConfig, symbolLetter, symbolBgColor, symbolLetterColor) {
   const result = await pool.query(
     `INSERT INTO client
-       (client_id, company_id, client_key, client_name, client_description, color, status_id, project_phases_config, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, 'ACTIVE', $7, NOW(), NOW())
-     RETURNING client_id, company_id, client_key, client_name, client_description, color, status_id, project_phases_config, created_at`,
-    [clientId, companyId, clientKey, clientName, clientDescription, color || '#6B7280', JSON.stringify(phasesConfig)]
+       (client_id, company_id, client_key, client_name, client_description, color, status_id, project_phases_config, symbol_letter, symbol_bg_color, symbol_letter_color, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, 'ACTIVE', $7, $8, $9, $10, NOW(), NOW())
+     RETURNING client_id, company_id, client_key, client_name, client_description, color, status_id, project_phases_config, symbol_letter, symbol_bg_color, symbol_letter_color, created_at`,
+    [clientId, companyId, clientKey, clientName, clientDescription, color || '#6B7280', JSON.stringify(phasesConfig), symbolLetter || null, symbolBgColor || '#6B7280', symbolLetterColor || '#FFFFFF']
   );
   return result.rows[0];
 }
 
-async function updateClient(clientId, clientName, clientDescription, statusId, color, phasesConfig) {
+async function updateClient(clientId, clientName, clientDescription, statusId, color, phasesConfig, symbolLetter, symbolBgColor, symbolLetterColor) {
   const result = await pool.query(
     `UPDATE client
         SET client_name = $2,
@@ -29,10 +29,13 @@ async function updateClient(clientId, clientName, clientDescription, statusId, c
             status_id = COALESCE($4, status_id),
             color = COALESCE($5, color),
             project_phases_config = COALESCE($6, project_phases_config),
+            symbol_letter = $7,
+            symbol_bg_color = COALESCE($8, symbol_bg_color),
+            symbol_letter_color = COALESCE($9, symbol_letter_color),
             updated_at = NOW()
       WHERE client_id = $1
-     RETURNING client_id, client_key, client_name, client_description, color, status_id, project_phases_config, updated_at`,
-    [clientId, clientName, clientDescription, statusId, color, phasesConfig ? JSON.stringify(phasesConfig) : null]
+     RETURNING client_id, client_key, client_name, client_description, color, status_id, project_phases_config, symbol_letter, symbol_bg_color, symbol_letter_color, updated_at`,
+    [clientId, clientName, clientDescription, statusId, color, phasesConfig ? JSON.stringify(phasesConfig) : null, symbolLetter !== undefined ? symbolLetter : null, symbolBgColor || null, symbolLetterColor || null]
   );
   return result.rows[0];
 }
@@ -69,6 +72,9 @@ async function getAllClients(userRole, companyId) {
        c.color,
        c.status_id,
        c.project_phases_config,
+       c.symbol_letter,
+       c.symbol_bg_color,
+       c.symbol_letter_color,
        c.created_at,
        c.updated_at
      FROM client c
@@ -117,6 +123,9 @@ async function getClientsWithProjects(userRole, companyId) {
        c.color,
        c.status_id as client_status_id,
        c.project_phases_config,
+       c.symbol_letter,
+       c.symbol_bg_color,
+       c.symbol_letter_color,
        p.project_id,
        p.project_key,
        p.title as project_title,

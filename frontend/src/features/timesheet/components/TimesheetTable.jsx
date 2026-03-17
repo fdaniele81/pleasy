@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from 'react-i18next';
-import { FileText } from "lucide-react";
+import { Briefcase, FolderKanban, ListTodo } from "lucide-react";
 import TimesheetTaskRow from "./TimesheetTaskRow";
 import TimesheetTimeOffRow from "./TimesheetTimeOffRow";
 import TimesheetClosedTasksRow from "./TimesheetClosedTasksRow";
@@ -102,9 +102,7 @@ function TimesheetTable({
 
   const hideLabelTooltip = useCallback(() => {
     clearTimeout(labelTooltipTimeout.current);
-    labelTooltipTimeout.current = setTimeout(() => {
-      setLabelTooltip(null);
-    }, 350);
+    setLabelTooltip(null);
   }, []);
 
   const allSelected = filteredTasks.length > 0 &&
@@ -613,14 +611,18 @@ function TimesheetTable({
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: labelTooltip.content.color || '#6366F1' }} />
+              <Briefcase className="h-3 w-3 text-gray-400 shrink-0" />
               <span className="font-semibold text-gray-100">{labelTooltip.content.client}</span>
             </div>
             {labelTooltip.content.project && (
-              <div className="text-gray-300 pl-4">{labelTooltip.content.project}</div>
+              <div className="flex items-center gap-1.5 text-gray-300 pl-4">
+                <FolderKanban className="h-3 w-3 text-gray-400 shrink-0" />
+                {labelTooltip.content.project}
+              </div>
             )}
             {labelTooltip.content.task && (
               <div className="flex items-center gap-1.5 pl-4 text-gray-200 text-xs">
-                <FileText className="h-3 w-3 text-gray-400 shrink-0" />
+                <ListTodo className="h-3 w-3 text-gray-400 shrink-0" />
                 {labelTooltip.content.task}
               </div>
             )}

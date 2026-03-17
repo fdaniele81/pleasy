@@ -17,6 +17,7 @@ import { ROLES } from '../../constants';
 import PageHeader from '../../shared/ui/PageHeader';
 import EmptyState from '../../shared/ui/EmptyState';
 import Button from '../../shared/ui/Button';
+import logger from '../../utils/logger';
 
 function Users() {
   const { t } = useTranslation(['users', 'common']);
@@ -87,6 +88,7 @@ function Users() {
         }).unwrap();
         setEditingUser(null);
       } catch (error) {
+        logger.error('Update user failed:', error);
       }
     }
   };
@@ -251,7 +253,15 @@ function Users() {
                       <tr key={user.user_id} className="hover:bg-gray-50">
                         <td className="px-6 py-2 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <User size={16} className="text-cyan-600" />
+                            <span
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold shrink-0 select-none"
+                              style={{
+                                backgroundColor: user.symbol_bg_color || '#6B7280',
+                                color: user.symbol_letter_color || '#FFFFFF'
+                              }}
+                            >
+                              {user.symbol_letter || (user.full_name ? user.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : '?')}
+                            </span>
                             <span className="text-sm font-medium text-gray-900">
                               {user.full_name}
                             </span>

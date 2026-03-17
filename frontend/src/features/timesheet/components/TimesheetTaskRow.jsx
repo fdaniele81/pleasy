@@ -118,16 +118,19 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
           client: task.client_name,
           project: isTMTask ? null : task.project_title,
           task: isTMTask ? null : task.task_title,
-          color: task.client_color,
+          color: task.symbol_bg_color || task.client_color,
         })}
         onMouseLeave={onLabelTooltipLeave}
       >
-        <div className="flex items-start gap-1.5 min-w-0">
+        <div className="flex gap-1.5 min-w-0 items-center">
           <div
-            className="w-5 h-5 rounded-full shrink-0 mt-0.5 flex items-center justify-center text-[10px] font-bold text-white"
-            style={{ backgroundColor: task.client_color || "#6366F1" }}
+            className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+            style={{
+              backgroundColor: task.symbol_bg_color || task.client_color || "#6366F1",
+              color: task.symbol_letter_color || "#FFFFFF",
+            }}
           >
-            {(task.client_name || '?')[0].toUpperCase()}
+            {task.symbol_letter || (task.client_name || '?')[0].toUpperCase()}
           </div>
           {isTMTask ? (
             <div className="min-w-0 flex-1 flex items-center">

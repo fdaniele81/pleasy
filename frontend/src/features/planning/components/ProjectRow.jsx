@@ -19,6 +19,8 @@ export const ProjectRow = memo(function ProjectRow({
   timelineWidth,
   todayLineOffset,
   getDateInfo,
+  onLabelTooltipHover,
+  onLabelTooltipLeave,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const metrics = useMemo(() => getFilteredMetrics(project), [project]);
@@ -48,11 +50,17 @@ export const ProjectRow = memo(function ProjectRow({
       {/* Project title - colSpan changes based on timeline mode */}
       <td
         colSpan={showTimeline ? 1 : 4}
-        className="border-b border-r border-gray-300 px-2 py-2 bg-gray-100 group-hover:bg-gray-200 border-l-[6px]"
-        style={{ borderLeftColor: project.client_color || '#6B7280' }}
+        className="border-b border-r border-gray-300 px-1.5 py-2 bg-gray-100 group-hover:bg-gray-200"
+        onMouseEnter={(e) => onLabelTooltipHover?.(e, {
+          client: project.client_name,
+          project: project.title,
+          task: null,
+          color: project.symbol_bg_color || project.client_color,
+        })}
+        onMouseLeave={onLabelTooltipLeave}
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-hidden min-w-0">
+          <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
             <Button
               onClick={() => toggleProjectExpansion(project.project_id)}
               isExpandButton
@@ -60,6 +68,17 @@ export const ProjectRow = memo(function ProjectRow({
               title={expandedProjects[project.project_id] ? t('common:collapse') : t('common:expand')}
               className="text-gray-500 hover:text-gray-700 shrink-0"
             />
+            {!expandedProjects[project.project_id] && (
+              <div
+                className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+                style={{
+                  backgroundColor: project.symbol_bg_color || project.client_color || '#6366F1',
+                  color: project.symbol_letter_color || '#FFFFFF',
+                }}
+              >
+                {project.symbol_letter || (project.client_name || '?')[0].toUpperCase()}
+              </div>
+            )}
             <span className="font-semibold text-gray-800 text-sm truncate">
               {project.title}
               <span className="font-normal text-gray-500 text-xs ml-1">

@@ -13,7 +13,7 @@ import { serviceError } from "../utils/errorHandler.js";
 import { validatePassword } from "../validators/passwordValidator.js";
 
 async function create(data, requestingUser) {
-  const { company_id, email, password, role_id, full_name, must_change_password } = data;
+  const { company_id, email, password, role_id, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color } = data;
 
   if (!company_id || !email || !role_id || !password || !full_name) {
     throw serviceError("USER_REQUIRED_FIELDS", "Company, email, role, name and password are required", 400);
@@ -37,11 +37,11 @@ async function create(data, requestingUser) {
   const user_id = uuidv4();
   const password_hash = await bcrypt.hash(password, 10);
 
-  return await userRepository.createUser(user_id, company_id, email, password_hash, role_id, full_name, !!must_change_password);
+  return await userRepository.createUser(user_id, company_id, email, password_hash, role_id, full_name, !!must_change_password, symbol_letter || null, symbol_bg_color || null, symbol_letter_color || null);
 }
 
 async function update(userId, data, requestingUser) {
-  const { email, role_id, status_id, full_name, must_change_password } = data;
+  const { email, role_id, status_id, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color } = data;
 
   await userNotExistsError(userId);
 
@@ -65,7 +65,7 @@ async function update(userId, data, requestingUser) {
     ? !!must_change_password
     : undefined;
 
-  return await userRepository.updateUser(userId, email, role_id, status_id, full_name, mustChangePwd);
+  return await userRepository.updateUser(userId, email, role_id, status_id, full_name, mustChangePwd, symbol_letter !== undefined ? symbol_letter : undefined, symbol_bg_color, symbol_letter_color);
 }
 
 async function changePassword(userId, currentPassword, newPassword) {

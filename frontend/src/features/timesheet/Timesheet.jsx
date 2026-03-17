@@ -101,6 +101,9 @@ function Timesheet() {
           client_key: project.client_key,
           client_name: project.client_name,
           client_color: project.client_color,
+          symbol_letter: project.symbol_letter,
+          symbol_bg_color: project.symbol_bg_color,
+          symbol_letter_color: project.symbol_letter_color,
         }))
       ),
     [projects]

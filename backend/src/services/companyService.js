@@ -61,7 +61,10 @@ async function getCompaniesWithUsers(user) {
         email: row.email,
         role_id: row.role_id,
         status_id: row.user_status_id,
-        must_change_password: !!row.must_change_password
+        must_change_password: !!row.must_change_password,
+        symbol_letter: row.symbol_letter,
+        symbol_bg_color: row.symbol_bg_color,
+        symbol_letter_color: row.symbol_letter_color
       });
     }
   });

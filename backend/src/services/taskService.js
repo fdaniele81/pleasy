@@ -163,6 +163,9 @@ async function getPMPlanning(user) {
         client_key: row.client_key,
         client_name: row.client_name,
         client_color: row.client_color,
+        symbol_letter: row.symbol_letter,
+        symbol_bg_color: row.symbol_bg_color,
+        symbol_letter_color: row.symbol_letter_color,
         tasks: new Map(),
       });
     }
@@ -181,6 +184,9 @@ async function getPMPlanning(user) {
           owner_id: row.owner_id,
           owner_name: row.owner_name,
           owner_email: row.owner_email,
+          owner_symbol_letter: row.owner_symbol_letter,
+          owner_symbol_bg_color: row.owner_symbol_bg_color,
+          owner_symbol_letter_color: row.owner_symbol_letter_color,
           budget: parseFloat(row.budget) || 0,
           initial_actual: parseFloat(row.initial_actual) || 0,
           actual: parseFloat(row.actual_hours) || 0,

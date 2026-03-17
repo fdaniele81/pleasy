@@ -74,5 +74,10 @@
   "demoLoginUser": "Entra come User",
   "forceChangePasswordMessage": "Devi cambiare la password prima di continuare.",
   "passwordChanged": "Password aggiornata. Verrai riportato al login...",
-  "mustChangePasswordLabel": "Richiedi cambio password al primo accesso"
+  "mustChangePasswordLabel": "Richiedi cambio password al primo accesso",
+  "detailsSection": "Dettagli Utente",
+  "symbolSection": "Simbolo Utente",
+  "symbolLetterLabel": "Lettera",
+  "symbolBgColorLabel": "Colore Sfondo",
+  "symbolLetterColorLabel": "Colore Lettera"
 }

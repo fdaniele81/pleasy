@@ -127,7 +127,7 @@ function TaskHistorySummaryModal({ isOpen, onClose, task }) {
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
             <div
               className="w-1.5 h-10 rounded-sm shrink-0"
-              style={{ backgroundColor: taskInfo?.client_color || "#6366F1" }}
+              style={{ backgroundColor: taskInfo?.symbol_bg_color || taskInfo?.client_color || "#6366F1" }}
             />
             <div className="min-w-0">
               <div className="text-sm font-semibold text-gray-800 truncate">

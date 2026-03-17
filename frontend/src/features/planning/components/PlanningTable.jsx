@@ -1,6 +1,7 @@
-import React, { memo, useMemo, useRef, useEffect } from "react";
+import React, { memo, useMemo, useRef, useEffect, useState, useCallback } from "react";
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Briefcase, FolderKanban, ListTodo } from 'lucide-react';
 import { ProjectRow } from "./ProjectRow";
 import { TaskRow } from "./TaskRow";
 import useTableDateHelpers from "../../../shared/ui/table/useTableDateHelpers";
@@ -82,6 +83,29 @@ export const PlanningTable = memo(function PlanningTable({
   }, [filteredProjects]);
 
   const { getDateInfo } = useTableDateHelpers(dateRange || [], holidays || []);
+
+  // Label tooltip (same pattern as Timesheet)
+  const [labelTooltip, setLabelTooltip] = useState(null);
+  const labelTooltipTimeout = useRef(null);
+
+  const showLabelTooltip = useCallback((e, content) => {
+    clearTimeout(labelTooltipTimeout.current);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const above = rect.bottom + 60 > window.innerHeight;
+    labelTooltipTimeout.current = setTimeout(() => {
+      setLabelTooltip({
+        content,
+        x: rect.left + rect.width / 2,
+        y: above ? rect.top : rect.bottom,
+        above,
+      });
+    }, 350);
+  }, []);
+
+  const hideLabelTooltip = useCallback(() => {
+    clearTimeout(labelTooltipTimeout.current);
+    setLabelTooltip(null);
+  }, []);
 
   const monthMarkers = useMemo(
     () => computeMonthMarkers(dateRange, columnWidth, locale),
@@ -437,6 +461,8 @@ export const PlanningTable = memo(function PlanningTable({
                     timelineWidth={timelineWidth}
                     todayLineOffset={todayLineOffset}
                     getDateInfo={getDateInfo}
+                    onLabelTooltipHover={showLabelTooltip}
+                    onLabelTooltipLeave={hideLabelTooltip}
                   />
                 )}
 
@@ -467,6 +493,8 @@ export const PlanningTable = memo(function PlanningTable({
                       getDateInfo={getDateInfo}
                       pushUndo={pushUndo}
                       refetchPlanning={refetchPlanning}
+                      onLabelTooltipHover={showLabelTooltip}
+                      onLabelTooltipLeave={hideLabelTooltip}
                     />
                   ))}
               </React.Fragment>
@@ -474,6 +502,40 @@ export const PlanningTable = memo(function PlanningTable({
           </tbody>
         </table>
       </div>
+
+      {labelTooltip && createPortal(
+        <div
+          className="fixed z-[9999] px-3 py-2.5 rounded-lg shadow-xl bg-gray-900 text-white text-xs min-w-48 max-w-sm border border-gray-600 pointer-events-none"
+          style={{
+            left: labelTooltip.x,
+            top: labelTooltip.above ? labelTooltip.y : labelTooltip.y + 4,
+            transform: labelTooltip.above
+              ? 'translate(-50%, calc(-100% - 4px))'
+              : 'translate(-50%, 0)',
+          }}
+        >
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: labelTooltip.content.color || '#6366F1' }} />
+              <Briefcase className="h-3 w-3 text-gray-400 shrink-0" />
+              <span className="font-semibold text-gray-100">{labelTooltip.content.client}</span>
+            </div>
+            {labelTooltip.content.project && (
+              <div className="flex items-center gap-1.5 text-gray-300 pl-4">
+                <FolderKanban className="h-3 w-3 text-gray-400 shrink-0" />
+                {labelTooltip.content.project}
+              </div>
+            )}
+            {labelTooltip.content.task && (
+              <div className="flex items-center gap-1.5 pl-4 text-gray-200 text-xs">
+                <ListTodo className="h-3 w-3 text-gray-400 shrink-0" />
+                {labelTooltip.content.task}
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </TableContainer>
   );
 });

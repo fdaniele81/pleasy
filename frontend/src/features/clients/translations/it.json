@@ -20,6 +20,7 @@
   "clientNameLabel": "Nome Cliente *",
   "clientNamePlaceholder": "Nome del cliente",
   "statusLabel": "Stato *",
+  "detailsSection": "Dettagli Cliente",
   "colorLabel": "Colore",
   "symbolSection": "Simbolo Cliente",
   "symbolLetterLabel": "Lettera",

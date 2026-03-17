@@ -33,6 +33,9 @@ async function getTimesheets(userId, startDate, endDate) {
       c.client_key,
       c.client_name,
       c.color as client_color,
+      c.symbol_letter,
+      c.symbol_bg_color,
+      c.symbol_letter_color,
       COALESCE(tt.total_hours_worked, 0) as task_total_hours,
       COALESCE(te.etc_hours, 0) as etc_hours,
       COALESCE(uns.non_submitted_hours, 0) as user_non_submitted_hours,
@@ -94,7 +97,10 @@ async function getClosedActivitiesTimesheets(userId, startDate, endDate) {
       p.project_key,
       p.title as project_title,
       c.client_name,
-      c.color as client_color
+      c.color as client_color,
+      c.symbol_letter,
+      c.symbol_bg_color,
+      c.symbol_letter_color
     FROM task_timesheet tt
     JOIN task t ON tt.task_id = t.task_id
     JOIN project p ON t.project_id = p.project_id
@@ -384,7 +390,8 @@ async function getSnapshotDetails(snapshotId) {
       tt.total_hours, tt.details,
       t.task_number, t.title as task_title, t.description as task_description,
       p.project_id, p.project_key, p.title as project_title, p.project_type_id,
-      c.client_id, c.client_key, c.client_name, c.color as client_color
+      c.client_id, c.client_key, c.client_name, c.color as client_color,
+      c.symbol_letter, c.symbol_bg_color, c.symbol_letter_color
     FROM task_timesheet tt
     JOIN task t ON tt.task_id = t.task_id
     JOIN project p ON t.project_id = p.project_id
@@ -404,7 +411,8 @@ async function getPreviewSubmission(userId) {
       tt.total_hours, tt.details,
       t.task_number, t.title as task_title, t.description as task_description,
       p.project_id, p.project_key, p.title as project_title, p.project_type_id,
-      c.client_id, c.client_key, c.client_name, c.color as client_color
+      c.client_id, c.client_key, c.client_name, c.color as client_color,
+      c.symbol_letter, c.symbol_bg_color, c.symbol_letter_color
     FROM task_timesheet tt
     JOIN task t ON tt.task_id = t.task_id
     JOIN project p ON t.project_id = p.project_id
@@ -462,6 +470,9 @@ async function getTMPlanningData(companyId, startDate, endDate, pmUserId) {
       c.client_key,
       c.client_name,
       c.color as client_color,
+      c.symbol_letter,
+      c.symbol_bg_color,
+      c.symbol_letter_color,
       p.project_id,
       p.project_key,
       t.task_id,
@@ -516,7 +527,10 @@ async function getTaskHistory(taskId, userId, allUsers = false) {
       p.project_type_id,
       c.client_name,
       c.client_key,
-      c.color as client_color
+      c.color as client_color,
+      c.symbol_letter,
+      c.symbol_bg_color,
+      c.symbol_letter_color
     FROM task_timesheet tt
     JOIN task t ON tt.task_id = t.task_id
     JOIN project p ON t.project_id = p.project_id

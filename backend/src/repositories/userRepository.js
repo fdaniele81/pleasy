@@ -1,12 +1,12 @@
 import pool from "../db.js";
 
-async function createUser(userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword = false) {
+async function createUser(userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword = false, symbolLetter = null, symbolBgColor = null, symbolLetterColor = null) {
   const result = await pool.query(
     `INSERT INTO users
-       (user_id, company_id, email, password_hash, role_id, status_id, created_at, updated_at, full_name, must_change_password)
-     VALUES ($1, $2, $3, $4, $5, 'ACTIVE', NOW(), NOW(), $6, $7)
-     RETURNING user_id, company_id, email, role_id, created_at, full_name`,
-    [userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword]
+       (user_id, company_id, email, password_hash, role_id, status_id, created_at, updated_at, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color)
+     VALUES ($1, $2, $3, $4, $5, 'ACTIVE', NOW(), NOW(), $6, $7, $8, COALESCE($9, '#6B7280'), COALESCE($10, '#FFFFFF'))
+     RETURNING user_id, company_id, email, role_id, created_at, full_name, symbol_letter, symbol_bg_color, symbol_letter_color`,
+    [userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword, symbolLetter || null, symbolBgColor || null, symbolLetterColor || null]
   );
   return result.rows[0];
 }
@@ -19,7 +19,7 @@ async function getUserById(userId) {
   return result.rows[0];
 }
 
-async function updateUser(userId, email, roleId, statusId, fullName, mustChangePassword) {
+async function updateUser(userId, email, roleId, statusId, fullName, mustChangePassword, symbolLetter, symbolBgColor, symbolLetterColor) {
   const result = await pool.query(
     `UPDATE users
         SET email = $2,
@@ -27,10 +27,13 @@ async function updateUser(userId, email, roleId, statusId, fullName, mustChangeP
             status_id = $4,
             updated_at = NOW(),
             full_name = $5,
-            must_change_password = COALESCE($6, must_change_password)
+            must_change_password = COALESCE($6, must_change_password),
+            symbol_letter = $7,
+            symbol_bg_color = COALESCE($8, symbol_bg_color),
+            symbol_letter_color = COALESCE($9, symbol_letter_color)
       WHERE user_id = $1
-     RETURNING email, role_id, status_id, updated_at, full_name, must_change_password`,
-    [userId, email, roleId, statusId, fullName, mustChangePassword]
+     RETURNING email, role_id, status_id, updated_at, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color`,
+    [userId, email, roleId, statusId, fullName, mustChangePassword, symbolLetter !== undefined ? symbolLetter : null, symbolBgColor || null, symbolLetterColor || null]
   );
   return result.rows[0];
 }

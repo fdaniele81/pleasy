@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Trash2, AlertCircle } from 'lucide-react';
+import { Trash2, AlertCircle, FolderKanban, ListTodo } from 'lucide-react';
 import DateInput from '../../../shared/ui/DateInput';
 import { SelectionCheckbox } from '../../../shared/ui/table';
 import { formatDateISO } from '../../../utils/date/dateUtils';
@@ -42,7 +42,9 @@ export const TaskRow = memo(function TaskRow({
   todayLineOffset,
   getDateInfo,
   pushUndo,
-  refetchPlanning
+  refetchPlanning,
+  onLabelTooltipHover,
+  onLabelTooltipLeave
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const statusLabels = getStatusLabels(t);
@@ -133,8 +135,8 @@ export const TaskRow = memo(function TaskRow({
   clearPendingDatesRef.current = clearPendingDates;
 
   const barColor = useMemo(() => {
-    return getUserColor(task.owner_id);
-  }, [task.owner_id]);
+    return task.owner_symbol_bg_color || getUserColor(task.owner_id);
+  }, [task.owner_id, task.owner_symbol_bg_color]);
 
   // Compute visual start/end dates (with drag delta applied)
   const { visualStart, visualEnd } = useMemo(() => {
@@ -213,29 +215,53 @@ export const TaskRow = memo(function TaskRow({
       </td>
 
       {/* Project/Activity - always shown */}
-      <td className="border-b border-r border-gray-300 px-2 py-0 w-[130px] max-w-[130px] xl:w-[200px] xl:max-w-[200px]">
-        <div className="flex items-center gap-1 overflow-hidden">
-          <span className="font-mono text-xs text-gray-500">
-            {project.project_key}-{task.task_number}
-          </span>
+      <td
+        className="border-b border-r border-gray-300 px-1.5 py-0.5 w-[160px] max-w-[160px] xl:w-[220px] xl:max-w-[220px]"
+        onMouseEnter={(e) => onLabelTooltipHover?.(e, {
+          client: project.client_name,
+          project: project.title,
+          task: `${task.title} (${project.project_key}-${task.task_number})`,
+          color: project.symbol_bg_color || project.client_color,
+        })}
+        onMouseLeave={onLabelTooltipLeave}
+      >
+        <div className="flex gap-1.5 min-w-0 items-center">
+          <div
+            className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+            style={{
+              backgroundColor: project.symbol_bg_color || project.client_color || '#6366F1',
+              color: project.symbol_letter_color || '#FFFFFF',
+            }}
+          >
+            {project.symbol_letter || (project.client_name || '?')[0].toUpperCase()}
+          </div>
           {isEditingTitle ? (
-            <input
-              type="text"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onBlur={() => handleCellBlur(task.task_id, project.project_id, 'title', task.title)}
-              onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'title', task.title)}
-              autoFocus
-              className="flex-1 px-2 py-0.5 border border-blue-300 rounded text-xs font-medium"
-            />
+            <div className="min-w-0 flex-1">
+              <input
+                type="text"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={() => handleCellBlur(task.task_id, project.project_id, 'title', task.title)}
+                onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'title', task.title)}
+                autoFocus
+                className="w-full px-2 py-0.5 border border-blue-300 rounded text-xs font-medium"
+              />
+            </div>
           ) : (
-            <span
-              className="font-medium text-xs cursor-pointer hover:text-blue-600 truncate max-w-xs"
-              onClick={() => handleTaskDetailsClick(task, project)}
-              title={task.title}
-            >
-              {task.title}
-            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] leading-tight text-gray-400 truncate flex items-center gap-1">
+                <FolderKanban className="h-2.5 w-2.5 shrink-0 text-gray-500" />
+                <span className="text-gray-500 truncate">{project.title}</span>
+              </div>
+              <div
+                className="text-xs leading-tight font-medium text-gray-800 truncate cursor-pointer hover:text-cyan-600 transition-colors flex items-center gap-1"
+                onClick={() => handleTaskDetailsClick(task, project)}
+                title={`${project.project_key}-${task.task_number} ${task.title}`}
+              >
+                <ListTodo className="h-3 w-3 shrink-0" />
+                <span className="truncate">{task.title}</span>
+              </div>
+            </div>
           )}
         </div>
       </td>
@@ -297,11 +323,11 @@ export const TaskRow = memo(function TaskRow({
               >
                 {task.owner_name ? (
                   <div
-                    className="w-5 h-5 rounded-full text-white flex items-center justify-center text-[10px] font-medium mx-auto"
-                    style={{ backgroundColor: barColor }}
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium mx-auto"
+                    style={{ backgroundColor: barColor, color: task.owner_symbol_letter_color || '#FFFFFF' }}
                     title={task.owner_name}
                   >
-                    {task.owner_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {task.owner_symbol_letter || task.owner_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
                 ) : (
                   <div className="w-5 h-5 rounded-full bg-gray-300 mx-auto" title={t('planning:notAssigned')} />
@@ -471,10 +497,11 @@ export const TaskRow = memo(function TaskRow({
                 {task.owner_name ? (
                   <div className="flex items-center gap-1 justify-center">
                     <div
-                      className="w-5 h-5 rounded-full bg-cyan-500 text-white flex items-center justify-center text-[10px] font-medium shrink-0"
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium shrink-0"
+                      style={{ backgroundColor: barColor, color: task.owner_symbol_letter_color || '#FFFFFF' }}
                       title={task.owner_name}
                     >
-                      {task.owner_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {task.owner_symbol_letter || task.owner_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </div>
                     <span className="hidden xl:inline text-xs truncate">{task.owner_name}</span>
                   </div>

@@ -133,7 +133,10 @@ CREATE TABLE public.users (
     full_name character varying,
     saved_filters jsonb DEFAULT '{}'::jsonb,
     token_version integer DEFAULT 0 NOT NULL,
-    must_change_password boolean DEFAULT false NOT NULL
+    must_change_password boolean DEFAULT false NOT NULL,
+    symbol_letter character varying(2),
+    symbol_bg_color character varying(7) DEFAULT '#6B7280'::character varying,
+    symbol_letter_color character varying(7) DEFAULT '#FFFFFF'::character varying
 );
 
 COMMENT ON TABLE public.users IS 'User accounts associated with companies';
@@ -734,5 +737,7 @@ INSERT INTO public.schema_migrations (filename) VALUES
     ('002_add_token_version.sql'),
     ('003_create_readonly_user.sql'),
     ('004_add_must_change_password.sql'),
-    ('005_project_client_cascade.sql')
+    ('005_project_client_cascade.sql'),
+    ('006_add_client_symbol.sql'),
+    ('007_add_user_symbol.sql')
 ON CONFLICT DO NOTHING;

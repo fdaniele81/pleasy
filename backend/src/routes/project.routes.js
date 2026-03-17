@@ -29,6 +29,12 @@ router.put("/:project_id",
   projectController.update
 );
 
+router.put("/:project_id/task-order",
+  verifyToken,
+  checkRole(["ADMIN", "PM"]),
+  projectController.updateTaskOrder
+);
+
 router.delete("/:project_id",
   verifyToken,
   checkRole(["ADMIN", "PM"]),

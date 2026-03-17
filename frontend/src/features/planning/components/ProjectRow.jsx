@@ -1,6 +1,6 @@
 import { useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowUpDown, Check, X } from 'lucide-react';
 import Button from '../../../shared/ui/Button';
 import { SelectionCheckbox } from '../../../shared/ui/table';
 import { formatHours, getUnitLabel, safeFormatDate, getFilteredMetrics, getProjectDateRange } from '../utils/helpers';
@@ -21,6 +21,10 @@ export const ProjectRow = memo(function ProjectRow({
   getDateInfo,
   onLabelTooltipHover,
   onLabelTooltipLeave,
+  reorderingProjectId,
+  onStartReordering,
+  onSaveReordering,
+  onCancelReordering,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const metrics = useMemo(() => getFilteredMetrics(project), [project]);
@@ -51,16 +55,18 @@ export const ProjectRow = memo(function ProjectRow({
       <td
         colSpan={showTimeline ? 1 : 4}
         className="border-b border-r border-gray-300 px-1.5 py-2 bg-gray-100 group-hover:bg-gray-200"
-        onMouseEnter={(e) => onLabelTooltipHover?.(e, {
-          client: project.client_name,
-          project: project.title,
-          task: null,
-          color: project.symbol_bg_color || project.client_color,
-        })}
-        onMouseLeave={onLabelTooltipLeave}
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
+          <div
+            className="flex items-center gap-1.5 overflow-hidden min-w-0"
+            onMouseEnter={(e) => onLabelTooltipHover?.(e, {
+              client: project.client_name,
+              project: project.title,
+              task: null,
+              color: project.symbol_bg_color || project.client_color,
+            })}
+            onMouseLeave={onLabelTooltipLeave}
+          >
             <Button
               onClick={() => toggleProjectExpansion(project.project_id)}
               isExpandButton
@@ -87,17 +93,45 @@ export const ProjectRow = memo(function ProjectRow({
             </span>
           </div>
           {!showTimeline && (
-            <Button
-              onClick={() => handleStartAddingTask(project.project_id)}
-              color="cyan"
-              icon={Plus}
-              iconSize={14}
-              size="sm"
-              title={t('planning:addActivity')}
-              className="xl:pr-2"
-            >
-              <span className="hidden xl:inline">{t('common:activity')}</span>
-            </Button>
+            <div className="flex items-center gap-0.5 shrink-0">
+              {reorderingProjectId === project.project_id ? (
+                <>
+                  <button
+                    onClick={onSaveReordering}
+                    title={t('planning:reorderSave')}
+                    className="p-1 rounded text-green-600 hover:bg-green-100 transition-colors"
+                  >
+                    <Check size={15} />
+                  </button>
+                  <button
+                    onClick={onCancelReordering}
+                    title={t('planning:reorderCancel')}
+                    className="p-1 rounded text-red-500 hover:bg-red-100 transition-colors"
+                  >
+                    <X size={15} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  {expandedProjects[project.project_id] && project.tasks.length > 1 && (
+                    <button
+                      onClick={() => onStartReordering(project.project_id, project.tasks)}
+                      title={t('planning:reorderActivities')}
+                      className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
+                    >
+                      <ArrowUpDown size={14} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleStartAddingTask(project.project_id)}
+                    title={t('planning:addActivity')}
+                    className="p-1 rounded text-cyan-600 hover:bg-cyan-100 transition-colors"
+                  >
+                    <Plus size={15} />
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
       </td>

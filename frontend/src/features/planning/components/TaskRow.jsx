@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Trash2, AlertCircle, FolderKanban, ListTodo } from 'lucide-react';
+import { Trash2, AlertCircle, FolderKanban, ListTodo, GripVertical } from 'lucide-react';
 import DateInput from '../../../shared/ui/DateInput';
 import { SelectionCheckbox } from '../../../shared/ui/table';
 import { formatDateISO } from '../../../utils/date/dateUtils';
@@ -44,7 +44,11 @@ export const TaskRow = memo(function TaskRow({
   pushUndo,
   refetchPlanning,
   onLabelTooltipHover,
-  onLabelTooltipLeave
+  onLabelTooltipLeave,
+  isReordering,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const statusLabels = getStatusLabels(t);
@@ -204,14 +208,27 @@ export const TaskRow = memo(function TaskRow({
 
   return (
     <>
-    <tr key={task.task_id} className="hover:bg-gray-50">
-      {/* Checkbox - always shown */}
+    <tr
+      key={task.task_id}
+      className={`hover:bg-gray-50 ${isReordering ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      draggable={isReordering}
+      onDragStart={isReordering ? () => onDragStart(task.task_id) : undefined}
+      onDragOver={isReordering ? (e) => onDragOver(e, task.task_id) : undefined}
+      onDragEnd={isReordering ? onDragEnd : undefined}
+    >
+      {/* Checkbox / Drag handle */}
       <td className="border-b border-r border-gray-300 px-1 py-0 text-center">
-        <SelectionCheckbox
-          checked={!!selectedTasks[task.task_id]}
-          onChange={() => toggleTaskSelection(task.task_id)}
-          size="sm"
-        />
+        {isReordering ? (
+          <div className="flex items-center justify-center text-gray-400">
+            <GripVertical size={16} />
+          </div>
+        ) : (
+          <SelectionCheckbox
+            checked={!!selectedTasks[task.task_id]}
+            onChange={() => toggleTaskSelection(task.task_id)}
+            size="sm"
+          />
+        )}
       </td>
 
       {/* Project/Activity - always shown */}

@@ -198,6 +198,7 @@ async function getPMPlanningData(pmUserId, companyId) {
       p.description as project_description,
       p.status_id,
       p.project_type_id,
+      p.task_order,
       p.created_at as project_created_at,
       c.client_id,
       c.client_key,

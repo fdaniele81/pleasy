@@ -52,6 +52,18 @@ async function updateProject(projectId, title, description, statusId, projectDet
   return result.rows[0];
 }
 
+async function updateTaskOrder(projectId, taskOrder) {
+  const result = await pool.query(
+    `UPDATE project
+        SET task_order = $2,
+            updated_at = NOW()
+      WHERE project_id = $1
+     RETURNING project_id, task_order`,
+    [projectId, taskOrder]
+  );
+  return result.rows[0];
+}
+
 async function deleteProject(projectId) {
   const result = await pool.query(
     `UPDATE project
@@ -171,6 +183,7 @@ export {
   checkProjectKeyExists,
   createProject,
   updateProject,
+  updateTaskOrder,
   deleteProject,
   getCompanyIdFromProject as getProjectCompanyId,
   getCompanyIdFromClient as getClientCompanyId,
@@ -195,6 +208,7 @@ export default {
   checkProjectKeyExistsByCompany,
   createProject,
   updateProject,
+  updateTaskOrder,
   deleteProject,
   getProjectCompanyId: getCompanyIdFromProject,
   getClientCompanyId: getCompanyIdFromClient,

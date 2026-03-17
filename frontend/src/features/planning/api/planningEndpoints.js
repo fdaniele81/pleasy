@@ -116,6 +116,40 @@ export const planningEndpoints = apiSlice.injectEndpoints({
         { type: TAG_TYPES.PLANNING, id: 'LIST' },
       ],
     }),
+
+    updateTaskOrder: builder.mutation({
+      query: ({ projectId, taskOrder }) => ({
+        url: `/project/${projectId}/task-order`,
+        method: 'PUT',
+        body: { task_order: taskOrder },
+      }),
+      async onQueryStarted({ projectId, taskOrder }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          apiSlice.util.updateQueryData('getPMPlanning', undefined, (draft) => {
+            const project = draft.find(p => p.project_id === projectId);
+            if (project) {
+              const taskMap = new Map(project.tasks.map(t => [t.task_id, t]));
+              const ordered = taskOrder
+                .filter(id => taskMap.has(id))
+                .map(id => taskMap.get(id));
+              const remaining = project.tasks.filter(t => !taskOrder.includes(t.task_id));
+              project.tasks = [...ordered, ...remaining];
+              project.task_order = taskOrder;
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+      invalidatesTags: (result, error, { projectId }) => [
+        { type: TAG_TYPES.PROJECT, id: projectId },
+        { type: TAG_TYPES.PLANNING, id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -126,4 +160,5 @@ export const {
   useCreateTaskPlanMutation,
   useUpdateTaskPlanMutation,
   useDeleteTaskPlanMutation,
+  useUpdateTaskOrderMutation,
 } = planningEndpoints;

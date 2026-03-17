@@ -158,6 +158,7 @@ async function getPMPlanning(user) {
         description: row.project_description,
         status_id: row.status_id,
         project_type_id: row.project_type_id,
+        task_order: row.task_order || null,
         created_at: row.project_created_at,
         client_id: row.client_id,
         client_key: row.client_key,
@@ -200,7 +201,7 @@ async function getPMPlanning(user) {
   });
 
   const projects = Array.from(projectsMap.values()).map((project) => {
-    const tasks = Array.from(project.tasks.values()).map((task) => {
+    let tasks = Array.from(project.tasks.values()).map((task) => {
       const etc_value = task.etc_hours;
       const eac = task.actual + etc_value;
       const delta = task.budget - eac;
@@ -216,6 +217,16 @@ async function getPMPlanning(user) {
         budget_residuo: budget_residuo,
       };
     });
+
+    // Apply custom task order if defined
+    if (project.task_order && project.task_order.length > 0) {
+      const orderMap = new Map(project.task_order.map((id, idx) => [id, idx]));
+      tasks.sort((a, b) => {
+        const aIdx = orderMap.has(a.task_id) ? orderMap.get(a.task_id) : Infinity;
+        const bIdx = orderMap.has(b.task_id) ? orderMap.get(b.task_id) : Infinity;
+        return aIdx - bIdx;
+      });
+    }
 
     const project_budget = tasks.reduce((sum, t) => sum + t.budget, 0);
     const project_actual = tasks.reduce((sum, t) => sum + t.actual, 0);

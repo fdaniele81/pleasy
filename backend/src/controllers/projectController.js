@@ -25,6 +25,22 @@ async function update(req, res) {
   }
 }
 
+async function updateTaskOrder(req, res) {
+  try {
+    const result = await projectService.updateTaskOrder(
+      req.params.project_id,
+      req.body.task_order,
+      req.user
+    );
+    res.status(200).json({
+      message: "Task order updated successfully",
+      project: result,
+    });
+  } catch (err) {
+    handleError(res, err, "UPDATE TASK ORDER ERR");
+  }
+}
+
 async function remove(req, res) {
   try {
     const project = await projectService.remove(req.params.project_id, req.user);
@@ -139,6 +155,7 @@ async function validateKey(req, res) {
 export {
   create,
   update,
+  updateTaskOrder,
   remove,
   addManager,
   removeManager,
@@ -152,6 +169,7 @@ export {
 export default {
   create,
   update,
+  updateTaskOrder,
   remove,
   addManager,
   removeManager,

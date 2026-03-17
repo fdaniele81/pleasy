@@ -12,6 +12,7 @@ import SimpleGanttModal from './components/gantt-selezione/SimpleGanttModal';
 import { usePlanningData } from './hooks/usePlanningData';
 import { useTaskEdit } from './hooks/useTaskEdit';
 import { usePlanningUndo } from './hooks/usePlanningUndo';
+import { useTaskReorder } from './hooks/useTaskReorder';
 import { usePlanningFilters } from './hooks/usePlanningFilters';
 import { useTimelinePeriod } from './hooks/useTimelinePeriod';
 import { useConfirmation } from '../../hooks';
@@ -290,6 +291,8 @@ function Pianificazione() {
     handleCloseTaskDetailsModal,
     handleSaveEditTask,
   } = taskEdit;
+
+  const taskReorder = useTaskReorder({ refetchPlanning });
 
   isEditingRef.current = !!editingCell;
   cancelEditingRef.current = cancelEditing;
@@ -599,6 +602,14 @@ function Pianificazione() {
             goToToday={timelinePeriod.goToToday}
             isAtToday={timelinePeriod.isAtToday}
             periodLabel={timelinePeriod.periodLabel}
+            reorderingProjectId={taskReorder.reorderingProjectId}
+            localTaskOrder={taskReorder.localTaskOrder}
+            onStartReordering={taskReorder.startReordering}
+            onSaveReordering={taskReorder.saveReordering}
+            onCancelReordering={taskReorder.cancelReordering}
+            onDragStart={taskReorder.handleDragStart}
+            onDragOver={taskReorder.handleDragOver}
+            onDragEnd={taskReorder.handleDragEnd}
           />
         </div>
       </div>

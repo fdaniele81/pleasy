@@ -1,7 +1,7 @@
 import React, { memo, useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Briefcase, FolderKanban, ListTodo } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Briefcase, FolderKanban, ListTodo, GripVertical } from 'lucide-react';
 import { ProjectRow } from "./ProjectRow";
 import { TaskRow } from "./TaskRow";
 import useTableDateHelpers from "../../../shared/ui/table/useTableDateHelpers";
@@ -60,6 +60,14 @@ export const PlanningTable = memo(function PlanningTable({
   goToToday,
   isAtToday,
   periodLabel,
+  reorderingProjectId,
+  localTaskOrder,
+  onStartReordering,
+  onSaveReordering,
+  onCancelReordering,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const locale = useLocale();
@@ -463,40 +471,60 @@ export const PlanningTable = memo(function PlanningTable({
                     getDateInfo={getDateInfo}
                     onLabelTooltipHover={showLabelTooltip}
                     onLabelTooltipLeave={hideLabelTooltip}
+                    reorderingProjectId={reorderingProjectId}
+                    onStartReordering={onStartReordering}
+                    onSaveReordering={onSaveReordering}
+                    onCancelReordering={onCancelReordering}
                   />
                 )}
 
                 {(hideProjectHeaders || expandedProjects[project.project_id]) &&
-                  project.tasks.map((task) => (
-                    <TaskRow
-                      key={task.task_id}
-                      task={task}
-                      project={project}
-                      selectedTasks={selectedTasks}
-                      toggleTaskSelection={toggleTaskSelection}
-                      editingCell={editingCell}
-                      editValue={editValue}
-                      setEditValue={setEditValue}
-                      handleCellClick={handleCellClick}
-                      handleCellBlur={handleCellBlur}
-                      handleKeyDown={handleKeyDown}
-                      availableUsers={availableUsers}
-                      handleDeleteTask={handleDeleteTask}
-                      handleInitialActualClick={handleInitialActualClick}
-                      handleTaskDetailsClick={handleTaskDetailsClick}
-                      showInDays={showInDays}
-                      showTimeline={showTimeline}
-                      dateRange={dateRange}
-                      columnWidth={columnWidth}
-                      timelineWidth={timelineWidth}
-                      todayLineOffset={todayLineOffset}
-                      getDateInfo={getDateInfo}
-                      pushUndo={pushUndo}
-                      refetchPlanning={refetchPlanning}
-                      onLabelTooltipHover={showLabelTooltip}
-                      onLabelTooltipLeave={hideLabelTooltip}
-                    />
-                  ))}
+                  (() => {
+                    const isReordering = reorderingProjectId === project.project_id;
+                    let tasksToRender = project.tasks;
+
+                    if (isReordering && localTaskOrder.length > 0) {
+                      const taskMap = new Map(project.tasks.map(t => [t.task_id, t]));
+                      tasksToRender = localTaskOrder
+                        .filter(id => taskMap.has(id))
+                        .map(id => taskMap.get(id));
+                    }
+
+                    return tasksToRender.map((task) => (
+                      <TaskRow
+                        key={task.task_id}
+                        task={task}
+                        project={project}
+                        selectedTasks={selectedTasks}
+                        toggleTaskSelection={toggleTaskSelection}
+                        editingCell={editingCell}
+                        editValue={editValue}
+                        setEditValue={setEditValue}
+                        handleCellClick={handleCellClick}
+                        handleCellBlur={handleCellBlur}
+                        handleKeyDown={handleKeyDown}
+                        availableUsers={availableUsers}
+                        handleDeleteTask={handleDeleteTask}
+                        handleInitialActualClick={handleInitialActualClick}
+                        handleTaskDetailsClick={handleTaskDetailsClick}
+                        showInDays={showInDays}
+                        showTimeline={showTimeline}
+                        dateRange={dateRange}
+                        columnWidth={columnWidth}
+                        timelineWidth={timelineWidth}
+                        todayLineOffset={todayLineOffset}
+                        getDateInfo={getDateInfo}
+                        pushUndo={pushUndo}
+                        refetchPlanning={refetchPlanning}
+                        onLabelTooltipHover={showLabelTooltip}
+                        onLabelTooltipLeave={hideLabelTooltip}
+                        isReordering={isReordering}
+                        onDragStart={onDragStart}
+                        onDragOver={onDragOver}
+                        onDragEnd={onDragEnd}
+                      />
+                    ));
+                  })()}
               </React.Fragment>
             ))}
           </tbody>

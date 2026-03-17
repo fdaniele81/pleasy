@@ -207,5 +207,9 @@
   "excelNotAssigned": "Non assegnato",
   "excelStatusNew": "Nuovo",
   "excelStatusInProgress": "In corso",
-  "excelStatusDone": "Fatto"
+  "excelStatusDone": "Fatto",
+
+  "reorderActivities": "Riordina attività",
+  "reorderSave": "Salva ordine",
+  "reorderCancel": "Annulla riordino"
 }

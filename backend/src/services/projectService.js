@@ -72,6 +72,19 @@ async function update(projectId, data, user) {
   return await projectRepository.updateProject(projectId, title, description, status_id, project_details);
 }
 
+async function updateTaskOrder(projectId, taskOrder, user) {
+  if (!Array.isArray(taskOrder)) {
+    throw serviceError("TASK_ORDER_MUST_BE_ARRAY", "task_order must be an array of task IDs", 400);
+  }
+
+  await projectNotExistsError(projectId);
+
+  const companyId = await projectRepository.getProjectCompanyId(projectId);
+  checkCompanyAccess(user, companyId);
+
+  return await projectRepository.updateTaskOrder(projectId, taskOrder.length > 0 ? taskOrder : null);
+}
+
 async function remove(projectId, user) {
   await projectNotExistsError(projectId);
 
@@ -275,6 +288,7 @@ async function validateKey(projectKey, user) {
 export {
   create,
   update,
+  updateTaskOrder,
   remove,
   addManager,
   removeManager,
@@ -288,6 +302,7 @@ export {
 export default {
   create,
   update,
+  updateTaskOrder,
   remove,
   addManager,
   removeManager,

@@ -8,12 +8,15 @@ const TaskModal = lazy(() => import('../../shared/components/modals/TaskModal'))
 const PlanningTaskHistoryModal = lazy(() => import('./components/PlanningTaskHistoryModal'));
 
 import SimpleGanttModal from './components/gantt-selezione/SimpleGanttModal';
+import SplitModal from '../estimate-conversion/components/SplitModal';
+import BaseModal from '../../shared/components/BaseModal';
 
 import { usePlanningData } from './hooks/usePlanningData';
 import { useTaskEdit } from './hooks/useTaskEdit';
 import { usePlanningUndo } from './hooks/usePlanningUndo';
 import { useTaskReorder } from './hooks/useTaskReorder';
 import { usePlanningFilters } from './hooks/usePlanningFilters';
+import { useTaskMergeSplit } from './hooks/useTaskMergeSplit';
 import { useTimelinePeriod } from './hooks/useTimelinePeriod';
 import { useConfirmation } from '../../hooks';
 import ConfirmationModal from '../../shared/ui/ConfirmationModal';
@@ -25,7 +28,7 @@ import { PlanningFilters } from './components/PlanningFilters';
 import { PlanningTable } from './components/PlanningTable';
 
 function Pianificazione() {
-  const { t } = useTranslation(['planning', 'common']);
+  const { t } = useTranslation(['planning', 'common', 'estimateConversion']);
   const [searchParams] = useSearchParams();
   const confirmation = useConfirmation();
 
@@ -293,6 +296,14 @@ function Pianificazione() {
   } = taskEdit;
 
   const taskReorder = useTaskReorder({ refetchPlanning });
+
+  const taskMergeSplit = useTaskMergeSplit({
+    projects,
+    selectedTasks,
+    refetchPlanning,
+    fetchSyncData,
+    confirmFn: confirmation.confirm,
+  });
 
   isEditingRef.current = !!editingCell;
   cancelEditingRef.current = cancelEditing;
@@ -610,9 +621,89 @@ function Pianificazione() {
             onDragStart={taskReorder.handleDragStart}
             onDragOver={taskReorder.handleDragOver}
             onDragEnd={taskReorder.handleDragEnd}
+            onStartMerge={taskMergeSplit.handleStartMerge}
+            onStartSplit={taskMergeSplit.handleStartSplit}
           />
         </div>
       </div>
+
+      {/* Merge modal */}
+      <BaseModal
+        isOpen={taskMergeSplit.showMergeModal}
+        onClose={taskMergeSplit.closeMergeModal}
+        title={t('planning:mergeTitle')}
+        icon={null}
+        size="sm"
+        customFooter={
+          <>
+            <button
+              onClick={taskMergeSplit.closeMergeModal}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              {t('common:cancel')}
+            </button>
+            <button
+              onClick={taskMergeSplit.handleConfirmMerge}
+              disabled={!taskMergeSplit.mergeTitle.trim() || taskMergeSplit.processing}
+              className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {taskMergeSplit.processing ? t('common:saving') : t('planning:mergeConfirm')}
+            </button>
+          </>
+        }
+      >
+        {taskMergeSplit.mergeContext && (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              {t('planning:mergeDescription', { count: taskMergeSplit.mergeContext.tasks.length })}
+            </p>
+            <div className="space-y-1">
+              {taskMergeSplit.mergeContext.tasks.map(task => (
+                <div key={task.task_id} className="text-xs text-gray-500 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full shrink-0" />
+                  <span className="truncate">{task.title}</span>
+                  <span className="ml-auto font-mono text-gray-400 shrink-0">
+                    {showInDays ? (Math.round((task.budget || 0) / 8 * 10) / 10) : (task.budget || 0)}
+                    {showInDays ? 'gg' : 'h'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('planning:mergedTaskName')}
+              </label>
+              <input
+                type="text"
+                value={taskMergeSplit.mergeTitle}
+                onChange={(e) => taskMergeSplit.setMergeTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && taskMergeSplit.mergeTitle.trim()) {
+                    taskMergeSplit.handleConfirmMerge();
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                autoFocus
+              />
+            </div>
+          </div>
+        )}
+      </BaseModal>
+
+      {/* Split modal */}
+      <SplitModal
+        isOpen={taskMergeSplit.showSplitModal}
+        onClose={taskMergeSplit.closeSplitModal}
+        onConfirm={taskMergeSplit.handleConfirmSplit}
+        sourceRow={taskMergeSplit.splitContext?.task ? {
+          budget: taskMergeSplit.splitContext.task.budget || 0,
+          color: '#06b6d4',
+          title: taskMergeSplit.splitContext.task.title,
+        } : null}
+        showInDays={showInDays}
+        getRowTitle={(row) => row.title || ''}
+        showNames
+      />
 
       <ConfirmationModal
         isOpen={confirmation.isOpen}

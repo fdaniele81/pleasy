@@ -4,8 +4,10 @@ import { useGetClientsWithProjectsQuery } from '../clients/api/clientEndpoints';
 import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
-  useDeleteProjectMutation
+  useDeleteProjectMutation,
+  useAddProjectManagerMutation
 } from './api/projectEndpoints';
+import { useAuth } from '../../hooks/useAuth';
 import { FolderKanban, Edit2, Users, ChevronRight, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import ProjectModal from './components/ProjectModal';
 import FilterDropdown from '../../shared/ui/filters/FilterDropdown';
@@ -22,6 +24,8 @@ function ProjectsSimple() {
   const [createProject] = useCreateProjectMutation();
   const [updateProject] = useUpdateProjectMutation();
   const [deleteProject] = useDeleteProjectMutation();
+  const [addProjectManager] = useAddProjectManagerMutation();
+  const { user } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -104,7 +108,10 @@ function ProjectsSimple() {
 
   const handleCreateProject = async (projectData, clientId) => {
     try {
-      await createProject({ clientId, projectData }).unwrap();
+      const created = await createProject({ clientId, projectData }).unwrap();
+      if (created?.project_id && user?.user_id) {
+        await addProjectManager({ projectId: created.project_id, userId: user.user_id }).unwrap();
+      }
     } catch (error) {
     }
   };

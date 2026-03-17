@@ -49,7 +49,7 @@ const TransposedTimesheetGrid = ({
         y: above ? rect.top : rect.bottom,
         above,
       });
-    }, 350);
+    }, 500);
   }, []);
 
   const hideTooltip = useCallback(() => {

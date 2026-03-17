@@ -97,7 +97,7 @@ function TimesheetTable({
         y: above ? rect.top : rect.bottom,
         above,
       });
-    }, 350);
+    }, 500);
   }, []);
 
   const hideLabelTooltip = useCallback(() => {

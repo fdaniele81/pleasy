@@ -211,5 +211,20 @@
 
   "reorderActivities": "Riordina attività",
   "reorderSave": "Salva ordine",
-  "reorderCancel": "Annulla riordino"
+  "reorderCancel": "Annulla riordino",
+
+  "mergeActivities": "Unisci attività selezionate",
+  "splitActivity": "Dividi attività selezionata",
+  "mergeTitle": "Unisci Attività",
+  "mergeDescription": "Verranno unite {{count}} attività in una sola. Il budget del nuovo task sarà la somma dei budget originali.",
+  "mergedTaskName": "Nome della nuova attività",
+  "mergeConfirm": "Unisci",
+  "mergeNeedTwo": "Seleziona almeno 2 attività dello stesso progetto per unirle",
+  "mergeBlockedActuals": "Impossibile unire: una o più attività hanno già dei consuntivi registrati",
+  "mergeSuccess": "{{count}} attività unite con successo",
+  "mergeError": "Errore durante l'unione delle attività",
+  "splitNeedOne": "Seleziona esattamente 1 attività per dividerla",
+  "splitBlockedActuals": "Impossibile dividere: l'attività ha già dei consuntivi registrati",
+  "splitSuccess": "Attività divisa in {{count}} parti",
+  "splitError": "Errore durante la divisione dell'attività"
 }

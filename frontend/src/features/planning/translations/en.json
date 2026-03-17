@@ -211,5 +211,20 @@
 
   "reorderActivities": "Reorder activities",
   "reorderSave": "Save order",
-  "reorderCancel": "Cancel reorder"
+  "reorderCancel": "Cancel reorder",
+
+  "mergeActivities": "Merge selected activities",
+  "splitActivity": "Split selected activity",
+  "mergeTitle": "Merge Activities",
+  "mergeDescription": "{{count}} activities will be merged into one. The new task budget will be the sum of the original budgets.",
+  "mergedTaskName": "New activity name",
+  "mergeConfirm": "Merge",
+  "mergeNeedTwo": "Select at least 2 activities from the same project to merge",
+  "mergeBlockedActuals": "Cannot merge: one or more activities have actuals already recorded",
+  "mergeSuccess": "{{count}} activities merged successfully",
+  "mergeError": "Error while merging activities",
+  "splitNeedOne": "Select exactly 1 activity to split",
+  "splitBlockedActuals": "Cannot split: the activity has actuals already recorded",
+  "splitSuccess": "Activity split into {{count}} parts",
+  "splitError": "Error while splitting the activity"
 }

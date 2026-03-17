@@ -166,7 +166,7 @@ export function useTimesheetActions({
     tooltipTimeoutRef.current = setTimeout(() => {
       setTooltipPosition({ x: rect.right + 8, y: rect.top + rect.height / 2 });
       setHoveredTaskId(taskId);
-    }, 200);
+    }, 500);
   }, []);
 
   const handleTooltipLeave = useCallback(() => {
@@ -180,7 +180,7 @@ export function useTimesheetActions({
     noteTooltipTimeoutRef.current = setTimeout(() => {
       setNoteTooltipPosition({ x: rect.left + rect.width / 2, y: rect.top - 8 });
       setHoveredNoteCell({ taskId, date, details, type });
-    }, 200);
+    }, 500);
   }, []);
 
   const handleNoteTooltipLeave = useCallback(() => {

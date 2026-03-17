@@ -68,6 +68,9 @@ async function getSnapshotDetails(snapshotId, user) {
         client_key: row.client_key,
         client_name: row.client_name,
         client_color: row.client_color,
+        symbol_letter: row.symbol_letter,
+        symbol_bg_color: row.symbol_bg_color,
+        symbol_letter_color: row.symbol_letter_color,
         timesheets: [],
         total_hours: 0
       });

@@ -37,6 +37,7 @@ async function getTimesheets(startDate, endDate, user) {
         symbol_letter: row.symbol_letter,
         symbol_bg_color: row.symbol_bg_color,
         symbol_letter_color: row.symbol_letter_color,
+        task_order: row.task_order || null,
         tasks: new Map()
       });
     }
@@ -81,10 +82,21 @@ async function getTimesheets(startDate, endDate, user) {
     }
   });
 
-  const projects = Array.from(projectsMap.values()).map(project => ({
-    ...project,
-    tasks: Array.from(project.tasks.values())
-  }));
+  const projects = Array.from(projectsMap.values()).map(project => {
+    let tasks = Array.from(project.tasks.values());
+
+    // Apply custom task order if defined
+    if (project.task_order && project.task_order.length > 0) {
+      const orderMap = new Map(project.task_order.map((id, idx) => [id, idx]));
+      tasks.sort((a, b) => {
+        const aIdx = orderMap.has(a.task_id) ? orderMap.get(a.task_id) : Infinity;
+        const bIdx = orderMap.has(b.task_id) ? orderMap.get(b.task_id) : Infinity;
+        return aIdx - bIdx;
+      });
+    }
+
+    return { ...project, tasks };
+  });
 
   const closedActivitiesTotalHours = await timesheetRepository.getClosedActivitiesTotal(userId);
   const closedActivitiesRows = await timesheetRepository.getClosedActivitiesTimesheets(userId, startDate, endDate);

@@ -232,7 +232,7 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
         isLeft: shouldShowLeft,
       });
       setHoveredPeriod({ userId, periodIdx });
-    }, 1000);
+    }, 500);
   }, []);
 
   const handleTooltipLeave = useCallback(() => {

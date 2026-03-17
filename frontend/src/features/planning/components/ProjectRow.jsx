@@ -1,6 +1,6 @@
 import { useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, ArrowUpDown, Check, X } from 'lucide-react';
+import { Plus, ArrowUpDown, Check, X, Merge, Scissors } from 'lucide-react';
 import Button from '../../../shared/ui/Button';
 import { SelectionCheckbox } from '../../../shared/ui/table';
 import { formatHours, getUnitLabel, safeFormatDate, getFilteredMetrics, getProjectDateRange } from '../utils/helpers';
@@ -25,6 +25,9 @@ export const ProjectRow = memo(function ProjectRow({
   onStartReordering,
   onSaveReordering,
   onCancelReordering,
+  onStartMerge,
+  onStartSplit,
+  selectedTaskCount,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const metrics = useMemo(() => getFilteredMetrics(project), [project]);
@@ -74,17 +77,15 @@ export const ProjectRow = memo(function ProjectRow({
               title={expandedProjects[project.project_id] ? t('common:collapse') : t('common:expand')}
               className="text-gray-500 hover:text-gray-700 shrink-0"
             />
-            {!expandedProjects[project.project_id] && (
-              <div
-                className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
-                style={{
-                  backgroundColor: project.symbol_bg_color || project.client_color || '#6366F1',
-                  color: project.symbol_letter_color || '#FFFFFF',
-                }}
-              >
-                {project.symbol_letter || (project.client_name || '?')[0].toUpperCase()}
-              </div>
-            )}
+            <div
+              className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+              style={{
+                backgroundColor: project.symbol_bg_color || project.client_color || '#6366F1',
+                color: project.symbol_letter_color || '#FFFFFF',
+              }}
+            >
+              {project.symbol_letter || (project.client_name || '?')[0].toUpperCase()}
+            </div>
             <span className="font-semibold text-gray-800 text-sm truncate">
               {project.title}
               <span className="font-normal text-gray-500 text-xs ml-1">
@@ -92,40 +93,64 @@ export const ProjectRow = memo(function ProjectRow({
               </span>
             </span>
           </div>
-          {!showTimeline && (
+          {!showTimeline && expandedProjects[project.project_id] && (
             <div className="flex items-center gap-0.5 shrink-0">
               {reorderingProjectId === project.project_id ? (
                 <>
                   <button
                     onClick={onSaveReordering}
-                    title={t('planning:reorderSave')}
-                    className="p-1 rounded text-green-600 hover:bg-green-100 transition-colors"
+                    onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:reorderSave') })}
+                    onMouseLeave={onLabelTooltipLeave}
+                    className="p-1 rounded text-gray-400 hover:text-green-600 hover:bg-gray-200 transition-colors"
                   >
                     <Check size={15} />
                   </button>
                   <button
                     onClick={onCancelReordering}
-                    title={t('planning:reorderCancel')}
-                    className="p-1 rounded text-red-500 hover:bg-red-100 transition-colors"
+                    onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:reorderCancel') })}
+                    onMouseLeave={onLabelTooltipLeave}
+                    className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-gray-200 transition-colors"
                   >
                     <X size={15} />
                   </button>
                 </>
               ) : (
                 <>
-                  {expandedProjects[project.project_id] && project.tasks.length > 1 && (
+                  {project.tasks.length > 1 && (
                     <button
                       onClick={() => onStartReordering(project.project_id, project.tasks)}
-                      title={t('planning:reorderActivities')}
+                      onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:reorderActivities') })}
+                      onMouseLeave={onLabelTooltipLeave}
                       className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
                     >
                       <ArrowUpDown size={14} />
                     </button>
                   )}
+                  {selectedTaskCount >= 2 && (
+                    <button
+                      onClick={() => onStartMerge(project.project_id)}
+                      onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:mergeActivities') })}
+                      onMouseLeave={onLabelTooltipLeave}
+                      className="p-1 rounded text-gray-400 hover:text-cyan-600 hover:bg-gray-200 transition-colors"
+                    >
+                      <Merge size={14} />
+                    </button>
+                  )}
+                  {selectedTaskCount === 1 && (
+                    <button
+                      onClick={() => onStartSplit(project.project_id)}
+                      onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:splitActivity') })}
+                      onMouseLeave={onLabelTooltipLeave}
+                      className="p-1 rounded text-gray-400 hover:text-cyan-600 hover:bg-gray-200 transition-colors"
+                    >
+                      <Scissors size={14} />
+                    </button>
+                  )}
                   <button
                     onClick={() => handleStartAddingTask(project.project_id)}
-                    title={t('planning:addActivity')}
-                    className="p-1 rounded text-cyan-600 hover:bg-cyan-100 transition-colors"
+                    onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:addActivity') })}
+                    onMouseLeave={onLabelTooltipLeave}
+                    className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
                   >
                     <Plus size={15} />
                   </button>

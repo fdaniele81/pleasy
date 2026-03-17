@@ -91,7 +91,7 @@ function Timesheet() {
     projects
       .filter((project) => project.project_key !== 'CLOSED_ACTIVITIES')
       .flatMap((project) =>
-        project.tasks.map((task) => ({
+        project.tasks.map((task, index) => ({
           ...task,
           project_id: project.project_id,
           project_key: project.project_key,
@@ -104,6 +104,7 @@ function Timesheet() {
           symbol_letter: project.symbol_letter,
           symbol_bg_color: project.symbol_bg_color,
           symbol_letter_color: project.symbol_letter_color,
+          _taskOrderIndex: index,
         }))
       ),
     [projects]
@@ -172,7 +173,7 @@ function Timesheet() {
         if (clientCompare !== 0) return clientCompare;
         const projectCompare = (a.project_key || "").localeCompare(b.project_key || "");
         if (projectCompare !== 0) return projectCompare;
-        return (a.task_number || 0) - (b.task_number || 0);
+        return (a._taskOrderIndex || 0) - (b._taskOrderIndex || 0);
       });
   }, [allTasksFlat, searchTerm, filterClientIds, filterProjectIds, filterProjectType]);
 

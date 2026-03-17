@@ -23,11 +23,13 @@ function SplitModal({
   sourceRow,
   showInDays = false,
   getRowTitle,
+  showNames = false,
 }) {
   const { t } = useTranslation(['estimateConversion', 'common']);
 
   const [splitCount, setSplitCount] = useState(2);
   const [splitBudgets, setSplitBudgets] = useState([]);
+  const [splitNames, setSplitNames] = useState([]);
 
   // Drag state
   const barRef = useRef(null);
@@ -67,16 +69,29 @@ function SplitModal({
   useEffect(() => {
     if (sourceRow && splitCount >= 2) {
       setSplitBudgets(distributeEqual(splitCount, totalBudget));
+      if (showNames) {
+        const baseTitle = getRowTitle?.(sourceRow) || sourceRow.title || '';
+        setSplitNames(prev => {
+          const names = Array(splitCount).fill('').map((_, i) =>
+            prev[i] !== undefined ? prev[i] : `${baseTitle} (${i + 1})`
+          );
+          return names;
+        });
+      }
     }
-  }, [splitCount, sourceRow, totalBudget, distributeEqual]);
+  }, [splitCount, sourceRow, totalBudget, distributeEqual, showNames, getRowTitle]);
 
   // Reset when opening
   useEffect(() => {
     if (isOpen && sourceRow) {
       setSplitCount(2);
       setSplitBudgets(distributeEqual(2, sourceRow.budget));
+      if (showNames) {
+        const baseTitle = getRowTitle?.(sourceRow) || sourceRow.title || '';
+        setSplitNames([`${baseTitle} (1)`, `${baseTitle} (2)`]);
+      }
     }
-  }, [isOpen, sourceRow, distributeEqual]);
+  }, [isOpen, sourceRow, distributeEqual, showNames, getRowTitle]);
 
   const splitBudgetSum = splitBudgets.reduce((s, v) => s + v, 0);
   const splitBudgetOk = sourceRow ? Math.abs(splitBudgetSum - totalBudget) < 0.1 : false;
@@ -188,7 +203,11 @@ function SplitModal({
 
   const handleConfirm = () => {
     if (!sourceRow || splitBudgets.length < 2 || !splitBudgetOk) return;
-    onConfirm(splitCount, splitBudgets);
+    if (showNames) {
+      onConfirm(splitCount, splitBudgets, splitNames);
+    } else {
+      onConfirm(splitCount, splitBudgets);
+    }
   };
 
   return (
@@ -315,32 +334,46 @@ function SplitModal({
               {splitBudgets.map((budget, index) => {
                 const pct = getPercent(budget);
                 return (
-                  <div key={index} className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length] }}
-                    />
-                    <span className="text-xs text-gray-500 w-4 text-right">{index + 1}.</span>
-                    <div className="relative">
+                  <div key={index} className={showNames ? 'space-y-1' : ''}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length] }}
+                      />
+                      <span className="text-xs text-gray-500 w-4 text-right">{index + 1}.</span>
+                      {showNames && (
+                        <input
+                          type="text"
+                          value={splitNames[index] || ''}
+                          onChange={(e) => {
+                            const newNames = [...splitNames];
+                            newNames[index] = e.target.value;
+                            setSplitNames(newNames);
+                          }}
+                          className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                          placeholder={`${t('estimateConversion:nameTask')} ${index + 1}`}
+                        />
+                      )}
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={pct}
+                          onChange={(e) => handlePercentChange(index, e.target.value)}
+                          className="w-20 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right pr-6 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                          step="1"
+                          min="0"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>
+                      </div>
                       <input
                         type="number"
-                        value={pct}
-                        onChange={(e) => handlePercentChange(index, e.target.value)}
-                        className="w-20 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right pr-6 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                        step="1"
+                        value={displayValue(budget)}
+                        onChange={(e) => handleBudgetChange(index, e.target.value)}
+                        className="w-24 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                        step="0.1"
                         min="0"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>
-                    </div>
-                    <input
-                      type="number"
-                      value={displayValue(budget)}
-                      onChange={(e) => handleBudgetChange(index, e.target.value)}
-                      className="w-24 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                      step="0.1"
-                      min="0"
-                    />
-                    <span className="text-xs text-gray-500 w-4">{unitLabel}</span>
+                      <span className="text-xs text-gray-500 w-4">{unitLabel}</span>
                     {/* Fill gap button: only when under 100% */}
                     {hasDeficit ? (
                       <button
@@ -353,6 +386,7 @@ function SplitModal({
                     ) : (
                       <span className="ml-1 w-16" />
                     )}
+                    </div>
                   </div>
                 );
               })}

@@ -49,6 +49,7 @@ export const TaskRow = memo(function TaskRow({
   onDragStart,
   onDragOver,
   onDragEnd,
+  hideProjectHeaders,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const statusLabels = getStatusLabels(t);
@@ -233,7 +234,7 @@ export const TaskRow = memo(function TaskRow({
 
       {/* Project/Activity - always shown */}
       <td
-        className="border-b border-r border-gray-300 px-1.5 py-0.5 w-[160px] max-w-[160px] xl:w-[220px] xl:max-w-[220px]"
+        className={`border-b border-r border-gray-300 ${hideProjectHeaders && !showTimeline ? 'px-2 py-1.5 w-[200px] max-w-[200px] xl:w-[260px] xl:max-w-[260px]' : hideProjectHeaders && showTimeline ? 'px-1.5 py-0.5 w-[200px] max-w-[200px]' : 'px-1.5 py-0.5 w-[160px] max-w-[160px] xl:w-[220px] xl:max-w-[220px]'}`}
         onMouseEnter={(e) => onLabelTooltipHover?.(e, {
           client: project.client_name,
           project: project.title,
@@ -243,15 +244,17 @@ export const TaskRow = memo(function TaskRow({
         onMouseLeave={onLabelTooltipLeave}
       >
         <div className="flex gap-1.5 min-w-0 items-center">
-          <div
-            className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
-            style={{
-              backgroundColor: project.symbol_bg_color || project.client_color || '#6366F1',
-              color: project.symbol_letter_color || '#FFFFFF',
-            }}
-          >
-            {project.symbol_letter || (project.client_name || '?')[0].toUpperCase()}
-          </div>
+          {hideProjectHeaders && (
+            <div
+              className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+              style={{
+                backgroundColor: project.symbol_bg_color || project.client_color || '#6366F1',
+                color: project.symbol_letter_color || '#FFFFFF',
+              }}
+            >
+              {project.symbol_letter || (project.client_name || '?')[0].toUpperCase()}
+            </div>
+          )}
           {isEditingTitle ? (
             <div className="min-w-0 flex-1">
               <input
@@ -264,16 +267,25 @@ export const TaskRow = memo(function TaskRow({
                 className="w-full px-2 py-0.5 border border-blue-300 rounded text-xs font-medium"
               />
             </div>
+          ) : hideProjectHeaders ? (
+            <div className={`min-w-0 flex-1 ${showTimeline ? '' : 'space-y-0.5'}`}>
+              <div className={`text-[11px] ${showTimeline ? 'leading-tight' : 'leading-normal'} text-gray-400 truncate flex items-center gap-1`}>
+                <FolderKanban className="h-2.5 w-2.5 shrink-0 text-gray-400" />
+                <span className="truncate">{project.title}</span>
+              </div>
+              <div
+                className={`text-xs ${showTimeline ? 'leading-tight' : 'leading-normal'} font-medium text-gray-800 truncate cursor-pointer hover:text-cyan-600 transition-colors flex items-center gap-1`}
+                onClick={() => handleTaskDetailsClick(task, project)}
+              >
+                <ListTodo className="h-3 w-3 shrink-0" />
+                <span className="truncate">{task.title}</span>
+              </div>
+            </div>
           ) : (
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] leading-tight text-gray-400 truncate flex items-center gap-1">
-                <FolderKanban className="h-2.5 w-2.5 shrink-0 text-gray-500" />
-                <span className="text-gray-500 truncate">{project.title}</span>
-              </div>
               <div
                 className="text-xs leading-tight font-medium text-gray-800 truncate cursor-pointer hover:text-cyan-600 transition-colors flex items-center gap-1"
                 onClick={() => handleTaskDetailsClick(task, project)}
-                title={`${project.project_key}-${task.task_number} ${task.title}`}
               >
                 <ListTodo className="h-3 w-3 shrink-0" />
                 <span className="truncate">{task.title}</span>

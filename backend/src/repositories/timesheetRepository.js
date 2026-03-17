@@ -36,6 +36,7 @@ async function getTimesheets(userId, startDate, endDate) {
       c.symbol_letter,
       c.symbol_bg_color,
       c.symbol_letter_color,
+      p.task_order,
       COALESCE(tt.total_hours_worked, 0) as task_total_hours,
       COALESCE(te.etc_hours, 0) as etc_hours,
       COALESCE(uns.non_submitted_hours, 0) as user_non_submitted_hours,

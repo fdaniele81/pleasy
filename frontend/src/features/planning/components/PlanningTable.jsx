@@ -68,6 +68,8 @@ export const PlanningTable = memo(function PlanningTable({
   onDragStart,
   onDragOver,
   onDragEnd,
+  onStartMerge,
+  onStartSplit,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const locale = useLocale();
@@ -107,7 +109,7 @@ export const PlanningTable = memo(function PlanningTable({
         y: above ? rect.top : rect.bottom,
         above,
       });
-    }, 350);
+    }, 500);
   }, []);
 
   const hideLabelTooltip = useCallback(() => {
@@ -201,7 +203,7 @@ export const PlanningTable = memo(function PlanningTable({
                       color="white"
                     />
                   </th>
-                  <th className="border-t border-r border-gray-300 px-2 py-2 text-left font-semibold w-[200px] max-w-[200px] bg-cyan-700">
+                  <th className={`border-t border-r border-gray-300 px-2 py-2 text-left font-semibold bg-cyan-700 ${hideProjectHeaders ? 'w-[240px] max-w-[240px]' : 'w-[200px] max-w-[200px]'}`}>
                     {t('planning:projectActivity')}
                   </th>
                   <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-16 bg-cyan-700">
@@ -271,7 +273,7 @@ export const PlanningTable = memo(function PlanningTable({
                     color="white"
                   />
                 </th>
-                <th className="border-t border-r border-gray-300 px-2 py-2 text-left font-semibold w-[130px] max-w-[130px] xl:w-[200px] xl:max-w-[200px] bg-cyan-700">
+                <th className={`border-t border-r border-gray-300 px-2 py-2 text-left font-semibold bg-cyan-700 ${hideProjectHeaders ? 'w-[200px] max-w-[200px] xl:w-[260px] xl:max-w-[260px]' : 'w-[130px] max-w-[130px] xl:w-[200px] xl:max-w-[200px]'}`}>
                   {t('planning:projectActivity')}
                 </th>
                 <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-10 xl:w-16 bg-cyan-700">
@@ -475,6 +477,9 @@ export const PlanningTable = memo(function PlanningTable({
                     onStartReordering={onStartReordering}
                     onSaveReordering={onSaveReordering}
                     onCancelReordering={onCancelReordering}
+                    onStartMerge={onStartMerge}
+                    onStartSplit={onStartSplit}
+                    selectedTaskCount={project.tasks.filter(t => selectedTasks[t.task_id]).length}
                   />
                 )}
 
@@ -522,6 +527,7 @@ export const PlanningTable = memo(function PlanningTable({
                         onDragStart={onDragStart}
                         onDragOver={onDragOver}
                         onDragEnd={onDragEnd}
+                        hideProjectHeaders={hideProjectHeaders}
                       />
                     ));
                   })()}
@@ -533,7 +539,7 @@ export const PlanningTable = memo(function PlanningTable({
 
       {labelTooltip && createPortal(
         <div
-          className="fixed z-[9999] px-3 py-2.5 rounded-lg shadow-xl bg-gray-900 text-white text-xs min-w-48 max-w-sm border border-gray-600 pointer-events-none"
+          className={`fixed z-[9999] px-3 py-2.5 rounded-lg shadow-xl bg-gray-900 text-white text-xs max-w-sm border border-gray-600 pointer-events-none ${labelTooltip.content.text ? '' : 'min-w-48'}`}
           style={{
             left: labelTooltip.x,
             top: labelTooltip.above ? labelTooltip.y : labelTooltip.y + 4,
@@ -542,25 +548,29 @@ export const PlanningTable = memo(function PlanningTable({
               : 'translate(-50%, 0)',
           }}
         >
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: labelTooltip.content.color || '#6366F1' }} />
-              <Briefcase className="h-3 w-3 text-gray-400 shrink-0" />
-              <span className="font-semibold text-gray-100">{labelTooltip.content.client}</span>
+          {labelTooltip.content.text ? (
+            <span>{labelTooltip.content.text}</span>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: labelTooltip.content.color || '#6366F1' }} />
+                <Briefcase className="h-3 w-3 text-gray-400 shrink-0" />
+                <span className="font-semibold text-gray-100">{labelTooltip.content.client}</span>
+              </div>
+              {labelTooltip.content.project && (
+                <div className="flex items-center gap-1.5 text-gray-300 pl-4">
+                  <FolderKanban className="h-3 w-3 text-gray-400 shrink-0" />
+                  {labelTooltip.content.project}
+                </div>
+              )}
+              {labelTooltip.content.task && (
+                <div className="flex items-center gap-1.5 pl-4 text-gray-200 text-xs">
+                  <ListTodo className="h-3 w-3 text-gray-400 shrink-0" />
+                  {labelTooltip.content.task}
+                </div>
+              )}
             </div>
-            {labelTooltip.content.project && (
-              <div className="flex items-center gap-1.5 text-gray-300 pl-4">
-                <FolderKanban className="h-3 w-3 text-gray-400 shrink-0" />
-                {labelTooltip.content.project}
-              </div>
-            )}
-            {labelTooltip.content.task && (
-              <div className="flex items-center gap-1.5 pl-4 text-gray-200 text-xs">
-                <ListTodo className="h-3 w-3 text-gray-400 shrink-0" />
-                {labelTooltip.content.task}
-              </div>
-            )}
-          </div>
+          )}
         </div>,
         document.body
       )}

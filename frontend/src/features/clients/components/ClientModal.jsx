@@ -103,7 +103,7 @@ const ClientModal = ({ isOpen, onClose, onConfirm, client = null }) => {
       error={errors.general}
       isSubmitting={isSubmitting}
       confirmButtonColor="cyan"
-      size="lg"
+      size="xl"
     >
       {/* — DETTAGLI CLIENTE — */}
       <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('clients:detailsSection')}</p>

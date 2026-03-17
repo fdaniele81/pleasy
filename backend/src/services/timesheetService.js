@@ -330,6 +330,9 @@ async function getTMPlanning(startDate, endDate, user) {
         user_id: row.user_id,
         full_name: row.full_name,
         email: row.email,
+        symbol_letter: row.user_symbol_letter,
+        symbol_bg_color: row.user_symbol_bg_color,
+        symbol_letter_color: row.user_symbol_letter_color,
         clients: new Map(),
         total_hours_all_clients: 0,
         total_hours_all_clients_all: 0

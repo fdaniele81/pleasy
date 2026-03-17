@@ -101,6 +101,9 @@ export function useTMPlanningData({
             client_id: client.client_id,
             client_name: client.client_name,
             client_color: client.client_color,
+            symbol_letter: client.symbol_letter,
+            symbol_bg_color: client.symbol_bg_color,
+            symbol_letter_color: client.symbol_letter_color,
             users: [],
             total_hours_all: 0,
           });
@@ -110,6 +113,9 @@ export function useTMPlanningData({
         clientData.users.push({
           user_id: user.user_id,
           full_name: user.full_name,
+          symbol_letter: user.symbol_letter,
+          symbol_bg_color: user.symbol_bg_color,
+          symbol_letter_color: user.symbol_letter_color,
           task_id: client.task_id,
           project_id: client.project_id,
           timesheets: client.timesheets,

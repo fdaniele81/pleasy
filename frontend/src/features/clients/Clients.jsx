@@ -18,6 +18,13 @@ import Button from '../../shared/ui/Button';
 import { useFilteredList } from '../../hooks/useFilteredList';
 import logger from '../../utils/logger';
 
+const getDefaultInitials = (name) => {
+  if (!name) return '?';
+  const words = name.trim().split(/\s+/);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
 function ClientsSimple() {
   const { t } = useTranslation(['clients', 'common']);
   const { data: clients = [], isLoading: loading } = useGetClientsQuery();
@@ -140,10 +147,10 @@ function ClientsSimple() {
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('clients:key')}
+                        {t('clients:name')}
                       </th>
                       <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('clients:name')}
+                        {t('clients:key')}
                       </th>
                       <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t('common:status')}
@@ -159,16 +166,21 @@ function ClientsSimple() {
                         <td className="px-6 py-2 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <span
-                              className="inline-block w-3 h-3 rounded-full shrink-0"
-                              style={{ backgroundColor: client.color || '#6B7280' }}
-                            />
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold tracking-tight shrink-0 select-none"
+                              style={{
+                                backgroundColor: client.symbol_bg_color || client.color || '#6B7280',
+                                color: client.symbol_letter_color || '#FFFFFF',
+                              }}
+                            >
+                              {client.symbol_letter || getDefaultInitials(client.client_name)}
+                            </span>
                             <span className="text-sm font-medium text-gray-900">
-                              {client.client_key}
+                              {client.client_name}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
-                          {client.client_name}
+                          {client.client_key}
                         </td>
                         <td className="px-6 py-2 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(client.status_id)}`}>

@@ -109,6 +109,9 @@ const TransposedTimesheetGrid = ({
             task_title: task.task_title,
             client_name: client.client_name,
             client_color: client.client_color,
+            symbol_letter: task.symbol_letter,
+            symbol_bg_color: task.symbol_bg_color,
+            symbol_letter_color: task.symbol_letter_color,
             project_key: project.project_key,
             project_title: project.project_title,
             project_type_id: task.project_type_id,
@@ -379,45 +382,70 @@ const TransposedTimesheetGrid = ({
                           : selectable ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-50'
                     }`}
                     style={{
-                      borderBottom: `5px solid ${col.client_color || '#0891B2'}`,
-                      height: useVerticalHeaders ? 100 : 'auto',
+                      height: useVerticalHeaders ? 120 : 'auto',
                     }}
                     onClick={selectable ? () => toggleColumn(col.task_id) : undefined}
                     onMouseEnter={(e) => showTooltip(e, { client: col.client_name, project: col.project_title, task: isTM ? null : col.task_title, color: col.client_color }, true)}
                     onMouseLeave={hideTooltip}
                   >
                     {useVerticalHeaders ? (
-                      <div className="flex items-end justify-center h-full px-0.5 pb-1.5 overflow-hidden gap-0.5">
-                        <span
-                          className="text-xs font-bold text-gray-700 whitespace-nowrap leading-tight"
-                          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                        >
-                          {col.project_key}
-                        </span>
-                        {!isTM && (
+                      <div className="flex flex-col items-center justify-end h-full px-0.5 pb-1.5 overflow-hidden gap-1">
+                        <div className="flex items-end gap-0.5">
                           <span
-                            className="text-[10px] text-gray-400 whitespace-nowrap leading-tight"
-                            style={{
-                              writingMode: 'vertical-rl',
-                              transform: 'rotate(180deg)',
-                              maxHeight: 88,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
+                            className="text-[10px] font-semibold text-gray-700 whitespace-nowrap leading-tight"
+                            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', maxHeight: 80, overflow: 'hidden', textOverflow: 'ellipsis' }}
                           >
-                            {col.task_title}
+                            {col.project_title}
                           </span>
-                        )}
+                          {!isTM && (
+                            <span
+                              className="text-[10px] text-gray-500 whitespace-nowrap leading-tight"
+                              style={{
+                                writingMode: 'vertical-rl',
+                                transform: 'rotate(180deg)',
+                                maxHeight: 80,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {col.task_title}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+                          style={{
+                            backgroundColor: col.symbol_bg_color || col.client_color || '#6366F1',
+                            color: col.symbol_letter_color || '#FFFFFF',
+                          }}
+                        >
+                          {col.symbol_letter || (col.client_name || '?')[0].toUpperCase()}
+                        </div>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-0.5 overflow-hidden px-1 py-1.5">
-                        <span className="text-xs font-bold text-gray-700 truncate w-full text-center">
-                          {col.project_key}
-                        </span>
-                        {!isTM && (
-                          <span className="text-[10px] text-gray-400 truncate w-full text-center leading-tight">
-                            {col.task_title}
+                        <div
+                          className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+                          style={{
+                            backgroundColor: col.symbol_bg_color || col.client_color || '#6366F1',
+                            color: col.symbol_letter_color || '#FFFFFF',
+                          }}
+                        >
+                          {col.symbol_letter || (col.client_name || '?')[0].toUpperCase()}
+                        </div>
+                        <div className="flex items-center gap-1 truncate w-full justify-center">
+                          <FolderKanban className="h-3 w-3 text-gray-400 shrink-0" />
+                          <span className="text-[10px] font-semibold text-gray-700 truncate">
+                            {col.project_title}
                           </span>
+                        </div>
+                        {!isTM && (
+                          <div className="flex items-center gap-1 truncate w-full justify-center">
+                            <ListTodo className="h-3 w-3 text-gray-400 shrink-0" />
+                            <span className="text-[10px] text-gray-500 truncate leading-tight">
+                              {col.task_title}
+                            </span>
+                          </div>
                         )}
                       </div>
                     )}

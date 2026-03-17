@@ -91,11 +91,22 @@ const TMPlanningUserGroupRows = memo(function TMPlanningUserGroupRows({
               <td className="sticky left-0 z-10 px-1 py-1.5 border-b border-gray-200 bg-white" />
               <td
                 className="sticky z-10 px-2 py-1.5 border-b border-gray-200 bg-white shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]"
-                style={{ borderLeft: `8px solid ${client.client_color || "#6B7280"}` }}
               >
-                <span className="text-sm font-medium text-gray-700 truncate block">
-                  {client.client_name}
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div
+                    className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+                    style={{
+                      backgroundColor: client.symbol_bg_color || client.client_color || '#6366F1',
+                      color: client.symbol_letter_color || '#FFFFFF',
+                    }}
+                    title={client.client_name}
+                  >
+                    {client.symbol_letter || (client.client_name || '?')[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 truncate">
+                    {client.client_name}
+                  </span>
+                </div>
               </td>
               <td className="px-1 py-1 text-center border-b border-r border-gray-200 bg-cyan-50">
                 <div className="relative flex items-center justify-center">

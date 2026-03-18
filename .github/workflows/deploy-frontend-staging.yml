@@ -1,0 +1,41 @@
+name: Build and deploy frontend (Staging)
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - "frontend/**"
+      - "version.json"
+      - "wrangler.jsonc"
+      - ".github/workflows/deploy-frontend-staging.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_URL: https://test-api.pleasyhub.com
+        run: npm run build
+
+      - name: Deploy to Cloudflare Workers (staging)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy --env staging

@@ -5,6 +5,8 @@ import planningFiltersReducer from './slices/planningFiltersSlice';
 import timesheetFiltersReducer from './slices/timesheetFiltersSlice';
 import tmPlanningFiltersReducer from './slices/tmPlanningFiltersSlice';
 import dashboardFiltersReducer from './slices/dashboardFiltersSlice';
+import ganttModalReducer from './slices/ganttModalSlice';
+import planningSelectionReducer from './slices/planningSelectionSlice';
 import { toastMiddleware } from './middleware/toastMiddleware';
 import { apiSlice } from '../api/apiSlice';
 import { authEndpoints } from '../features/login/api/authEndpoints';
@@ -35,6 +37,8 @@ const appReducer = combineReducers({
   timesheetFilters: timesheetFiltersReducer,
   tmPlanningFilters: tmPlanningFiltersReducer,
   dashboardFilters: dashboardFiltersReducer,
+  ganttModal: ganttModalReducer,
+  planningSelection: planningSelectionReducer,
   [apiSlice.reducerPath]: apiSlice.reducer,
 });
 
@@ -47,6 +51,8 @@ const rootReducer = (state, action) => {
       timesheetFilters: undefined,
       tmPlanningFilters: undefined,
       dashboardFilters: undefined,
+      ganttModal: undefined,
+      planningSelection: undefined,
     };
   }
   return appReducer(state, action);

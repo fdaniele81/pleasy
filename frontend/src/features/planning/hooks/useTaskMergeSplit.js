@@ -223,6 +223,56 @@ export function useTaskMergeSplit({ projects, selectedTasks, refetchPlanning, fe
     setSplitContext(null);
   }, []);
 
+  /**
+   * Clone selected tasks within a project.
+   */
+  const handleCloneTasks = useCallback(async (projectId) => {
+    const tasks = getSelectedTasksForProject(projectId);
+    if (tasks.length === 0) {
+      dispatch(addToast({ message: t('planning:cloneNeedOne'), type: 'error' }));
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      for (const task of tasks) {
+        await createTask({
+          projectId,
+          taskData: {
+            project_id: projectId,
+            title: `${task.title} (${t('common:copy')})`,
+            description: task.description || '',
+            details: task.task_details || null,
+            budget: task.budget || 0,
+            task_status_id: task.task_status_id || 'NEW',
+            owner_id: task.owner_id || null,
+            start_date: task.start_date ? formatDateISO(task.start_date) : null,
+            end_date: task.end_date ? formatDateISO(task.end_date) : null,
+            external_key: task.external_key || null,
+            initial_actual: 0,
+            etc: task.etc || 0,
+          },
+        }).unwrap();
+      }
+
+      await refetchPlanning();
+      fetchSyncData?.();
+
+      dispatch(addToast({
+        message: t('planning:cloneSuccess', { count: tasks.length }),
+        type: 'success',
+      }));
+    } catch (error) {
+      logger.error('Clone error:', error);
+      dispatch(addToast({
+        message: t('planning:cloneError'),
+        type: 'error',
+      }));
+    } finally {
+      setProcessing(false);
+    }
+  }, [getSelectedTasksForProject, createTask, refetchPlanning, fetchSyncData, dispatch, t]);
+
   return {
     // Merge
     showMergeModal,
@@ -239,6 +289,9 @@ export function useTaskMergeSplit({ projects, selectedTasks, refetchPlanning, fe
     handleStartSplit,
     handleConfirmSplit,
     closeSplitModal,
+
+    // Clone
+    handleCloneTasks,
 
     // State
     processing,

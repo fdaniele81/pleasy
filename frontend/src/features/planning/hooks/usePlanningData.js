@@ -25,7 +25,6 @@ export function usePlanningData() {
   const [showGlobalSyncModal, setShowGlobalSyncModal] = useState(false);
   const [selectedExternalKey, setSelectedExternalKey] = useState(null);
 
-  const [showGanttModal, setShowGanttModal] = useState(false);
   const [showInitialActualModal, setShowInitialActualModal] = useState(false);
   const [selectedTaskForInitialActual, setSelectedTaskForInitialActual] = useState(null);
 
@@ -106,8 +105,6 @@ export function usePlanningData() {
     hasTemplate,
     hasValidQuery,
 
-    showGanttModal,
-    setShowGanttModal,
     showInitialActualModal,
     setShowInitialActualModal,
     selectedTaskForInitialActual,

@@ -70,6 +70,7 @@ export const PlanningTable = memo(function PlanningTable({
   onDragEnd,
   onStartMerge,
   onStartSplit,
+  onCloneTasks,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const locale = useLocale();
@@ -203,7 +204,7 @@ export const PlanningTable = memo(function PlanningTable({
                       color="white"
                     />
                   </th>
-                  <th className={`border-t border-r border-gray-300 px-2 py-2 text-left font-semibold bg-cyan-700 ${hideProjectHeaders ? 'w-[240px] max-w-[240px]' : 'w-[200px] max-w-[200px]'}`}>
+                  <th className={`border-t border-r border-gray-300 px-2 py-2 text-left font-semibold bg-cyan-700 ${hideProjectHeaders ? 'w-[320px] max-w-[320px]' : 'w-[280px] max-w-[280px]'}`}>
                     {t('planning:projectActivity')}
                   </th>
                   <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-16 bg-cyan-700">
@@ -479,6 +480,7 @@ export const PlanningTable = memo(function PlanningTable({
                     onCancelReordering={onCancelReordering}
                     onStartMerge={onStartMerge}
                     onStartSplit={onStartSplit}
+                    onCloneTasks={onCloneTasks}
                     selectedTaskCount={project.tasks.filter(t => selectedTasks[t.task_id]).length}
                   />
                 )}

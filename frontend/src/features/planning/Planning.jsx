@@ -1,12 +1,18 @@
 import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setIsGanttOpen, setIsCalendarOpen, toggleIsCalendarOpen } from '../../store/slices/ganttModalSlice';
+import { selectIsGanttOpen, selectIsCalendarOpen } from '../../store/selectors/ganttModalSelectors';
+import { toggleTask, setSelectedTasks as setSelectedTasksAction, mergeSelectedTasks } from '../../store/slices/planningSelectionSlice';
+import { selectSelectedTasks } from '../../store/selectors/planningSelectionSelectors';
 
 const GanttModal = lazy(() => import('./components/gantt-globale/GanttModal'));
 const TaskModal = lazy(() => import('../../shared/components/modals/TaskModal'));
 
 const PlanningTaskHistoryModal = lazy(() => import('./components/PlanningTaskHistoryModal'));
 
+import FloatingCalendar from './components/FloatingCalendar';
 import SimpleGanttModal from './components/gantt-selezione/SimpleGanttModal';
 import SplitModal from '../estimate-conversion/components/SplitModal';
 import BaseModal from '../../shared/components/BaseModal';
@@ -31,6 +37,9 @@ function Pianificazione() {
   const { t } = useTranslation(['planning', 'common', 'estimateConversion']);
   const [searchParams] = useSearchParams();
   const confirmation = useConfirmation();
+  const dispatch = useDispatch();
+  const showGanttModal = useSelector(selectIsGanttOpen);
+  const showFloatingCalendar = useSelector(selectIsCalendarOpen);
 
   const planningData = usePlanningData();
   const {
@@ -38,8 +47,6 @@ function Pianificazione() {
     loading,
     holidays,
     availableUsers,
-    showGanttModal,
-    setShowGanttModal,
     showInitialActualModal,
     setShowInitialActualModal,
     selectedTaskForInitialActual,
@@ -50,7 +57,14 @@ function Pianificazione() {
 
   const timelinePeriod = useTimelinePeriod();
 
-  const [selectedTasks, setSelectedTasks] = useState({});
+  const selectedTasks = useSelector(selectSelectedTasks);
+  const setSelectedTasks = useCallback((valOrFn) => {
+    if (typeof valOrFn === 'function') {
+      dispatch(setSelectedTasksAction(valOrFn(selectedTasks)));
+    } else {
+      dispatch(setSelectedTasksAction(valOrFn));
+    }
+  }, [dispatch, selectedTasks]);
 
   const {
     searchTerm,
@@ -377,12 +391,16 @@ function Pianificazione() {
   }, [selectedTasks]);
 
   const handleShowGlobalGantt = useCallback(() => {
-    setShowGanttModal(true);
-  }, []);
+    dispatch(setIsGanttOpen(true));
+  }, [dispatch]);
 
   const handleShowSelectionGantt = useCallback(() => {
     setShowSelectionGanttModal(true);
   }, []);
+
+  const handleToggleCalendar = useCallback(() => {
+    dispatch(toggleIsCalendarOpen());
+  }, [dispatch]);
 
   const handleExport = useCallback(() => {
     const selectedTaskIds = Object.keys(selectedTasks).filter(key => selectedTasks[key] && !key.startsWith('project_'));
@@ -414,8 +432,8 @@ function Pianificazione() {
   }, []);
 
   const toggleTaskSelection = useCallback((taskId) => {
-    setSelectedTasks(prev => ({ ...prev, [taskId]: !prev[taskId] }));
-  }, []);
+    dispatch(toggleTask(taskId));
+  }, [dispatch]);
 
   const toggleProjectExpansion = useCallback((projectId) => {
     toggleExpandedProject(projectId);
@@ -435,23 +453,17 @@ function Pianificazione() {
 
     if (projectTaskIds.length === 0) {
       const projectKey = `project_${project.project_id}`;
-      setSelectedTasks(prev => ({
-        ...prev,
-        [projectKey]: !prev[projectKey]
-      }));
+      dispatch(mergeSelectedTasks({ [projectKey]: !selectedTasks[projectKey] }));
       return;
     }
 
     const allSelected = projectTaskIds.every(id => selectedTasks[id]);
-
-    setSelectedTasks(prev => {
-      const newSelected = { ...prev };
-      projectTaskIds.forEach(id => {
-        newSelected[id] = !allSelected;
-      });
-      return newSelected;
+    const update = {};
+    projectTaskIds.forEach(id => {
+      update[id] = !allSelected;
     });
-  }, [selectedTasks]);
+    dispatch(mergeSelectedTasks(update));
+  }, [dispatch, selectedTasks]);
 
   if (loading && projects.length === 0) {
     return (
@@ -468,7 +480,7 @@ function Pianificazione() {
       <Suspense fallback={null}>
         <GanttModal
           isOpen={showGanttModal}
-          onClose={() => setShowGanttModal(false)}
+          onClose={() => dispatch(setIsGanttOpen(false))}
           projects={filteredProjects}
           filterUserIds={filterUserIds}
           refreshTrigger={ganttRefreshTrigger}
@@ -480,6 +492,12 @@ function Pianificazione() {
         onClose={() => setShowSelectionGanttModal(false)}
         selectedTasks={selectedTasks}
         projects={projects}
+      />
+
+      <FloatingCalendar
+        isOpen={showFloatingCalendar}
+        onClose={() => dispatch(setIsCalendarOpen(false))}
+        holidays={holidays}
       />
 
       <Suspense fallback={null}>
@@ -535,6 +553,7 @@ function Pianificazione() {
             onExport={handleExport}
             onShowGlobalGantt={handleShowGlobalGantt}
             onShowSelectionGantt={handleShowSelectionGantt}
+            onToggleCalendar={handleToggleCalendar}
             selectionFilters={selectionFilters}
             hasSelectedTasks={hasSelectedTasks}
           />
@@ -623,6 +642,7 @@ function Pianificazione() {
             onDragEnd={taskReorder.handleDragEnd}
             onStartMerge={taskMergeSplit.handleStartMerge}
             onStartSplit={taskMergeSplit.handleStartSplit}
+            onCloneTasks={taskMergeSplit.handleCloneTasks}
           />
         </div>
       </div>

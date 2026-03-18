@@ -212,6 +212,7 @@ async function getPMPlanningData(pmUserId, companyId) {
       t.external_key,
       t.title as task_title,
       t.description as task_description,
+      t.task_details,
       t.task_status_id,
       t.owner_id,
       t.budget,

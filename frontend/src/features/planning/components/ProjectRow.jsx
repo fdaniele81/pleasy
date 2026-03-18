@@ -1,8 +1,9 @@
 import { useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, ArrowUpDown, Check, X, Merge, Scissors } from 'lucide-react';
+import { Plus, ArrowUpDown, Check, X, Merge, Scissors, Copy } from 'lucide-react';
 import Button from '../../../shared/ui/Button';
 import { SelectionCheckbox } from '../../../shared/ui/table';
+import { formatDateISO } from '../../../utils/date/dateUtils';
 import { formatHours, getUnitLabel, safeFormatDate, getFilteredMetrics, getProjectDateRange } from '../utils/helpers';
 
 export const ProjectRow = memo(function ProjectRow({
@@ -27,12 +28,45 @@ export const ProjectRow = memo(function ProjectRow({
   onCancelReordering,
   onStartMerge,
   onStartSplit,
+  onCloneTasks,
   selectedTaskCount,
 }) {
   const { t } = useTranslation(['planning', 'common']);
   const metrics = useMemo(() => getFilteredMetrics(project), [project]);
   const variance = useMemo(() => metrics.delta, [metrics]);
   const { minDate, maxDate } = useMemo(() => getProjectDateRange(project), [project]);
+
+  const summaryBarPosition = useMemo(() => {
+    if (!showTimeline || !minDate || !maxDate || !dateRange || dateRange.length === 0) return null;
+
+    const rangeStartISO = formatDateISO(dateRange[0]);
+    const rangeEndISO = formatDateISO(dateRange[dateRange.length - 1]);
+    const projStart = formatDateISO(new Date(minDate));
+    const projEnd = formatDateISO(new Date(maxDate));
+
+    if (projEnd < rangeStartISO || projStart > rangeEndISO) return null;
+
+    const clampedStart = projStart < rangeStartISO ? rangeStartISO : projStart;
+    const clampedEnd = projEnd > rangeEndISO ? rangeEndISO : projEnd;
+
+    const startDate = new Date(clampedStart);
+    const rangeStart = new Date(dateRange[0]);
+    rangeStart.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+    const dayOffset = Math.round((startDate - rangeStart) / (1000 * 60 * 60 * 24));
+
+    const endDate = new Date(clampedEnd);
+    endDate.setHours(0, 0, 0, 0);
+    const durationDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    const left = dayOffset * columnWidth;
+    const width = Math.max(durationDays * columnWidth, 4);
+
+    const isStartClipped = projStart < rangeStartISO;
+    const isEndClipped = projEnd > rangeEndISO;
+
+    return { left, width, isStartClipped, isEndClipped };
+  }, [showTimeline, minDate, maxDate, dateRange, columnWidth]);
 
   const formattedBudget = useMemo(() => formatHours(metrics.budget, showInDays), [metrics.budget, showInDays]);
   const formattedActual = useMemo(() => formatHours(metrics.actual, showInDays), [metrics.actual, showInDays]);
@@ -146,6 +180,16 @@ export const ProjectRow = memo(function ProjectRow({
                       <Scissors size={14} />
                     </button>
                   )}
+                  {selectedTaskCount >= 1 && (
+                    <button
+                      onClick={() => onCloneTasks(project.project_id)}
+                      onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:cloneActivities') })}
+                      onMouseLeave={onLabelTooltipLeave}
+                      className="p-1 rounded text-gray-400 hover:text-cyan-600 hover:bg-gray-200 transition-colors"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  )}
                   <button
                     onClick={() => handleStartAddingTask(project.project_id)}
                     onMouseEnter={(e) => onLabelTooltipHover?.(e, { text: t('planning:addActivity') })}
@@ -169,12 +213,29 @@ export const ProjectRow = memo(function ProjectRow({
           {/* Empty compact user cell */}
           <td className="border-b border-r border-gray-300 px-1 py-2 bg-gray-100 group-hover:bg-gray-200" />
 
-          {/* Single timeline cell (no summary bar) */}
+          {/* Timeline cell with project summary bar */}
           <td
             className="border-b border-gray-200 p-0 bg-gray-100 group-hover:bg-gray-200"
             style={{ width: timelineWidth }}
           >
             <div className="relative" style={{ width: timelineWidth, height: 24 }}>
+              {/* Project summary bar */}
+              {summaryBarPosition && (
+                <div
+                  className="absolute top-1 pointer-events-none"
+                  style={{
+                    left: summaryBarPosition.left,
+                    width: summaryBarPosition.width,
+                    height: 16,
+                    backgroundColor: project.symbol_bg_color || project.client_color || '#6366F1',
+                    opacity: 0.7,
+                    borderRadius:
+                      summaryBarPosition.isStartClipped && summaryBarPosition.isEndClipped ? '0' :
+                      summaryBarPosition.isStartClipped ? '0 4px 4px 0' :
+                      summaryBarPosition.isEndClipped ? '4px 0 0 4px' : '4px',
+                  }}
+                />
+              )}
               {/* Today line */}
               {todayLineOffset !== null && (
                 <div

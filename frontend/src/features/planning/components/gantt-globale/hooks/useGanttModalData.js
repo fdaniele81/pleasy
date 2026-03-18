@@ -1,10 +1,27 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { useGetHolidaysQuery } from '../../../../holidays/api/holidayEndpoints';
 import { useGetFteReportQuery } from '../../../api/taskEndpoints';
 import { useGetGanttDailyTimeOffsQuery } from '../../../../timesheet/api/timesheetEndpoints';
 import { formatDateISO } from '../../../../../utils/date/dateUtils';
 import { useLocale } from '../../../../../hooks/useLocale';
+import {
+  toggleExpandedUser as toggleExpandedUserAction,
+  toggleExcludedTask as toggleExcludedTaskAction,
+  setTimeInterval as setTimeIntervalAction,
+  setDateOffset as setDateOffsetAction,
+  setEtcReferenceDate as setEtcReferenceDateAction,
+  setPosition as setPositionAction,
+} from '../../../../../store/slices/ganttModalSlice';
+import {
+  selectExpandedUsers,
+  selectExcludedTasks,
+  selectTimeInterval,
+  selectDateOffset,
+  selectEtcReferenceDate,
+  selectPosition,
+} from '../../../../../store/selectors/ganttModalSelectors';
 
 const NUM_COLUMNS = 14;
 
@@ -25,16 +42,24 @@ const getEventCoordinates = (e) => {
 export function useGanttModalData({ isOpen, projects, filterUserIds = [], refreshTrigger = 0 }) {
   const { t } = useTranslation('planning');
   const locale = useLocale();
+  const dispatch = useDispatch();
   const { data: holidays = [] } = useGetHolidaysQuery();
-  const [expandedUsers, setExpandedUsers] = useState({});
-  const [excludedTasks, setExcludedTasks] = useState({});
-  const [timeInterval, setTimeInterval] = useState(12);
-  const [dateOffset, setDateOffset] = useState(0);
-  const [etcReferenceDate, setEtcReferenceDate] = useState(() => formatDateISO(new Date()));
+
+  // Persistent state from Redux
+  const expandedUsers = useSelector(selectExpandedUsers);
+  const excludedTasks = useSelector(selectExcludedTasks);
+  const timeInterval = useSelector(selectTimeInterval);
+  const dateOffset = useSelector(selectDateOffset);
+  const etcReferenceDate = useSelector(selectEtcReferenceDate);
+  const position = useSelector(selectPosition);
+
+  const setTimeInterval = useCallback((value) => dispatch(setTimeIntervalAction(value)), [dispatch]);
+  const setEtcReferenceDate = useCallback((value) => dispatch(setEtcReferenceDateAction(value)), [dispatch]);
+
+  // Local-only state (transient UI)
   const [hoveredPeriod, setHoveredPeriod] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0, isLeft: false });
   const tooltipTimeoutRef = useRef(null);
-  const [position, setPosition] = useState({ x: 20, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const width = 1000;
@@ -77,7 +102,6 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
     { skip: !isOpen || !projects || projects.length === 0 }
   );
 
-  useEffect(() => { setDateOffset(0); }, [timeInterval]);
   useEffect(() => { if (isOpen) { setHeight(null); } }, [isOpen]);
 
   const visibleUserIds = useMemo(() => {
@@ -212,12 +236,12 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
   }, [fteReportData, allUsersTimeOffs, filterUserIds, visibleUserIds, excludedTasks]);
 
   const handleToggleUser = useCallback((userId) => {
-    setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }));
-  }, []);
+    dispatch(toggleExpandedUserAction(userId));
+  }, [dispatch]);
 
   const handleToggleTaskExclusion = useCallback((taskId) => {
-    setExcludedTasks(prev => ({ ...prev, [taskId]: !prev[taskId] }));
-  }, []);
+    dispatch(toggleExcludedTaskAction(taskId));
+  }, [dispatch]);
 
   const handleTooltipHover = useCallback((event, userId, periodIdx) => {
     if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
@@ -272,17 +296,17 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
   const handlePrevious = useCallback(() => {
     if (dateOffset <= minDateOffset) return;
     const totalDays = timeInterval * 7;
-    setDateOffset(prev => Math.max(minDateOffset, prev - totalDays));
-  }, [dateOffset, minDateOffset, timeInterval]);
+    dispatch(setDateOffsetAction(Math.max(minDateOffset, dateOffset - totalDays)));
+  }, [dateOffset, minDateOffset, timeInterval, dispatch]);
 
   const handleNext = useCallback(() => {
     const totalDays = timeInterval * 7;
-    setDateOffset(prev => prev + totalDays);
-  }, [timeInterval]);
+    dispatch(setDateOffsetAction(dateOffset + totalDays));
+  }, [dateOffset, timeInterval, dispatch]);
 
   const handleGoToEtcRef = useCallback(() => {
-    setDateOffset(minDateOffset);
-  }, [minDateOffset]);
+    dispatch(setDateOffsetAction(minDateOffset));
+  }, [minDateOffset, dispatch]);
 
   const handleMouseDown = useCallback((e) => {
     if (e.target.closest('.gantt-drag-handle')) {
@@ -302,14 +326,14 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (isDragging) {
-        setPosition({ x: e.clientX - dragOffset.x, y: Math.max(0, e.clientY - dragOffset.y) });
+        dispatch(setPositionAction({ x: e.clientX - dragOffset.x, y: Math.max(0, e.clientY - dragOffset.y) }));
       }
     };
     const handleTouchMove = (e) => {
       if (isDragging) {
         e.preventDefault();
         const coords = getEventCoordinates(e);
-        setPosition({ x: coords.x - dragOffset.x, y: Math.max(0, coords.y - dragOffset.y) });
+        dispatch(setPositionAction({ x: coords.x - dragOffset.x, y: Math.max(0, coords.y - dragOffset.y) }));
       }
     };
     const handleMouseUp = () => { setIsDragging(false); };
@@ -326,7 +350,7 @@ export function useGanttModalData({ isOpen, projects, filterUserIds = [], refres
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, dragOffset, dispatch]);
 
   return {
     t, holidays, allUsersTimeOffs, fteData,

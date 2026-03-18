@@ -71,7 +71,7 @@ const GanttModal = ({ isOpen, onClose, projects, filterUserIds = [], refreshTrig
   return (
     <div
       ref={panelRef}
-      className="fixed bg-white rounded-lg shadow-2xl border-2 border-gray-300 flex flex-col z-50"
+      className="fixed bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-50"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,

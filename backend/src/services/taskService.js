@@ -181,6 +181,7 @@ async function getPMPlanning(user) {
           external_key: row.external_key,
           title: row.task_title,
           description: row.task_description,
+          task_details: row.task_details || null,
           task_status_id: row.task_status_id,
           owner_id: row.owner_id,
           owner_name: row.owner_name,

@@ -45,6 +45,7 @@ jobs:
     name: Deploy to VPS (Staging)
     runs-on: ubuntu-latest
     needs: build-and-push
+    environment: Staging
 
     steps:
       - name: Checkout repository

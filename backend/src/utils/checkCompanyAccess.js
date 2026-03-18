@@ -1,7 +1,6 @@
 export default function checkCompanyAccess(user, targetCompanyId, options = {}) {
   const { allowMissing = false } = options;
 
-  // Ricomoplia
   if (!targetCompanyId) {
     if (allowMissing) {
       return;

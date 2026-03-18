@@ -4,16 +4,5 @@
   "assets": {
     "directory": "./frontend/dist",
     "not_found_handling": "single-page-application"
-  },
-  "env": {
-    "staging": {
-      "name": "pleasy-staging",
-      "routes": [
-        {
-          "pattern": "test.pleasyhub.com/*",
-          "zone_name": "pleasyhub.com"
-        }
-      ]
-    }
   }
 }

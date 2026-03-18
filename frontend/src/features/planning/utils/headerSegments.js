@@ -13,7 +13,7 @@ export function computeHeaderSegments(dateRange, timeInterval, locale = 'it-IT')
 
   const todayISO = formatDateISO(new Date());
 
-  if (timeInterval <= 2) {
+  if (timeInterval <= 4) {
     return dateRange.map((date, idx) => ({
       label: formatDayLabel(date, locale),
       colSpan: 1,
@@ -103,8 +103,12 @@ function groupByMonth(dateRange, locale, todayISO, timeInterval) {
  * Returns [{ label, pixelOffset, daysInRange }] — one entry per month boundary in the range.
  * daysInRange indicates how many days of that month are visible.
  */
-export function computeMonthMarkers(dateRange, pixelsPerDay, locale = 'it-IT') {
+export function computeMonthMarkers(dateRange, pixelsPerDayOrGetLeft, locale = 'it-IT') {
   if (!dateRange || dateRange.length === 0) return [];
+
+  const getLeft = typeof pixelsPerDayOrGetLeft === 'function'
+    ? pixelsPerDayOrGetLeft
+    : (idx) => idx * pixelsPerDayOrGetLeft;
 
   const markers = [];
   let currentMonth = -1;
@@ -118,7 +122,7 @@ export function computeMonthMarkers(dateRange, pixelsPerDay, locale = 'it-IT') {
       currentYear = year;
       markers.push({
         label: date.toLocaleDateString(locale, { month: 'short' }),
-        pixelOffset: idx * pixelsPerDay,
+        pixelOffset: getLeft(idx),
         startIdx: idx,
       });
     }
@@ -132,4 +136,46 @@ export function computeMonthMarkers(dateRange, pixelsPerDay, locale = 'it-IT') {
   }
 
   return markers;
+}
+
+/**
+ * Day-of-week single-letter abbreviations.
+ * Italian: L M M G V S D (Lunedì..Domenica)
+ * English: M T W T F S S (Monday..Sunday)
+ */
+const DAY_LETTERS = {
+  'it-IT': ['D', 'L', 'M', 'M', 'G', 'V', 'S'],
+  'en-US': ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+};
+
+export function getDayLetter(date, locale = 'it-IT') {
+  const letters = DAY_LETTERS[locale] || DAY_LETTERS['it-IT'];
+  return letters[date.getDay()];
+}
+
+/**
+ * Computes month spans for the calendar-grid top row.
+ * Returns [{ label, days }] — one per visible month segment.
+ */
+export function computeMonthSpans(dateRange, locale = 'it-IT') {
+  if (!dateRange || dateRange.length === 0) return [];
+  const spans = [];
+  let current = null;
+
+  dateRange.forEach((date) => {
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    if (!current || current.key !== key) {
+      if (current) spans.push(current);
+      current = {
+        key,
+        label: date.toLocaleDateString(locale, { month: 'short' }),
+        days: 1,
+      };
+    } else {
+      current.days++;
+    }
+  });
+
+  if (current) spans.push(current);
+  return spans;
 }

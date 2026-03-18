@@ -17,9 +17,12 @@ export const ProjectRow = memo(function ProjectRow({
   showTimeline,
   dateRange,
   columnWidth,
+  columnWidths,
+  getColumnLeft,
   timelineWidth,
   todayLineOffset,
   getDateInfo,
+  isCalendarGrid,
   onLabelTooltipHover,
   onLabelTooltipLeave,
   reorderingProjectId,
@@ -59,14 +62,14 @@ export const ProjectRow = memo(function ProjectRow({
     endDate.setHours(0, 0, 0, 0);
     const durationDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-    const left = dayOffset * columnWidth;
-    const width = Math.max(durationDays * columnWidth, 4);
+    const left = getColumnLeft(dayOffset);
+    const width = Math.max(getColumnLeft(dayOffset + durationDays) - left, 4);
 
     const isStartClipped = projStart < rangeStartISO;
     const isEndClipped = projEnd > rangeEndISO;
 
     return { left, width, isStartClipped, isEndClipped };
-  }, [showTimeline, minDate, maxDate, dateRange, columnWidth]);
+  }, [showTimeline, minDate, maxDate, dateRange, getColumnLeft]);
 
   const formattedBudget = useMemo(() => formatHours(metrics.budget, showInDays), [metrics.budget, showInDays]);
   const formattedActual = useMemo(() => formatHours(metrics.actual, showInDays), [metrics.actual, showInDays]);
@@ -90,7 +93,7 @@ export const ProjectRow = memo(function ProjectRow({
 
       {/* Project title - colSpan changes based on timeline mode */}
       <td
-        colSpan={showTimeline ? 1 : 4}
+        colSpan={showTimeline ? 3 : 4}
         className="border-b border-r border-gray-300 px-1.5 py-2 bg-gray-100 group-hover:bg-gray-200"
       >
         <div className="flex items-center justify-between gap-2">
@@ -207,18 +210,21 @@ export const ProjectRow = memo(function ProjectRow({
 
       {showTimeline ? (
         <>
-          {/* Empty compact status cell */}
-          <td className="border-b border-r border-gray-300 px-1 py-2 bg-gray-100 group-hover:bg-gray-200" />
-
-          {/* Empty compact user cell */}
-          <td className="border-b border-r border-gray-300 px-1 py-2 bg-gray-100 group-hover:bg-gray-200" />
-
           {/* Timeline cell with project summary bar */}
           <td
             className="border-b border-gray-200 p-0 bg-gray-100 group-hover:bg-gray-200"
             style={{ width: timelineWidth }}
           >
-            <div className="relative" style={{ width: timelineWidth, height: 24 }}>
+            <div
+              className="relative"
+              style={{
+                width: timelineWidth,
+                height: 24,
+              }}
+            >
+              {isCalendarGrid && columnWidths && columnWidths.map((_, i) => (
+                <div key={i} className="absolute top-0 bottom-0" style={{ left: getColumnLeft(i + 1), width: 1, backgroundColor: 'rgba(0,0,0,0.04)' }} />
+              ))}
               {/* Project summary bar */}
               {summaryBarPosition && (
                 <div
@@ -234,13 +240,6 @@ export const ProjectRow = memo(function ProjectRow({
                       summaryBarPosition.isStartClipped ? '0 4px 4px 0' :
                       summaryBarPosition.isEndClipped ? '4px 0 0 4px' : '4px',
                   }}
-                />
-              )}
-              {/* Today line */}
-              {todayLineOffset !== null && (
-                <div
-                  className="absolute top-0 bottom-0 border-l-2 border-dashed border-orange-400/40 pointer-events-none z-10"
-                  style={{ left: todayLineOffset }}
                 />
               )}
             </div>

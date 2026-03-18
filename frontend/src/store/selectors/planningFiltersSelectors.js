@@ -67,6 +67,11 @@ export const selectShowTimeline = createSelector(
   (filters) => filters.showTimeline
 );
 
+export const selectTimeInterval = createSelector(
+  [selectPlanningFiltersState],
+  (filters) => filters.timeInterval
+);
+
 export const selectExpandedProjects = createSelector(
   [selectPlanningFiltersState],
   (filters) => filters.expandedProjects

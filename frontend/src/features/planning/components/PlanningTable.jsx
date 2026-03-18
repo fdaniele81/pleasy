@@ -1,7 +1,7 @@
 import React, { memo, useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Briefcase, FolderKanban, ListTodo, GripVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Briefcase, FolderKanban, ListTodo, GripVertical } from 'lucide-react';
 import { ProjectRow } from "./ProjectRow";
 import { TaskRow } from "./TaskRow";
 import useTableDateHelpers from "../../../shared/ui/table/useTableDateHelpers";
@@ -18,7 +18,7 @@ import {
   isValidDate,
   getGrandTotals,
 } from "../utils/helpers";
-import { computeMonthMarkers } from "../utils/headerSegments";
+import { computeMonthMarkers, computeMonthSpans, getDayLetter } from "../utils/headerSegments";
 import { useLocale } from "../../../hooks/useLocale";
 
 export const PlanningTable = memo(function PlanningTable({
@@ -49,6 +49,8 @@ export const PlanningTable = memo(function PlanningTable({
   refetchPlanning,
   dateRange,
   columnWidth,
+  columnWidths,
+  getColumnLeft,
   timelineWidth,
   todayLineOffset,
   setAvailableWidth,
@@ -57,6 +59,8 @@ export const PlanningTable = memo(function PlanningTable({
   setTimeInterval,
   goToPrevious,
   goToNext,
+  goToPreviousDay,
+  goToNextDay,
   goToToday,
   isAtToday,
   periodLabel,
@@ -119,24 +123,33 @@ export const PlanningTable = memo(function PlanningTable({
   }, []);
 
   const monthMarkers = useMemo(
-    () => computeMonthMarkers(dateRange, columnWidth, locale),
-    [dateRange, columnWidth, locale]
+    () => computeMonthMarkers(dateRange, getColumnLeft, locale),
+    [dateRange, getColumnLeft, locale]
+  );
+
+  const isCalendarGrid = timeInterval <= 4;
+
+  const monthSpans = useMemo(
+    () => isCalendarGrid ? computeMonthSpans(dateRange, locale) : [],
+    [isCalendarGrid, dateRange, locale]
   );
 
   // Measure available width for adaptive column sizing
   const containerRef = useRef(null);
+
+  // Fixed columns width: expand 32 + project 288/328 + status 64 + user 56
+  const timelineLeft = useMemo(() => hideProjectHeaders ? 480 : 440, [hideProjectHeaders]);
+
   useEffect(() => {
     if (!showTimeline || !containerRef.current || !setAvailableWidth) return;
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        // Subtract fixed columns width (~350px: expand 32 + project 200 + status 64 + user 56)
-        const fixedWidth = 352;
-        setAvailableWidth(Math.max(200, entry.contentRect.width - fixedWidth));
+        setAvailableWidth(Math.max(200, entry.contentRect.width - timelineLeft));
       }
     });
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [showTimeline, setAvailableWidth]);
+  }, [showTimeline, setAvailableWidth, timelineLeft]);
 
   const allExpanded = useMemo(() =>
     filteredProjects.every((p) => expandedProjects[p.project_id]),
@@ -188,7 +201,7 @@ export const PlanningTable = memo(function PlanningTable({
 
   return (
     <TableContainer maxHeight="calc(100vh - 300px)" overflowX={showTimeline ? 'hidden' : 'auto'}>
-      <div ref={containerRef}>
+      <div ref={containerRef} className="relative">
         <table className={`w-full border-separate border-spacing-0 ${showTimeline ? 'table-fixed' : 'table-fixed'}`}>
           <thead>
             {showTimeline ? (
@@ -204,7 +217,7 @@ export const PlanningTable = memo(function PlanningTable({
                       color="white"
                     />
                   </th>
-                  <th className={`border-t border-r border-gray-300 px-2 py-2 text-left font-semibold bg-cyan-700 ${hideProjectHeaders ? 'w-[320px] max-w-[320px]' : 'w-[280px] max-w-[280px]'}`}>
+                  <th className={`border-t border-r border-gray-300 px-2 py-2 text-left font-semibold bg-cyan-700 ${hideProjectHeaders ? 'w-[328px] max-w-[328px]' : 'w-[288px] max-w-[288px]'}`}>
                     {t('planning:projectActivity')}
                   </th>
                   <th className="border-t border-r border-gray-300 px-1 py-2 text-center font-semibold w-16 bg-cyan-700">
@@ -224,7 +237,8 @@ export const PlanningTable = memo(function PlanningTable({
                         className="border border-cyan-500 rounded px-1.5 py-0.5 text-[10px] font-medium bg-cyan-800 text-white hover:bg-cyan-600 focus:outline-none focus:ring-1 focus:ring-cyan-400 cursor-pointer"
                       >
                         <option value={2}>{t('planning:ganttInterval2w')}</option>
-                        <option value={4}>{t('planning:ganttInterval1m')}</option>
+                        <option value={3}>{t('planning:ganttInterval3w')}</option>
+                        <option value={4}>{t('planning:ganttInterval4w')}</option>
                         <option value={13}>{t('planning:ganttInterval3m')}</option>
                         <option value={26}>{t('planning:ganttInterval6m')}</option>
                         <option value={52}>{t('planning:ganttInterval1y')}</option>
@@ -233,6 +247,15 @@ export const PlanningTable = memo(function PlanningTable({
                         type="button"
                         onClick={goToPrevious}
                         className="p-0.5 rounded border border-cyan-500 text-white hover:bg-cyan-600 transition-colors"
+                        title={t('planning:timelinePrevWeek')}
+                      >
+                        <ChevronsLeft size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={goToPreviousDay}
+                        className="p-0.5 rounded border border-cyan-500 text-white hover:bg-cyan-600 transition-colors"
+                        title={t('planning:timelinePrevDay')}
                       >
                         <ChevronLeft size={14} />
                       </button>
@@ -250,10 +273,19 @@ export const PlanningTable = memo(function PlanningTable({
                       </button>
                       <button
                         type="button"
-                        onClick={goToNext}
+                        onClick={goToNextDay}
                         className="p-0.5 rounded border border-cyan-500 text-white hover:bg-cyan-600 transition-colors"
+                        title={t('planning:timelineNextDay')}
                       >
                         <ChevronRight size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={goToNext}
+                        className="p-0.5 rounded border border-cyan-500 text-white hover:bg-cyan-600 transition-colors"
+                        title={t('planning:timelineNextWeek')}
+                      >
+                        <ChevronsRight size={14} />
                       </button>
                       <span className="text-[10px] font-semibold text-cyan-100 whitespace-nowrap">
                         {periodLabel}
@@ -330,30 +362,85 @@ export const PlanningTable = memo(function PlanningTable({
                   {t('planning:period').toUpperCase()}
                 </TotalsRow.Cell>
                 <TotalsRow.Cell className="p-0 bg-cyan-700 overflow-hidden">
-                  <div className="relative h-5" style={{ width: timelineWidth }}>
-                    {monthMarkers.map((marker, idx) => (
-                      <React.Fragment key={idx}>
-                        <div
-                          className="absolute top-0 bottom-0 border-l border-cyan-500"
-                          style={{ left: marker.pixelOffset }}
-                        />
-                        {marker.daysInRange >= 7 && (
-                          <span
-                            className="absolute text-[10px] font-medium text-white whitespace-nowrap capitalize"
-                            style={{ left: marker.pixelOffset + 6, top: 2 }}
-                          >
-                            {marker.label}
-                          </span>
-                        )}
-                      </React.Fragment>
-                    ))}
-                    {todayLineOffset !== null && (
-                      <div
-                        className="absolute top-0 bottom-0 border-l-2 border-dashed border-orange-400 pointer-events-none"
-                        style={{ left: todayLineOffset }}
-                      />
-                    )}
-                  </div>
+                  {isCalendarGrid ? (
+                    <div style={{ width: timelineWidth }}>
+                      {/* Month name spans */}
+                      <div className="flex" style={{ height: 16 }}>
+                        {(() => {
+                          let dayIdx = 0;
+                          return monthSpans.map((span, idx) => {
+                            let spanWidth = 0;
+                            for (let i = 0; i < span.days; i++) {
+                              spanWidth += columnWidths[dayIdx + i] || columnWidth;
+                            }
+                            dayIdx += span.days;
+                            return (
+                              <div
+                                key={idx}
+                                className="text-[9px] font-semibold text-cyan-200 text-center capitalize border-r border-cyan-500 leading-[16px]"
+                                style={{ width: spanWidth }}
+                              >
+                                {span.label}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                      {/* Day cells: number + weekday letter */}
+                      <div className="flex relative" style={{ height: 22 }}>
+                        {(() => {
+                          // Pre-compute today's column index once
+                          let todayDayIdx = -1;
+                          if (todayLineOffset !== null) {
+                            for (let i = 0; i < dateRange.length; i++) {
+                              const left = getColumnLeft(i);
+                              if (todayLineOffset >= left && todayLineOffset < left + (columnWidths[i] || columnWidth)) {
+                                todayDayIdx = i;
+                                break;
+                              }
+                            }
+                          }
+                          return dateRange.map((date, idx) => {
+                          const info = getDateInfo(date);
+                          const isToday = todayDayIdx === idx;
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex flex-col items-center justify-center leading-none border-r border-cyan-600 relative ${
+                                info.isNonWorking ? 'bg-cyan-800/50' : ''
+                              }`}
+                              style={{ width: columnWidths[idx] || columnWidth }}
+                            >
+                              <span className="text-[9px] font-semibold text-white">{date.getDate()}</span>
+                              <span className={`text-[8px] ${info.isNonWorking ? 'text-cyan-400' : 'text-cyan-200'}`}>
+                                {getDayLetter(date, locale)}
+                              </span>
+                            </div>
+                          );
+                        });
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative h-5" style={{ width: timelineWidth }}>
+                      {monthMarkers.map((marker, idx) => (
+                        <React.Fragment key={idx}>
+                          <div
+                            className="absolute top-0 bottom-0 border-l border-cyan-500"
+                            style={{ left: marker.pixelOffset }}
+                          />
+                          {marker.daysInRange >= 7 && (
+                            <span
+                              className="absolute text-[10px] font-medium text-white whitespace-nowrap capitalize"
+                              style={{ left: marker.pixelOffset + 6, top: 2 }}
+                            >
+                              {marker.label}
+                            </span>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
                 </TotalsRow.Cell>
               </TotalsRow>
             ) : (
@@ -469,9 +556,12 @@ export const PlanningTable = memo(function PlanningTable({
                     showTimeline={showTimeline}
                     dateRange={dateRange}
                     columnWidth={columnWidth}
+                    columnWidths={columnWidths}
+                    getColumnLeft={getColumnLeft}
                     timelineWidth={timelineWidth}
                     todayLineOffset={todayLineOffset}
                     getDateInfo={getDateInfo}
+                    isCalendarGrid={isCalendarGrid}
                     onLabelTooltipHover={showLabelTooltip}
                     onLabelTooltipLeave={hideLabelTooltip}
                     reorderingProjectId={reorderingProjectId}
@@ -518,9 +608,12 @@ export const PlanningTable = memo(function PlanningTable({
                         showTimeline={showTimeline}
                         dateRange={dateRange}
                         columnWidth={columnWidth}
+                        columnWidths={columnWidths}
+                        getColumnLeft={getColumnLeft}
                         timelineWidth={timelineWidth}
                         todayLineOffset={todayLineOffset}
                         getDateInfo={getDateInfo}
+                        isCalendarGrid={isCalendarGrid}
                         pushUndo={pushUndo}
                         refetchPlanning={refetchPlanning}
                         onLabelTooltipHover={showLabelTooltip}
@@ -537,6 +630,28 @@ export const PlanningTable = memo(function PlanningTable({
             ))}
           </tbody>
         </table>
+
+        {/* Continuous overlay for non-working days, today column and today line */}
+        {showTimeline && (
+          <div
+            className="absolute top-0 bottom-0 pointer-events-none"
+            style={{ left: timelineLeft, width: timelineWidth, zIndex: 15 }}
+          >
+            {isCalendarGrid && dateRange.flatMap((date, i) => {
+              const info = getDateInfo(date);
+              const elems = [];
+              if (info.isNonWorking) {
+                elems.push(
+                  <div key={`nw-${i}`} className="absolute top-0 bottom-0" style={{ left: getColumnLeft(i), width: columnWidths[i] || columnWidth, backgroundColor: 'rgba(156,163,175,0.15)' }} />
+                );
+              }
+              return elems;
+            })}
+            {todayLineOffset !== null && (
+              <div className="absolute top-0 bottom-0" style={{ left: todayLineOffset, width: 2, backgroundColor: '#EF4444' }} />
+            )}
+          </div>
+        )}
       </div>
 
       {labelTooltip && createPortal(

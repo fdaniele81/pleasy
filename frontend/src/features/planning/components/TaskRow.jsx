@@ -38,9 +38,12 @@ export const TaskRow = memo(function TaskRow({
   showTimeline,
   dateRange,
   columnWidth,
+  columnWidths,
+  getColumnLeft,
   timelineWidth,
   todayLineOffset,
   getDateInfo,
+  isCalendarGrid,
   pushUndo,
   refetchPlanning,
   onLabelTooltipHover,
@@ -179,14 +182,14 @@ export const TaskRow = memo(function TaskRow({
     endDate.setHours(0, 0, 0, 0);
     const durationDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-    const left = dayOffset * columnWidth;
-    const width = durationDays * columnWidth;
+    const left = getColumnLeft(dayOffset);
+    const width = getColumnLeft(dayOffset + durationDays) - left;
 
     const isStartClipped = visualStart < rangeStartISO;
     const isEndClipped = visualEnd > rangeEndISO;
 
     return { left, width: Math.max(width, 4), isStartClipped, isEndClipped };
-  }, [visualStart, visualEnd, dateRange, columnWidth]);
+  }, [visualStart, visualEnd, dateRange, getColumnLeft]);
 
   // Determine drag mode from mouse position within the bar
   const handleBarMouseDown = useCallback((e) => {
@@ -370,14 +373,16 @@ export const TaskRow = memo(function TaskRow({
             className="border-b border-gray-200 p-0"
             style={{ width: timelineWidth }}
           >
-            <div className="relative" style={{ width: timelineWidth, height: 24 }}>
-              {/* Today line */}
-              {todayLineOffset !== null && (
-                <div
-                  className="absolute top-0 bottom-0 border-l-2 border-dashed border-orange-400/60 pointer-events-none z-10"
-                  style={{ left: todayLineOffset }}
-                />
-              )}
+            <div
+              className="relative"
+              style={{
+                width: timelineWidth,
+                height: 24,
+              }}
+            >
+              {isCalendarGrid && columnWidths && columnWidths.map((_, i) => (
+                <div key={i} className="absolute top-0 bottom-0" style={{ left: getColumnLeft(i + 1), width: 1, backgroundColor: 'rgba(0,0,0,0.04)' }} />
+              ))}
 
               {/* Task bar + ETC label */}
               {barPosition && (() => {

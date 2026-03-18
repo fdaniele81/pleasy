@@ -30,7 +30,8 @@ const GanttHeader = ({
           className="border border-gray-200 rounded-md px-2 py-0.5 text-xs font-medium text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
         >
           <option value="2">{t('ganttInterval2w')}</option>
-          <option value="4">{t('ganttInterval1m')}</option>
+          <option value="3">{t('ganttInterval3w')}</option>
+          <option value="4">{t('ganttInterval4w')}</option>
           <option value="12">{t('ganttInterval3m')}</option>
           <option value="24">{t('ganttInterval6m')}</option>
           <option value="48">{t('ganttInterval1y')}</option>

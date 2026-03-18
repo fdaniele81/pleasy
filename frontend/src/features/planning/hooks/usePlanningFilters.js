@@ -14,6 +14,7 @@ import {
   setHideProjectHeaders as setHideProjectHeadersAction,
   setShowInDays as setShowInDaysAction,
   setShowTimeline as setShowTimelineAction,
+  setTimeInterval as setTimeIntervalAction,
   setExpandedProjects as setExpandedProjectsAction,
   toggleExpandedProject as toggleExpandedProjectAction,
   mergeExpandedProjects as mergeExpandedProjectsAction,
@@ -32,6 +33,7 @@ import {
   selectHideProjectHeaders,
   selectShowInDays,
   selectShowTimeline,
+  selectTimeInterval,
   selectExpandedProjects,
 } from '../../../store/selectors/planningFiltersSelectors';
 
@@ -51,6 +53,7 @@ export function usePlanningFilters() {
   const hideProjectHeaders = useSelector(selectHideProjectHeaders);
   const showInDays = useSelector(selectShowInDays);
   const showTimeline = useSelector(selectShowTimeline);
+  const timeInterval = useSelector(selectTimeInterval);
   const expandedProjects = useSelector(selectExpandedProjects);
 
   const setSearchTerm = useCallback((value) => dispatch(setSearchTermAction(value)), [dispatch]);
@@ -66,6 +69,7 @@ export function usePlanningFilters() {
   const setHideProjectHeaders = useCallback((value) => dispatch(setHideProjectHeadersAction(value)), [dispatch]);
   const setShowInDays = useCallback((value) => dispatch(setShowInDaysAction(value)), [dispatch]);
   const setShowTimeline = useCallback((value) => dispatch(setShowTimelineAction(value)), [dispatch]);
+  const setTimeInterval = useCallback((value) => dispatch(setTimeIntervalAction(value)), [dispatch]);
   const setExpandedProjects = useCallback((value) => dispatch(setExpandedProjectsAction(value)), [dispatch]);
   const toggleExpandedProject = useCallback((projectId) => dispatch(toggleExpandedProjectAction(projectId)), [dispatch]);
   const mergeExpandedProjects = useCallback((value) => dispatch(mergeExpandedProjectsAction(value)), [dispatch]);
@@ -84,6 +88,7 @@ export function usePlanningFilters() {
     hideProjectHeaders,
     showInDays,
     showTimeline,
+    timeInterval,
     expandedProjects,
 
     setSearchTerm,
@@ -99,6 +104,7 @@ export function usePlanningFilters() {
     setHideProjectHeaders,
     setShowInDays,
     setShowTimeline,
+    setTimeInterval,
     setExpandedProjects,
     toggleExpandedProject,
     mergeExpandedProjects,

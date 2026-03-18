@@ -14,6 +14,7 @@ const initialState = {
   hideProjectHeaders: false,
   showInDays: false,
   showTimeline: false,
+  timeInterval: 4,
   expandedProjects: {},
 };
 
@@ -60,6 +61,9 @@ const planningFiltersSlice = createSlice({
     setShowTimeline: (state, action) => {
       state.showTimeline = action.payload;
     },
+    setTimeInterval: (state, action) => {
+      state.timeInterval = action.payload;
+    },
     setExpandedProjects: (state, action) => {
       state.expandedProjects = action.payload;
     },
@@ -88,6 +92,7 @@ export const {
   setHideProjectHeaders,
   setShowInDays,
   setShowTimeline,
+  setTimeInterval,
   setExpandedProjects,
   toggleExpandedProject,
   mergeExpandedProjects,

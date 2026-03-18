@@ -55,17 +55,6 @@ function Pianificazione() {
     refetchPlanning,
   } = planningData;
 
-  const timelinePeriod = useTimelinePeriod();
-
-  const selectedTasks = useSelector(selectSelectedTasks);
-  const setSelectedTasks = useCallback((valOrFn) => {
-    if (typeof valOrFn === 'function') {
-      dispatch(setSelectedTasksAction(valOrFn(selectedTasks)));
-    } else {
-      dispatch(setSelectedTasksAction(valOrFn));
-    }
-  }, [dispatch, selectedTasks]);
-
   const {
     searchTerm,
     filterUserIds,
@@ -93,10 +82,23 @@ function Pianificazione() {
     setHideProjectHeaders,
     setShowInDays,
     setShowTimeline,
+    timeInterval,
+    setTimeInterval: setTimeIntervalFilter,
     expandedProjects,
     toggleExpandedProject,
     mergeExpandedProjects,
   } = usePlanningFilters();
+
+  const timelinePeriod = useTimelinePeriod({ timeInterval, setTimeInterval: setTimeIntervalFilter });
+
+  const selectedTasks = useSelector(selectSelectedTasks);
+  const setSelectedTasks = useCallback((valOrFn) => {
+    if (typeof valOrFn === 'function') {
+      dispatch(setSelectedTasksAction(valOrFn(selectedTasks)));
+    } else {
+      dispatch(setSelectedTasksAction(valOrFn));
+    }
+  }, [dispatch, selectedTasks]);
 
   const [ganttRefreshTrigger, setGanttRefreshTrigger] = useState(0);
 
@@ -621,6 +623,8 @@ function Pianificazione() {
             refetchPlanning={refetchPlanning}
             dateRange={timelinePeriod.dateRange}
             columnWidth={timelinePeriod.columnWidth}
+            columnWidths={timelinePeriod.columnWidths}
+            getColumnLeft={timelinePeriod.getColumnLeft}
             timelineWidth={timelinePeriod.timelineWidth}
             todayLineOffset={timelinePeriod.todayLineOffset}
             setAvailableWidth={timelinePeriod.setAvailableWidth}
@@ -629,6 +633,8 @@ function Pianificazione() {
             setTimeInterval={timelinePeriod.setTimeInterval}
             goToPrevious={timelinePeriod.goToPrevious}
             goToNext={timelinePeriod.goToNext}
+            goToPreviousDay={timelinePeriod.goToPreviousDay}
+            goToNextDay={timelinePeriod.goToNextDay}
             goToToday={timelinePeriod.goToToday}
             isAtToday={timelinePeriod.isAtToday}
             periodLabel={timelinePeriod.periodLabel}

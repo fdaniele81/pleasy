@@ -17,8 +17,8 @@ import LanguageSwitcher from "./LanguageSwitcher";
 const ChangePasswordModal = lazy(() => import("../../features/users/components/ChangePasswordModal"));
 
 const HOME_URL = import.meta.env.VITE_HOME_URL || null;
-const IS_NON_PROD = import.meta.env.VITE_API_URL?.includes('test-api') || import.meta.env.DEV;
-const ENV_LABEL = import.meta.env.DEV ? 'LOCAL' : 'TEST';
+const ENV_LABEL = import.meta.env.VITE_ENV_LABEL;
+const IS_NON_PROD = !!ENV_LABEL || import.meta.env.DEV;
 
 const MobileNavLink = memo(function MobileNavLink({ to, icon, label, isActive, onClick }) {
   return (
@@ -178,7 +178,7 @@ const Header = memo(function Header() {
                 className="flex items-center hover:opacity-80 transition-opacity"
               >
                 <img src="/pleasy.png" alt="pleasy" className="h-9" />
-                {IS_NON_PROD && <span className="ml-2 px-2 py-0.5 text-xs font-bold text-amber-800 bg-amber-200 rounded">{ENV_LABEL}</span>}
+                {IS_NON_PROD && <span className="ml-2 px-2 py-0.5 text-xs font-bold text-amber-800 bg-amber-200 rounded">{ENV_LABEL || 'LOCAL'}</span>}
               </a>
             ) : (
               <Link
@@ -186,7 +186,7 @@ const Header = memo(function Header() {
                 className="flex items-center hover:opacity-80 transition-opacity"
               >
                 <img src="/pleasy.png" alt="pleasy" className="h-9" />
-                {IS_NON_PROD && <span className="ml-2 px-2 py-0.5 text-xs font-bold text-amber-800 bg-amber-200 rounded">{ENV_LABEL}</span>}
+                {IS_NON_PROD && <span className="ml-2 px-2 py-0.5 text-xs font-bold text-amber-800 bg-amber-200 rounded">{ENV_LABEL || 'LOCAL'}</span>}
               </Link>
             )}
 

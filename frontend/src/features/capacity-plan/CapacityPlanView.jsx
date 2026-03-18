@@ -13,6 +13,8 @@ import DistributionConfigModal from './components/DistributionConfigModal';
 import { addToast } from '../../store/slices/toastSlice';
 import { useCapacityPlanUndo } from './hooks/useCapacityPlanUndo';
 
+// test
+
 function CapacityPlanView() {
   const { t } = useTranslation(['capacityPlan', 'common']);
   const location = useLocation();

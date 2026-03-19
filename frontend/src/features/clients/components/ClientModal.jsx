@@ -5,6 +5,7 @@ import { isRequired } from '../../../utils/validation/validationUtils';
 import { useFormModal } from '../../../hooks/useFormModal';
 import BaseModal from '../../../shared/components/BaseModal';
 
+// ricompila
 const SymbolPreview = ({ letter, bgColor, letterColor }) => (
   <div
     className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold tracking-tight select-none"

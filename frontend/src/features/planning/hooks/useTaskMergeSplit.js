@@ -8,6 +8,7 @@ import {
   useCreateTaskMutation,
   useDeleteTaskMutation,
 } from '../api/taskEndpoints';
+import { useUpdateTaskOrderMutation } from '../api/planningEndpoints';
 
 /**
  * Hook for merging and splitting tasks in Planning.
@@ -19,6 +20,7 @@ export function useTaskMergeSplit({ projects, selectedTasks, refetchPlanning, fe
 
   const [createTask] = useCreateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
+  const [updateTaskOrder] = useUpdateTaskOrderMutation();
 
   // Merge modal state
   const [showMergeModal, setShowMergeModal] = useState(false);
@@ -235,8 +237,10 @@ export function useTaskMergeSplit({ projects, selectedTasks, refetchPlanning, fe
 
     setProcessing(true);
     try {
+      // Create clones and track original→clone mapping for ordering
+      const cloneMap = []; // { originalTaskId, newTaskId }
       for (const task of tasks) {
-        await createTask({
+        const result = await createTask({
           projectId,
           taskData: {
             project_id: projectId,
@@ -253,6 +257,30 @@ export function useTaskMergeSplit({ projects, selectedTasks, refetchPlanning, fe
             etc: task.etc || 0,
           },
         }).unwrap();
+        if (result?.task?.task_id) {
+          cloneMap.push({ originalTaskId: task.task_id, newTaskId: result.task.task_id });
+        }
+      }
+
+      // Insert clones right after their originals in the task order
+      if (cloneMap.length > 0) {
+        const project = projects.find(p => p.project_id === projectId);
+        const currentOrder = project?.tasks.map(t => t.task_id) || [];
+        const newOrder = [];
+        for (const taskId of currentOrder) {
+          newOrder.push(taskId);
+          const clone = cloneMap.find(c => c.originalTaskId === taskId);
+          if (clone) {
+            newOrder.push(clone.newTaskId);
+          }
+        }
+        // Add any clones whose originals weren't in the current order
+        for (const clone of cloneMap) {
+          if (!newOrder.includes(clone.newTaskId)) {
+            newOrder.push(clone.newTaskId);
+          }
+        }
+        await updateTaskOrder({ projectId, taskOrder: newOrder }).unwrap();
       }
 
       await refetchPlanning();
@@ -271,7 +299,7 @@ export function useTaskMergeSplit({ projects, selectedTasks, refetchPlanning, fe
     } finally {
       setProcessing(false);
     }
-  }, [getSelectedTasksForProject, createTask, refetchPlanning, fetchSyncData, dispatch, t]);
+  }, [getSelectedTasksForProject, createTask, updateTaskOrder, projects, refetchPlanning, fetchSyncData, dispatch, t]);
 
   return {
     // Merge

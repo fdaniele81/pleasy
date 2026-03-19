@@ -9,6 +9,7 @@ const SimpleGanttSuspendedArea = ({
   suspendedAreaLabel = 'SOSPESO',
   onSuspendedAreaChange,
   onSuspendedAreaLabelChange,
+  labelOnly = false,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -98,6 +99,75 @@ const SimpleGanttSuspendedArea = ({
   const { x, width } = suspendedAreaData;
   const areaHeight = legendYPosition - 32 - (TIMELINE_HEIGHT + 5);
 
+  // Label-only pass: render just the label on top of everything
+  if (labelOnly) {
+    return (
+      <g id="suspended-area-label">
+        {!isEditingLabel ? (
+          <g
+            onDoubleClick={() => {
+              setIsEditingLabel(true);
+              setTempLabel(suspendedAreaLabel);
+            }}
+            style={{ cursor: 'text' }}
+          >
+            {suspendedAreaLabel.trim() && (
+              <rect
+                x={x + width / 2 - Math.max(45, suspendedAreaLabel.length * 5)}
+                y={TIMELINE_HEIGHT + 8}
+                width={Math.max(90, suspendedAreaLabel.length * 10)}
+                height="24"
+                fill="#6B7280"
+                rx="12"
+                opacity="0.9"
+              />
+            )}
+            <text
+              x={x + width / 2}
+              y={TIMELINE_HEIGHT + 22}
+              textAnchor="middle"
+              fontSize={11}
+              fontWeight="700"
+              fill="#FFFFFF"
+              letterSpacing="1"
+            >
+              {suspendedAreaLabel}
+            </text>
+          </g>
+        ) : (
+          <foreignObject
+            x={x + width / 2 - 60}
+            y={TIMELINE_HEIGHT + 8}
+            width="120"
+            height="24"
+          >
+            <input
+              type="text"
+              value={tempLabel}
+              onChange={(e) => setTempLabel(e.target.value)}
+              onBlur={() => {
+                onSuspendedAreaLabelChange(tempLabel);
+                setIsEditingLabel(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  onSuspendedAreaLabelChange(tempLabel);
+                  setIsEditingLabel(false);
+                } else if (e.key === 'Escape') {
+                  setIsEditingLabel(false);
+                }
+              }}
+              autoFocus
+              className="w-full h-full px-2 text-center text-xs font-bold text-white bg-gray-500 rounded-xl border-none outline-none"
+              style={{ letterSpacing: '1px' }}
+            />
+          </foreignObject>
+        )}
+      </g>
+    );
+  }
+
+  // Background pass: area, borders, resize handles (no label)
   return (
     <g id="suspended-area">
       <rect
@@ -142,67 +212,6 @@ const SimpleGanttSuspendedArea = ({
         strokeWidth="3"
         opacity="0.6"
       />
-
-      {!isEditingLabel ? (
-        <g
-          onDoubleClick={() => {
-            setIsEditingLabel(true);
-            setTempLabel(suspendedAreaLabel);
-          }}
-          style={{ cursor: 'text' }}
-        >
-          {suspendedAreaLabel.trim() && (
-            <rect
-              x={x + width / 2 - Math.max(45, suspendedAreaLabel.length * 5)}
-              y={TIMELINE_HEIGHT + 8}
-              width={Math.max(90, suspendedAreaLabel.length * 10)}
-              height="24"
-              fill="#6B7280"
-              rx="12"
-              opacity="0.9"
-            />
-          )}
-          <text
-            x={x + width / 2}
-            y={TIMELINE_HEIGHT + 22}
-            textAnchor="middle"
-            fontSize={11}
-            fontWeight="700"
-            fill="#FFFFFF"
-            letterSpacing="1"
-          >
-            {suspendedAreaLabel}
-          </text>
-        </g>
-      ) : (
-        <foreignObject
-          x={x + width / 2 - 60}
-          y={TIMELINE_HEIGHT + 8}
-          width="120"
-          height="24"
-        >
-          <input
-            type="text"
-            value={tempLabel}
-            onChange={(e) => setTempLabel(e.target.value)}
-            onBlur={() => {
-              onSuspendedAreaLabelChange(tempLabel);
-              setIsEditingLabel(false);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                onSuspendedAreaLabelChange(tempLabel);
-                setIsEditingLabel(false);
-              } else if (e.key === 'Escape') {
-                setIsEditingLabel(false);
-              }
-            }}
-            autoFocus
-            className="w-full h-full px-2 text-center text-xs font-bold text-white bg-gray-500 rounded-xl border-none outline-none"
-            style={{ letterSpacing: '1px' }}
-          />
-        </foreignObject>
-      )}
 
       <rect
         x={x - 8}

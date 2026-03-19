@@ -12,7 +12,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
   const containerRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1400);
-  const [showProjectHeaders, setShowProjectHeaders] = useState(true);
+  const [projectHeaderMode, setProjectHeaderMode] = useState('expanded');
   const [colorByStatus, setColorByStatus] = useState(true);
   const [showMilestones, setShowMilestones] = useState(true);
   const [showGridLines, setShowGridLines] = useState(true);
@@ -212,24 +212,15 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
     >
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-4 py-3 from-gray-50 to-gray-100 rounded-lg border border-gray-200 flex-wrap">
-          <button
-            onClick={() => setShowProjectHeaders(!showProjectHeaders)}
-            className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
-              !showProjectHeaders
-                ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-            title={!showProjectHeaders ? t('printGanttShowProjectHeaders') : t('printGanttHideProjectHeaders')}
+          <select
+            value={projectHeaderMode}
+            onChange={(e) => setProjectHeaderMode(e.target.value)}
+            className="px-2 py-1.5 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
           >
-            {!showProjectHeaders ? (
-              <EyeOff size={14} className="shrink-0" />
-            ) : (
-              <Eye size={14} className="shrink-0" />
-            )}
-            <span className="whitespace-nowrap">
-              {t('printGanttProjectClient')}
-            </span>
-          </button>
+            <option value="expanded">{t('printGanttProjectBarExpanded')}</option>
+            <option value="collapsed">{t('printGanttProjectBarCollapsed')}</option>
+            <option value="none">{t('printGanttProjectBarNone')}</option>
+          </select>
 
           <button
             onClick={() => setColorByStatus(!colorByStatus)}
@@ -361,7 +352,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
             dateRange={dateRange}
             svgRef={svgRef}
             containerWidth={containerWidth}
-            showProjectHeaders={showProjectHeaders}
+            projectHeaderMode={projectHeaderMode}
             colorByStatus={colorByStatus}
             showMilestones={!anonymizeMode && showMilestones}
             showGridLines={showGridLines}

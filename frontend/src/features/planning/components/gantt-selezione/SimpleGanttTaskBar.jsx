@@ -21,6 +21,7 @@ const SimpleGanttTaskBar = ({
   showMilestones = false,
   milestonesVisibility = {},
   onMilestoneClick,
+  rowHeight = ROW_HEIGHT,
 }) => {
   const { t } = useTranslation('planning');
 
@@ -28,6 +29,8 @@ const SimpleGanttTaskBar = ({
     return null;
   }
 
+  const h = rowHeight;
+  const barPadding = Math.max(6, Math.round(h * 0.22));
   const statusId = getStatusId(task);
   const statusLabel = t(STATUS_LABEL_KEYS[statusId]) || (task.task_status_id || 'N/A');
   const taskColor = getTaskColor(statusId, colorByStatus);
@@ -42,7 +45,7 @@ const SimpleGanttTaskBar = ({
     <g>
       <rect
         x={task.barPosition.x - 8 - estimateTextWidth(truncateText(task.title, 45))}
-        y={task.yPosition + ROW_HEIGHT / 2 - 10}
+        y={task.yPosition + h / 2 - 10}
         width={estimateTextWidth(truncateText(task.title, 45)) + 4}
         height={18}
         fill="white"
@@ -51,7 +54,7 @@ const SimpleGanttTaskBar = ({
 
       <text
         x={task.barPosition.x - 8}
-        y={task.yPosition + ROW_HEIGHT / 2 + 5}
+        y={task.yPosition + h / 2 + 5}
         fontSize={13}
         fill="#374151"
         fontWeight="500"
@@ -62,18 +65,18 @@ const SimpleGanttTaskBar = ({
 
       <rect
         x={task.barPosition.x}
-        y={task.yPosition + 8}
+        y={task.yPosition + barPadding}
         width={task.barPosition.width}
-        height={ROW_HEIGHT - 16}
+        height={h - barPadding * 2}
         fill={taskColor}
-        rx={6}
+        rx={5}
       />
 
       {showMilestones && (
         <g className="milestone-group">
           <rect
             x={task.barPosition.x + task.barPosition.width - 10}
-            y={task.yPosition + ROW_HEIGHT / 2 - 10}
+            y={task.yPosition + h / 2 - 10}
             width={20}
             height={20}
             fill="transparent"
@@ -85,10 +88,10 @@ const SimpleGanttTaskBar = ({
             <>
               <polygon
                 points={`
-                  ${task.barPosition.x + task.barPosition.width},${task.yPosition + ROW_HEIGHT / 2 - 8}
-                  ${task.barPosition.x + task.barPosition.width + 8},${task.yPosition + ROW_HEIGHT / 2}
-                  ${task.barPosition.x + task.barPosition.width},${task.yPosition + ROW_HEIGHT / 2 + 8}
-                  ${task.barPosition.x + task.barPosition.width - 8},${task.yPosition + ROW_HEIGHT / 2}
+                  ${task.barPosition.x + task.barPosition.width},${task.yPosition + h / 2 - 7}
+                  ${task.barPosition.x + task.barPosition.width + 7},${task.yPosition + h / 2}
+                  ${task.barPosition.x + task.barPosition.width},${task.yPosition + h / 2 + 7}
+                  ${task.barPosition.x + task.barPosition.width - 7},${task.yPosition + h / 2}
                 `}
                 fill="#FBBF24"
                 stroke="#4B5563"
@@ -100,7 +103,7 @@ const SimpleGanttTaskBar = ({
                 <>
                   <rect
                     x={task.barPosition.x + task.barPosition.width + 10}
-                    y={task.yPosition + ROW_HEIGHT / 2 - 13}
+                    y={task.yPosition + h / 2 - 13}
                     width={estimateTextWidth(formatDateDDMON(task.end_date), 600) * (11/13)}
                     height={16}
                     fill="white"
@@ -110,7 +113,7 @@ const SimpleGanttTaskBar = ({
 
                   <text
                     x={task.barPosition.x + task.barPosition.width + 10}
-                    y={task.yPosition + ROW_HEIGHT / 2 - 5}
+                    y={task.yPosition + h / 2 - 5}
                     textAnchor="start"
                     fontSize={11}
                     fontWeight="600"

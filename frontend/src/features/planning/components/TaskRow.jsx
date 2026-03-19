@@ -451,6 +451,7 @@ export const TaskRow = memo(function TaskRow({
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={() => handleCellBlur(task.task_id, project.project_id, 'external_key', task.external_key || '')}
                 onKeyDown={(e) => handleKeyDown(e, task.task_id, project.project_id, 'external_key', task.external_key || '')}
+                onFocus={(e) => e.target.select()}
                 autoFocus
                 className="w-full px-1 py-1 border border-blue-300 rounded text-xs"
               />

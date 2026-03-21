@@ -1,414 +1,296 @@
-import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
+import { Download, ArrowLeft, ArrowRight, X, CheckSquare, EyeOff } from 'lucide-react';
 import { useGetCompanyTimeOffPlanQuery, useLazyGetCompanyTimeOffPlanQuery } from '../timesheet/api/timesheetEndpoints';
 import { useGetHolidaysQuery } from '../holidays/api/holidayEndpoints';
 import { exportTimeOffPlanToExcel } from '../../utils/export/excel';
 import { addToast } from '../../store/slices/toastSlice';
 import logger from '../../utils/logger';
 import { generateDateRange } from '../../utils/table/tableUtils';
-import { getMonday, toISODate, formatDateISO } from '../../utils/date/dateUtils';
-import { useLocale } from '../../hooks/useLocale';
-import { getColumnCountForWidth, getWeekCountForWidth } from '../../constants/breakpoints';
+import { formatDateISO } from '../../utils/date/dateUtils';
 import { useTimeOffPlanCalculations } from './hooks/useTimeOffPlanCalculations';
-import { TimeOffIcon } from '../../utils/ui/timeOffIcons';
-import {
-  TableContainer,
-  SelectionCheckbox,
-  useTableDateHelpers,
-} from '../../shared/ui/table';
-import TimeOffPlanHeader from './components/TimeOffPlanHeader';
-import TimeOffPlanTableHeader from './components/TimeOffPlanTableHeader';
-import TimeOffPlanUserRow from './components/TimeOffPlanUserRow';
-
-const ExportModal = lazy(() => import('../../shared/components/modals/ExportModal'));
+import { useLocale } from '../../hooks/useLocale';
+import PageHeader from '../../shared/ui/PageHeader';
+import Button from '../../shared/ui/Button';
+import { getRouteIcon } from '../../constants/routeIcons';
+import TimeOffPlanSummary from './components/TimeOffPlanSummary';
+import TimeOffPlanTransposedTable from './components/TimeOffPlanTransposedTable';
 
 function TimeOffPlan() {
   const { t } = useTranslation(['timeoffplan', 'common']);
-  const locale = useLocale();
   const dispatch = useDispatch();
+  const locale = useLocale();
+  const [page, setPage] = useState('selection'); // 'selection' | 'detail'
+  const [selectedMonths, setSelectedMonths] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [hideEmptyDates, setHideEmptyDates] = useState(false);
+
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('daily');
-  const [showExportModal, setShowExportModal] = useState(false);
 
-  const getQueryDateRange = () => {
-    if (!startDate || !endDate) return { startDate: '', endDate: '' };
+  useEffect(() => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 12, 0);
+    setStartDate(formatDateISO(firstDay));
+    setEndDate(formatDateISO(lastDay));
+  }, []);
 
-    if (viewMode === 'weekly') {
-      const maxWeeks = getWeekCountForWidth();
-      const firstWeekStart = getMonday(new Date(startDate));
-      const lastWeekStart = new Date(firstWeekStart);
-      lastWeekStart.setDate(lastWeekStart.getDate() + ((maxWeeks - 1) * 7));
-      const lastWeekEnd = new Date(lastWeekStart);
-      lastWeekEnd.setDate(lastWeekEnd.getDate() + 6);
-
-      return {
-        startDate: formatDateISO(firstWeekStart),
-        endDate: formatDateISO(lastWeekEnd)
-      };
-    }
-
-    return { startDate, endDate };
+  const handleMonthToggle = (monthKey) => {
+    setSelectedMonths(prev => {
+      const next = prev.includes(monthKey)
+        ? prev.filter(m => m !== monthKey)
+        : [...prev, monthKey].sort();
+      return next;
+    });
   };
 
-  const queryDateRange = getQueryDateRange();
+  const handleUserToggle = (userId) => {
+    setSelectedUserIds(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAllUsers = () => {
+    if (selectedUserIds.length === allUsers.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(allUsers.map(u => u.user_id));
+    }
+  };
+
+  const handleSelectAllMonths = () => {
+    const { months } = getMonthlyBreakdown;
+    if (selectedMonths.length === months.length) {
+      setSelectedMonths([]);
+    } else {
+      setSelectedMonths([...months]);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSelectedMonths([]);
+    setSelectedUserIds([]);
+  };
+
+  const handleSelectAll = () => {
+    const { months } = getMonthlyBreakdown;
+    const allSelected = selectedMonths.length === months.length && selectedUserIds.length === allUsers.length;
+    if (allSelected) {
+      setSelectedMonths([]);
+      setSelectedUserIds([]);
+    } else {
+      setSelectedMonths([...months]);
+      setSelectedUserIds(allUsers.map(u => u.user_id));
+    }
+  };
+
+  const effectiveDateRange = useMemo(() => {
+    if (selectedMonths.length === 0) return null;
+    const sorted = [...selectedMonths].sort();
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    const [fy, fm] = first.split('-').map(Number);
+    const [ly, lm] = last.split('-').map(Number);
+    return {
+      startDate: formatDateISO(new Date(fy, fm - 1, 1)),
+      endDate: formatDateISO(new Date(ly, lm, 0)),
+    };
+  }, [selectedMonths]);
 
   const { data: users = [], isLoading: loading } = useGetCompanyTimeOffPlanQuery(
-    queryDateRange,
-    { skip: !queryDateRange.startDate || !queryDateRange.endDate }
+    { startDate, endDate },
+    { skip: !startDate || !endDate }
   );
 
   const { data: holidays = [] } = useGetHolidaysQuery();
   const [getCompanyTimeOffPlanForExport] = useLazyGetCompanyTimeOffPlanQuery();
 
-  const [selectedUsers, setSelectedUsers] = useState({ VACATION: {} });
-  const [selectionFilters, setSelectionFilters] = useState([]);
-  const [filterUserIds, setFilterUserIds] = useState([]);
-
-  const calculations = useTimeOffPlanCalculations(startDate, endDate, viewMode, users);
+  const calculations = useTimeOffPlanCalculations(users);
   const {
-    weekRanges,
-    getExtendedDateRange,
-    getWeekForDate,
-    formatWeekHeader,
     getTimeOffForDate,
     getTotalHoursForUserAndType,
-    getTotalHoursForUser,
-    getTotalHoursForDate,
-    getTimeOffForWeek,
-    getTotalHoursForWeek,
-    getGrandTotal
+    getGrandTotal,
+    getMonthlyBreakdown,
   } = calculations;
 
-  const goToPreviousPeriod = () => {
-    const newStart = new Date(startDate);
-    newStart.setDate(newStart.getDate() - 7);
-    const newEnd = new Date(endDate);
-    newEnd.setDate(newEnd.getDate() - 7);
-    setStartDate(formatDateISO(newStart));
-    setEndDate(formatDateISO(newEnd));
+  const allUsers = useMemo(() =>
+    [...users].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')),
+    [users]
+  );
+
+  const filteredUsers = useMemo(() => {
+    if (selectedUserIds.length === 0) return allUsers;
+    return allUsers.filter(u => selectedUserIds.includes(u.user_id));
+  }, [allUsers, selectedUserIds]);
+
+  const tableStartDate = effectiveDateRange?.startDate || startDate;
+  const tableEndDate = effectiveDateRange?.endDate || endDate;
+
+  const dateRange = useMemo(() =>
+    generateDateRange(tableStartDate, tableEndDate),
+    [tableStartDate, tableEndDate]
+  );
+
+  const visibleDateRange = useMemo(() => {
+    if (!hideEmptyDates) return dateRange;
+    return dateRange.filter(date =>
+      filteredUsers.some(user => getTimeOffForDate(user, 'VACATION', date) > 0)
+    );
+  }, [dateRange, hideEmptyDates, filteredUsers, getTimeOffForDate]);
+
+  const canProceed = selectedMonths.length > 0 && selectedUserIds.length > 0;
+
+  const formatDateDisplay = (isoDate) => {
+    if (!isoDate) return '';
+    const d = new Date(isoDate + 'T00:00:00');
+    return d.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
-  const goToNextPeriod = () => {
-    const newStart = new Date(startDate);
-    newStart.setDate(newStart.getDate() + 7);
-    const newEnd = new Date(endDate);
-    newEnd.setDate(newEnd.getDate() + 7);
-    setStartDate(formatDateISO(newStart));
-    setEndDate(formatDateISO(newEnd));
-  };
-
-  const goToToday = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const numDays = getColumnCountForWidth();
-    const endDay = new Date(today);
-    endDay.setDate(endDay.getDate() + numDays);
-    setStartDate(formatDateISO(today));
-    setEndDate(formatDateISO(endDay));
-  };
-
-  const isAtToday = useMemo(() => {
-    if (!startDate) return true;
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return start.getTime() === today.getTime();
-  }, [startDate]);
-
-  const getPeriodLabel = () => {
-    if (!queryDateRange.startDate || !queryDateRange.endDate) return '';
-    const start = new Date(queryDateRange.startDate);
-    const end = new Date(queryDateRange.endDate);
-    const formatOptions = { day: 'numeric', month: 'short' };
-    const startStr = start.toLocaleDateString(locale, formatOptions);
-    const endStr = end.toLocaleDateString(locale, { ...formatOptions, year: 'numeric' });
-    return `${startStr} - ${endStr}`;
-  };
-
-  const toggleUserSelection = (userId, timeOffTypeId) => {
-    setSelectedUsers((prev) => ({
-      ...prev,
-      [timeOffTypeId]: {
-        ...prev[timeOffTypeId],
-        [userId]: !prev[timeOffTypeId]?.[userId]
-      }
-    }));
-  };
-
-  const closeAllDropdowns = () => {
-    const dropdownIds = ['view-dropdown'];
-    dropdownIds.forEach(id => {
-      const dropdown = document.getElementById(id);
-      if (dropdown && !dropdown.classList.contains('hidden')) {
-        dropdown.classList.add('hidden');
-      }
-    });
-  };
-
-  const toggleDropdown = (dropdownId) => {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-
-    const wasHidden = dropdown.classList.contains('hidden');
-    closeAllDropdowns();
-
-    if (wasHidden) {
-      dropdown.classList.remove('hidden');
-    }
-  };
-
-  const handleExport = async ({ startDate: exportStartDate, endDate: exportEndDate }) => {
+  const handleExport = async () => {
     try {
-      const usersWithTimeOffs = await getCompanyTimeOffPlanForExport({ startDate: exportStartDate, endDate: exportEndDate }).unwrap();
-
-      const hasVacationSelection = Object.keys(selectedUsers.VACATION).some(userId => selectedUsers.VACATION[userId]);
-
-      const vacationUsers = hasVacationSelection
-        ? usersWithTimeOffs.filter(u => selectedUsers.VACATION[u.user_id])
+      const usersWithTimeOffs = await getCompanyTimeOffPlanForExport({ startDate: tableStartDate, endDate: tableEndDate }).unwrap();
+      const exportUsers = selectedUserIds.length > 0
+        ? usersWithTimeOffs.filter(u => selectedUserIds.includes(u.user_id))
         : usersWithTimeOffs;
-
-      await exportTimeOffPlanToExcel(vacationUsers, [], exportStartDate, exportEndDate, holidays);
-
-      setShowExportModal(false);
+      await exportTimeOffPlanToExcel(exportUsers, [], tableStartDate, tableEndDate, holidays);
     } catch (error) {
       logger.error('Errore durante export:', error);
       dispatch(addToast({ message: t('timeoffplan:exportError', { message: error.message }), type: 'error' }));
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const dropdownIds = ['view-dropdown'];
-      const dropdowns = dropdownIds.map(id => document.getElementById(id));
-
-      const clickedOutside = !dropdowns.some(dropdown =>
-        dropdown && dropdown.contains(event.target)
-      );
-
-      const clickedButton = event.target.closest('button');
-      const isDropdownButton = clickedButton && dropdownIds.some(id =>
-        clickedButton.getAttribute('onclick')?.includes(id) ||
-        clickedButton.parentElement?.querySelector(`#${id}`)
-      );
-
-      if (clickedOutside && !isDropdownButton) {
-        dropdowns.forEach(dropdown => {
-          if (dropdown && !dropdown.classList.contains('hidden')) {
-            dropdown.classList.add('hidden');
-          }
-        });
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const numDays = getColumnCountForWidth();
-
-    const endDay = new Date(today);
-    endDay.setDate(endDay.getDate() + numDays);
-
-    setStartDate(formatDateISO(today));
-    setEndDate(formatDateISO(endDay));
-  }, []);
-
-  const dateRange = generateDateRange(startDate, endDate);
-
-  const { getDateInfo } = useTableDateHelpers(dateRange, holidays);
-
-  const uniqueUsers = useMemo(() =>
-    [...users].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')),
-    [users]
-  );
-
-  const getFilteredUsersForSection = (timeOffTypeId) => {
-    return users.filter(user => {
-      if (filterUserIds.length > 0 && !filterUserIds.includes(user.user_id)) return false;
-
-      if (searchTerm.trim()) {
-        const term = searchTerm.toLowerCase();
-        const matchesSearch = (
-          user.full_name?.toLowerCase().includes(term) ||
-          user.email?.toLowerCase().includes(term)
-        );
-        if (!matchesSearch) return false;
-      }
-
-      if (selectionFilters.length > 0 && selectionFilters.length < 2) {
-        const isSelectedInThisSection = selectedUsers[timeOffTypeId]?.[user.user_id];
-
-        if (selectionFilters.includes('selected')) {
-          return isSelectedInThisSection;
-        } else if (selectionFilters.includes('unselected')) {
-          return !isSelectedInThisSection;
-        }
-      }
-
-      return true;
-    });
-  };
-
-  const filteredUsersVacation = getFilteredUsersForSection('VACATION');
-  const filteredUsers = filteredUsersVacation;
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <div className="flex items-center justify-center p-6">
+        <div className="flex items-center justify-center p-6 pt-20">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Suspense fallback={null}>
-        <ExportModal
-          isOpen={showExportModal}
-          onClose={() => setShowExportModal(false)}
-          onExport={handleExport}
-          title={t('timeoffplan:exportTitle')}
-          defaultStartDate={queryDateRange.startDate}
-          defaultEndDate={queryDateRange.endDate}
-        />
-      </Suspense>
+  const hasFilters = selectedMonths.length > 0 || selectedUserIds.length > 0;
+  const isAllSelected = getMonthlyBreakdown.months.length > 0
+    && selectedMonths.length === getMonthlyBreakdown.months.length
+    && allUsers.length > 0
+    && selectedUserIds.length === allUsers.length;
 
-      <div className="p-4">
+  // === PAGINA 1: Selezione ===
+  if (page === 'selection') {
+    return (
+      <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+        <div className="shrink-0 p-4 pb-0">
+          <div className="max-w-full mx-auto">
+            <div className="mt-16"></div>
+
+            <PageHeader
+              icon={getRouteIcon('/timeoff-plan')}
+              title={t('timeoffplan:title')}
+              description={t('timeoffplan:next12Months')}
+              actionButton={{
+                label: t('timeoffplan:viewDetail'),
+                onClick: () => setPage('detail'),
+                icon: ArrowRight,
+                disabled: !canProceed,
+              }}
+            />
+
+            <div className="flex items-center gap-2 mb-3">
+              <Button
+                onClick={handleSelectAll}
+                variant="ghost"
+                color="cyan"
+                size="sm"
+                icon={CheckSquare}
+                iconSize={14}
+              >
+                {isAllSelected ? t('timeoffplan:deselectAll') : t('timeoffplan:selectAll')}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 px-4 pb-4">
+          <div className="max-w-full mx-auto h-full flex flex-col">
+            <TimeOffPlanSummary
+              users={allUsers}
+              monthlyBreakdown={getMonthlyBreakdown}
+              selectedMonths={selectedMonths}
+              onMonthToggle={handleMonthToggle}
+              onSelectAllMonths={handleSelectAllMonths}
+              selectedUserIds={selectedUserIds}
+              onUserToggle={handleUserToggle}
+              onSelectAllUsers={handleSelectAllUsers}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // === PAGINA 2: Dettaglio ===
+  return (
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+      <div className="shrink-0 p-4 pb-0">
         <div className="max-w-full mx-auto">
           <div className="mt-16"></div>
 
-          <TimeOffPlanHeader
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            selectionFilters={selectionFilters}
-            onSelectionFiltersChange={setSelectionFilters}
-            filterUserIds={filterUserIds}
-            onFilterUserIdsChange={setFilterUserIds}
-            uniqueUsers={uniqueUsers}
-            onExportClick={() => setShowExportModal(true)}
-            onPrevious={goToPreviousPeriod}
-            onNext={goToNextPeriod}
-            onToday={goToToday}
-            isTodayDisabled={isAtToday}
-            periodLabel={getPeriodLabel()}
+          <div className="mb-2">
+            <button
+              onClick={() => setPage('selection')}
+              className="inline-flex items-center gap-1 text-sm text-cyan-600 hover:text-cyan-800 font-medium transition-colors"
+            >
+              <ArrowLeft size={16} />
+              {t('timeoffplan:backToSelection')}
+            </button>
+          </div>
+
+          <PageHeader
+            icon={getRouteIcon('/timeoff-plan')}
+            title={t('timeoffplan:detailTitle')}
+            description={`${t('timeoffplan:usersSelected', { count: filteredUsers.length })}  ·  ${formatDateDisplay(tableStartDate)} — ${formatDateDisplay(tableEndDate)}`}
+            actionButton={{
+              label: t('common:export'),
+              onClick: handleExport,
+              icon: Download,
+              color: 'green',
+            }}
           />
 
-          <TableContainer maxHeight="calc(100vh - 300px)">
-            <table className="w-full border-collapse">
-              <TimeOffPlanTableHeader
-                viewMode={viewMode}
-                dateRange={dateRange}
-                weekRanges={weekRanges}
-                holidays={holidays}
-                formatWeekHeader={formatWeekHeader}
-                filteredUsers={filteredUsers}
-                selectedUsers={selectedUsers}
-                onSelectAll={setSelectedUsers}
-              />
+          <div className="flex items-center gap-3 mb-3">
+            <Button
+              onClick={() => setHideEmptyDates(prev => !prev)}
+              variant={hideEmptyDates ? 'solid' : 'ghost'}
+              color={hideEmptyDates ? 'cyan' : 'gray'}
+              size="sm"
+              icon={EyeOff}
+              iconSize={14}
+            >
+              {t('timeoffplan:hideEmptyDates')}
+            </Button>
+            {hideEmptyDates && visibleDateRange.length < dateRange.length && (
+              <span className="text-xs text-gray-500">
+                {t('timeoffplan:datesVisible', { count: visibleDateRange.length })}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
 
-              <tbody>
-                <tr className="bg-cyan-700 font-bold">
-                  <th className="border border-gray-300 px-1 py-1 text-center sticky left-0 bg-cyan-700 z-20 w-8 min-w-8 max-w-8">
-                    <SelectionCheckbox
-                      checked={
-                        filteredUsersVacation.length > 0 &&
-                        filteredUsersVacation.every((u) => selectedUsers.VACATION?.[u.user_id])
-                      }
-                      onChange={(e) => {
-                        const allUserIds = filteredUsersVacation.map((u) => u.user_id);
-                        setSelectedUsers((prev) => {
-                          const newVacation = { ...prev.VACATION };
-                          if (e.target.checked) {
-                            allUserIds.forEach((id) => (newVacation[id] = true));
-                          } else {
-                            allUserIds.forEach((id) => delete newVacation[id]);
-                          }
-                          return { ...prev, VACATION: newVacation };
-                        });
-                      }}
-                    />
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left sticky left-8 bg-cyan-700 z-20 w-64 min-w-64 max-w-64 shadow-[2px_0_0_0_rgb(79,70,229)] text-white">
-                    <div className="flex items-center gap-2">
-                      <TimeOffIcon.VACATION size={18} className="text-white" />
-                      <span>{t('timeoffplan:vacationLeave')}</span>
-                    </div>
-                  </th>
-                  <th className="border border-gray-300 px-1 py-1 text-center bg-cyan-700 sticky left-72 z-20 w-20 min-w-20 max-w-20 shadow-[4px_0_0_0_rgb(79,70,229)] text-white text-xs font-bold">
-                    {getGrandTotal('VACATION', filteredUsersVacation).toFixed(1)}
-                  </th>
-
-                  {viewMode === 'daily' ? (
-                    dateRange.map((date, idx) => {
-                      const dateInfo = getDateInfo(date);
-                      const total = getTotalHoursForDate(date, 'VACATION', filteredUsersVacation);
-
-                      return (
-                        <th
-                          key={idx}
-                          className={`border border-gray-300 px-1 py-1 text-center text-xs ${
-                            dateInfo.isToday
-                              ? 'bg-cyan-600 text-white'
-                              : dateInfo.isNonWorking
-                              ? 'bg-gray-600 text-white'
-                              : 'bg-cyan-700 text-white'
-                          }`}
-                        >
-                          {total > 0 ? total.toFixed(1) : '-'}
-                        </th>
-                      );
-                    })
-                  ) : (
-                    weekRanges.map((week, idx) => {
-                      const total = getTotalHoursForWeek(week.dates, 'VACATION', filteredUsersVacation);
-
-                      return (
-                        <th
-                          key={idx}
-                          className="border border-gray-300 px-1 py-1 text-center bg-cyan-700 text-white text-xs"
-                        >
-                          {total > 0 ? total.toFixed(1) : '-'}
-                        </th>
-                      );
-                    })
-                  )}
-                </tr>
-
-                {filteredUsersVacation.map((user) => (
-                  <TimeOffPlanUserRow
-                    key={`${user.user_id}-VACATION`}
-                    user={user}
-                    timeOffTypeId="VACATION"
-                    isSelected={!!selectedUsers.VACATION?.[user.user_id]}
-                    onToggleSelection={toggleUserSelection}
-                    viewMode={viewMode}
-                    dateRange={dateRange}
-                    weekRanges={weekRanges}
-                    holidays={holidays}
-                    getTimeOffForDate={getTimeOffForDate}
-                    getTimeOffForWeek={getTimeOffForWeek}
-                    getTotalHoursForUserAndType={getTotalHoursForUserAndType}
-                    bgColor="bg-cyan-50"
-                  />
-                ))}
-
-              </tbody>
-            </table>
-          </TableContainer>
+      <div className="flex-1 min-h-0 px-4 pb-4">
+        <div className="max-w-full mx-auto h-full flex flex-col">
+          <TimeOffPlanTransposedTable
+            users={filteredUsers}
+            dateRange={visibleDateRange}
+            holidays={holidays}
+            getTimeOffForDate={getTimeOffForDate}
+            getTotalHoursForUserAndType={getTotalHoursForUserAndType}
+            getGrandTotal={getGrandTotal}
+          />
         </div>
       </div>
     </div>

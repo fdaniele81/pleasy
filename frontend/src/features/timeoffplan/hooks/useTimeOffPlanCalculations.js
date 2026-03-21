@@ -1,73 +1,10 @@
 import { useMemo } from 'react';
-import { toISODate, formatDateISO } from '../../../utils/date/dateUtils';
-import { getMonday } from '../../../utils/date/dateUtils';
-import { getWeekCountForWidth } from '../../../constants/breakpoints';
+import { formatDateISO } from '../../../utils/date/dateUtils';
 
-export const useTimeOffPlanCalculations = (startDate, endDate, viewMode, users) => {
-
-  const generateWeekRanges = useMemo(() => {
-    if (viewMode !== 'weekly' || !startDate) return [];
-
-    const maxWeeks = getWeekCountForWidth();
-    const weeks = [];
-    const firstWeekStart = getMonday(new Date(startDate));
-
-    for (let i = 0; i < maxWeeks; i++) {
-      const weekStart = new Date(firstWeekStart);
-      weekStart.setDate(weekStart.getDate() + (i * 7));
-
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-
-      const dates = [];
-      for (let d = new Date(weekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
-        dates.push(new Date(d));
-      }
-
-      weeks.push({
-        weekStart: new Date(weekStart),
-        weekEnd: new Date(weekEnd),
-        dates: dates
-      });
-    }
-
-    return weeks;
-  }, [startDate, viewMode]);
-
-  const getExtendedDateRange = () => {
-    if (viewMode === 'weekly' && generateWeekRanges.length > 0) {
-      const firstWeek = generateWeekRanges[0];
-      const lastWeek = generateWeekRanges[generateWeekRanges.length - 1];
-      return {
-        start: toISODate(firstWeek.weekStart),
-        end: toISODate(lastWeek.weekEnd)
-      };
-    }
-    return { start: startDate, end: endDate };
-  };
-
-  const getWeekForDate = (date) => {
-    if (viewMode !== 'weekly') return null;
-
-    const dateStr = toISODate(date);
-    return generateWeekRanges.find(week => {
-      const weekStartStr = toISODate(week.weekStart);
-      const weekEndStr = toISODate(week.weekEnd);
-      return dateStr >= weekStartStr && dateStr <= weekEndStr;
-    });
-  };
-
-  const formatWeekHeader = (weekStart, locale) => {
-    const day = weekStart.getDate();
-    const monthName = locale
-      ? weekStart.toLocaleDateString(locale, { month: 'short' }).replace('.', '')
-      : String(weekStart.getMonth() + 1);
-    const year = weekStart.getFullYear();
-    return { day, monthName, year };
-  };
+export const useTimeOffPlanCalculations = (users) => {
 
   const getTimeOffForDate = (user, timeOffTypeId, date) => {
-    const dateStr = formatDateISO(date);
+    const dateStr = typeof date === 'string' ? date : formatDateISO(date);
     const timeOff = user.timeOffs?.find(to => to.time_off_type_id === timeOffTypeId && to.date === dateStr);
     return timeOff ? timeOff.hours : 0;
   };
@@ -81,36 +18,6 @@ export const useTimeOffPlanCalculations = (startDate, endDate, viewMode, users) 
     return user.timeOffs?.reduce((sum, to) => sum + to.hours, 0) || 0;
   };
 
-  const getTotalHoursForDate = (date, timeOffTypeId, usersList = users) => {
-    const dateStr = formatDateISO(date);
-    let total = 0;
-
-    usersList.forEach(user => {
-      const to = user.timeOffs?.find(to => to.time_off_type_id === timeOffTypeId && to.date === dateStr);
-      if (to) total += to.hours;
-    });
-
-    return total;
-  };
-
-  const getTimeOffForWeek = (user, timeOffTypeId, weekDates) => {
-    let total = 0;
-    weekDates.forEach(date => {
-      const dateStr = formatDateISO(date);
-      const timeOff = user.timeOffs?.find(to => to.time_off_type_id === timeOffTypeId && to.date === dateStr);
-      if (timeOff) total += timeOff.hours;
-    });
-    return total;
-  };
-
-  const getTotalHoursForWeek = (weekDates, timeOffTypeId, usersList = users) => {
-    let total = 0;
-    usersList.forEach(user => {
-      total += getTimeOffForWeek(user, timeOffTypeId, weekDates);
-    });
-    return total;
-  };
-
   const getGrandTotal = (timeOffTypeId, usersList = users) => {
     let total = 0;
     usersList.forEach(user => {
@@ -119,17 +26,40 @@ export const useTimeOffPlanCalculations = (startDate, endDate, viewMode, users) 
     return total;
   };
 
+  const getMonthlyBreakdown = useMemo(() => {
+    const today = new Date();
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      months.push(key);
+    }
+
+    const userMonthTotals = new Map();
+
+    if (users && users.length > 0) {
+      users.forEach(user => {
+        const monthTotals = new Map();
+        user.timeOffs?.forEach(to => {
+          if (to.time_off_type_id === 'VACATION') {
+            const monthKey = to.date.substring(0, 7);
+            if (months.includes(monthKey)) {
+              monthTotals.set(monthKey, (monthTotals.get(monthKey) || 0) + to.hours);
+            }
+          }
+        });
+        userMonthTotals.set(user.user_id, monthTotals);
+      });
+    }
+
+    return { months, userMonthTotals };
+  }, [users]);
+
   return {
-    weekRanges: generateWeekRanges,
-    getExtendedDateRange,
-    getWeekForDate,
-    formatWeekHeader,
     getTimeOffForDate,
     getTotalHoursForUserAndType,
     getTotalHoursForUser,
-    getTotalHoursForDate,
-    getTimeOffForWeek,
-    getTotalHoursForWeek,
-    getGrandTotal
+    getGrandTotal,
+    getMonthlyBreakdown,
   };
 };

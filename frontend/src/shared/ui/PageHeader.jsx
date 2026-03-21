@@ -25,8 +25,9 @@ const PageHeader = ({
       {actionButton && (
         <Button
           onClick={actionButton.onClick}
-          color="cyan"
+          color={actionButton.color || "cyan"}
           icon={ActionIcon}
+          disabled={actionButton.disabled}
         >
           {actionButton.label}
         </Button>
@@ -43,6 +44,8 @@ PageHeader.propTypes = {
     label: PropTypes.string.isRequired,
     onClick: PropTypes.func.isRequired,
     icon: PropTypes.elementType,
+    color: PropTypes.string,
+    disabled: PropTypes.bool,
   }),
 };
 

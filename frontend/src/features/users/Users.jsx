@@ -7,7 +7,7 @@ import {
   useDeleteUserMutation,
   useResetUserPasswordMutation
 } from './api/userEndpoints';
-import { Users, Edit2, Shield, Mail, KeyRound, Building } from 'lucide-react';
+import { Users as UsersIcon, Edit2, Shield, Mail, KeyRound, Building } from 'lucide-react';
 import UserModal from './components/UserModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import SearchFilter from '../../shared/components/SearchFilter';

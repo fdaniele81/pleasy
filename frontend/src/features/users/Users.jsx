@@ -7,7 +7,7 @@ import {
   useDeleteUserMutation,
   useResetUserPasswordMutation
 } from './api/userEndpoints';
-import { User, Edit2, Shield, Mail, KeyRound, Building } from 'lucide-react';
+import { Users, Edit2, Shield, Mail, KeyRound, Building } from 'lucide-react';
 import UserModal from './components/UserModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import SearchFilter from '../../shared/components/SearchFilter';
@@ -18,7 +18,6 @@ import PageHeader from '../../shared/ui/PageHeader';
 import EmptyState from '../../shared/ui/EmptyState';
 import Button from '../../shared/ui/Button';
 import logger from '../../utils/logger';
-
 function Users() {
   const { t } = useTranslation(['users', 'common']);
   const { data: companies = [], isLoading: loading } = useGetCompaniesWithUsersQuery();
@@ -86,6 +85,7 @@ function Users() {
           userId: editingUser.user_id,
           userData: userData
         }).unwrap();
+
         setEditingUser(null);
       } catch (error) {
         logger.error('Update user failed:', error);
@@ -185,7 +185,7 @@ function Users() {
           <div className="mt-16"></div>
 
           <PageHeader
-            icon={User}
+            icon={Users}
             title={t('users:title')}
             description={isAdmin ? t('users:descriptionAdmin') : t('users:descriptionPm')}
             actionButton={{
@@ -336,7 +336,7 @@ function Users() {
 
           {filteredUsers.length === 0 && (
             <EmptyState
-              icon={User}
+              icon={Users}
               title={searchTerm.trim() ? t('common:noResults') : t('users:noUsers')}
               message={
                 searchTerm.trim()

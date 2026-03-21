@@ -64,7 +64,8 @@ async function getCompaniesWithUsers(user) {
         must_change_password: !!row.must_change_password,
         symbol_letter: row.symbol_letter,
         symbol_bg_color: row.symbol_bg_color,
-        symbol_letter_color: row.symbol_letter_color
+        symbol_letter_color: row.symbol_letter_color,
+        preferred_unit: row.preferred_unit || 'HOURS'
       });
     }
   });

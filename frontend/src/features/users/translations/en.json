@@ -79,5 +79,8 @@
   "symbolSection": "User Symbol",
   "symbolLetterLabel": "Letter",
   "symbolBgColorLabel": "Background Color",
-  "symbolLetterColorLabel": "Letter Color"
+  "symbolLetterColorLabel": "Letter Color",
+  "preferredUnitLabel": "Preferred Unit",
+  "unitHours": "Hours",
+  "unitDays": "Days"
 }

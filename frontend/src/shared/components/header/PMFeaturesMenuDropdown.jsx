@@ -66,7 +66,7 @@ const PMFeaturesMenuDropdown = memo(function PMFeaturesMenuDropdown({
             className={DROPDOWN_ITEM_CLASSES}
             onClick={onToggle}
           >
-            {routeIcons[ROUTES.HOLIDAYS] && React.createElement(routeIcons[ROUTES.HOLIDAYS], { size: 16 })}
+            {routeIcons[ROUTES.TM_PLANNING] && React.createElement(routeIcons[ROUTES.TM_PLANNING], { size: 16 })}
             <span>{t('navigation:calendarActivities')}</span>
           </Link>
         </div>

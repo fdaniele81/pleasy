@@ -45,6 +45,7 @@ function formatUserResponse(user) {
     role_id: user.role_id,
     role_des: user.description || user.role_des,
     company_id: user.company_id,
+    preferred_unit: user.preferred_unit || 'HOURS',
   };
 }
 

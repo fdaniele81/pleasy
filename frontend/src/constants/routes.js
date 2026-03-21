@@ -31,10 +31,12 @@ export const ROUTES = {
   TIMESHEET_SNAPSHOTS: '/timesheet-snapshots',
   RECONCILIATION: '/reconciliation',
   TM_PLANNING: '/tm-planning',
+  DEFAULT_CONFIG: '/default-config',
 };
 
 
 export const CONFIG_MENU_ROUTES = [
+  ROUTES.DEFAULT_CONFIG,
   ROUTES.HOLIDAYS,
   ROUTES.COMPANIES,
   ROUTES.USERS,

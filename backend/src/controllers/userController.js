@@ -56,6 +56,54 @@ async function resetPassword(req, res) {
   }
 }
 
+async function getPreferredUnit(req, res) {
+  try {
+    const preferredUnit = await userService.getPreferredUnit(req.user.user_id);
+    res.status(200).json({ preferred_unit: preferredUnit });
+  } catch (err) {
+    handleError(res, err, "GET PREFERRED UNIT ERR");
+  }
+}
+
+async function updatePreferredUnit(req, res) {
+  try {
+    const updatedUnit = await userService.updatePreferredUnit(
+      req.user.user_id,
+      req.body.preferred_unit
+    );
+    res.status(200).json({
+      message: "Preferred unit updated successfully",
+      preferred_unit: updatedUnit,
+    });
+  } catch (err) {
+    handleError(res, err, "UPDATE PREFERRED UNIT ERR");
+  }
+}
+
+async function getDefaultPhasesConfig(req, res) {
+  try {
+    const result = await userService.getDefaultPhasesConfig(req.user.user_id);
+    res.status(200).json(result);
+  } catch (err) {
+    handleError(res, err, "GET DEFAULT PHASES CONFIG ERR");
+  }
+}
+
+async function updateDefaultPhasesConfig(req, res) {
+  try {
+    const result = await userService.updateDefaultPhasesConfig(
+      req.user.user_id,
+      req.body.default_phases_config
+    );
+    res.status(200).json({
+      message: "Default phases configuration updated successfully",
+      ...result,
+    });
+  } catch (err) {
+    handleError(res, err, "UPDATE DEFAULT PHASES CONFIG ERR");
+  }
+}
+
 async function remove(req, res) {
   try {
     const user = await userService.remove(req.params.user_id, req.user);
@@ -74,6 +122,10 @@ export {
   changePassword,
   resetPassword,
   remove,
+  getPreferredUnit,
+  updatePreferredUnit,
+  getDefaultPhasesConfig,
+  updateDefaultPhasesConfig,
 };
 
 export default {
@@ -82,4 +134,8 @@ export default {
   changePassword,
   resetPassword,
   remove,
+  getPreferredUnit,
+  updatePreferredUnit,
+  getDefaultPhasesConfig,
+  updateDefaultPhasesConfig,
 };

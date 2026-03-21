@@ -66,7 +66,7 @@ async function findAll(filters = {}, user) {
       c.client_name,
       c.company_id,
       p.title as project_title,
-      pd.project_key,
+      COALESCE(pd.project_key, p.project_key) as project_key,
       u.full_name as created_by_name,
       (SELECT COUNT(*) FROM estimate_task WHERE estimate_id = e.estimate_id) as tasks_count,
       (SELECT COALESCE(SUM(hours_development_input), 0) FROM estimate_task WHERE estimate_id = e.estimate_id) as total_input_hours,
@@ -146,6 +146,7 @@ async function findById(estimateId) {
           THEN c.project_phases_config
         ELSE '{}'::jsonb
       END as effective_phase_config,
+      p.project_key,
       p.title as project_title,
       u.full_name as created_by_name,
       u.email as created_by_email

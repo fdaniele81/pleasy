@@ -15,11 +15,13 @@ const upload = multer({
     const allowedMimes = [
       "application/vnd.ms-excel",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/csv",
+      "application/csv",
     ];
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Formato file non valido. Usare file Excel (.xls, .xlsx)"));
+      cb(new Error("Formato file non valido. Usare file Excel (.xls, .xlsx) o CSV (.csv)"));
     }
   },
 });

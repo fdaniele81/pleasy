@@ -3,7 +3,7 @@ import pool from "../db.js";
 async function _getUserByEmailInternal(email, includePassword = false) {
   const passwordField = includePassword ? "u.password_hash, " : "";
   const result = await pool.query(
-    `SELECT u.user_id, u.full_name, u.email, ${passwordField}u.company_id, u.role_id, u.status_id, u.token_version, u.must_change_password, r.description
+    `SELECT u.user_id, u.full_name, u.email, ${passwordField}u.company_id, u.role_id, u.status_id, u.token_version, u.must_change_password, u.preferred_unit, r.description
      FROM users u
      JOIN role r ON u.role_id = r.role_id
      WHERE u.email = $1`,
@@ -22,7 +22,7 @@ async function getUserByEmailForImpersonate(email) {
 
 async function getUserById(userId) {
   const result = await pool.query(
-    `SELECT u.user_id, u.full_name, u.email, u.company_id, u.role_id, u.status_id, u.token_version, u.must_change_password, r.description
+    `SELECT u.user_id, u.full_name, u.email, u.company_id, u.role_id, u.status_id, u.token_version, u.must_change_password, u.preferred_unit, r.description
      FROM users u
      JOIN role r ON u.role_id = r.role_id
      WHERE u.user_id = $1`,

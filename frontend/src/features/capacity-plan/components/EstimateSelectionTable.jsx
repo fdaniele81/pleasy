@@ -8,6 +8,7 @@ const EstimateSelectionTable = ({
   selectedIds,
   onToggleSelect,
   onSelectAll,
+  showInDays = false,
 }) => {
   const { t } = useTranslation(['capacityPlan', 'common']);
   const allSelected = estimates.length > 0 && estimates.every((e) => selectedIds.includes(e.estimate_id));
@@ -30,6 +31,10 @@ const EstimateSelectionTable = ({
 
   const formatHours = (hours) => {
     if (!hours && hours !== 0) return '-';
+    if (showInDays) {
+      const days = parseFloat(hours) / 8;
+      return `${(Math.round(days * 10) / 10).toFixed(1)}gg`;
+    }
     return `${parseFloat(hours).toFixed(1)}h`;
   };
 

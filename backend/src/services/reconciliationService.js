@@ -13,7 +13,7 @@ async function uploadFile(file, templateName, user) {
   const companyId = user.company_id;
 
   // Parse Excel BEFORE acquiring a DB connection/transaction
-  const { columns, originalColumns, columnMapping, rows } = await parseExcelFile(file.buffer);
+  const { columns, originalColumns, columnMapping, rows } = await parseExcelFile(file.buffer, file.originalname);
 
   const pool = reconciliationRepository.getPool();
   const client = await pool.connect();
@@ -162,7 +162,7 @@ async function configureTemplate(templateName, sqlQuery, file, user) {
   // Parse Excel BEFORE acquiring a DB connection/transaction
   let parsedFile = null;
   if (file) {
-    parsedFile = await parseExcelFile(file.buffer);
+    parsedFile = await parseExcelFile(file.buffer, file.originalname);
   }
 
   const pool = reconciliationRepository.getPool();

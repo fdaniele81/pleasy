@@ -11,9 +11,10 @@ import {
 } from "../utils/dbValidations.js";
 import { serviceError } from "../utils/errorHandler.js";
 import { validatePassword } from "../validators/passwordValidator.js";
+import { DEFAULT_PROJECT_PHASES_CONFIG, isValidConfig } from "../config/projectPhasesConfig.js";
 
 async function create(data, requestingUser) {
-  const { company_id, email, password, role_id, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color } = data;
+  const { company_id, email, password, role_id, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color, preferred_unit } = data;
 
   if (!company_id || !email || !role_id || !password || !full_name) {
     throw serviceError("USER_REQUIRED_FIELDS", "Company, email, role, name and password are required", 400);
@@ -37,11 +38,11 @@ async function create(data, requestingUser) {
   const user_id = uuidv4();
   const password_hash = await bcrypt.hash(password, 10);
 
-  return await userRepository.createUser(user_id, company_id, email, password_hash, role_id, full_name, !!must_change_password, symbol_letter || null, symbol_bg_color || null, symbol_letter_color || null);
+  return await userRepository.createUser(user_id, company_id, email, password_hash, role_id, full_name, !!must_change_password, symbol_letter || null, symbol_bg_color || null, symbol_letter_color || null, preferred_unit || 'HOURS');
 }
 
 async function update(userId, data, requestingUser) {
-  const { email, role_id, status_id, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color } = data;
+  const { email, role_id, status_id, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color, preferred_unit } = data;
 
   await userNotExistsError(userId);
 
@@ -65,7 +66,7 @@ async function update(userId, data, requestingUser) {
     ? !!must_change_password
     : undefined;
 
-  return await userRepository.updateUser(userId, email, role_id, status_id, full_name, mustChangePwd, symbol_letter !== undefined ? symbol_letter : undefined, symbol_bg_color, symbol_letter_color);
+  return await userRepository.updateUser(userId, email, role_id, status_id, full_name, mustChangePwd, symbol_letter !== undefined ? symbol_letter : undefined, symbol_bg_color, symbol_letter_color, preferred_unit || undefined);
 }
 
 async function changePassword(userId, currentPassword, newPassword) {
@@ -113,6 +114,40 @@ async function resetPassword(targetUserId, newPassword, requestingUser) {
   return targetUserId;
 }
 
+async function getPreferredUnit(userId) {
+  await userNotExistsError(userId);
+  return await userRepository.getPreferredUnit(userId);
+}
+
+async function updatePreferredUnit(userId, preferredUnit) {
+  if (!preferredUnit || !['HOURS', 'DAYS'].includes(preferredUnit)) {
+    throw serviceError("USER_INVALID_UNIT", "Preferred unit must be HOURS or DAYS", 400);
+  }
+
+  await userNotExistsError(userId);
+  return await userRepository.updatePreferredUnit(userId, preferredUnit);
+}
+
+async function getDefaultPhasesConfig(userId) {
+  await userNotExistsError(userId);
+
+  const config = await userRepository.getDefaultPhasesConfig(userId);
+  return {
+    default_phases_config: isValidConfig(config) ? config : DEFAULT_PROJECT_PHASES_CONFIG
+  };
+}
+
+async function updateDefaultPhasesConfig(userId, phasesConfig) {
+  if (!phasesConfig) {
+    throw serviceError("USER_PHASES_CONFIG_REQUIRED", "Project phases configuration is required", 400);
+  }
+
+  await userNotExistsError(userId);
+
+  const updatedConfig = await userRepository.updateDefaultPhasesConfig(userId, phasesConfig);
+  return { default_phases_config: updatedConfig };
+}
+
 async function remove(userId, requestingUser) {
   await userNotExistsError(userId);
 
@@ -128,6 +163,10 @@ export {
   changePassword,
   resetPassword,
   remove,
+  getPreferredUnit,
+  updatePreferredUnit,
+  getDefaultPhasesConfig,
+  updateDefaultPhasesConfig,
 };
 
 export default {
@@ -136,4 +175,8 @@ export default {
   changePassword,
   resetPassword,
   remove,
+  getPreferredUnit,
+  updatePreferredUnit,
+  getDefaultPhasesConfig,
+  updateDefaultPhasesConfig,
 };

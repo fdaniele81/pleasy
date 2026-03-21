@@ -34,4 +34,28 @@ router.delete("/:user_id",
   userController.remove
 );
 
+router.get("/preferred-unit",
+  verifyToken,
+  checkRole(["PM"]),
+  userController.getPreferredUnit
+);
+
+router.put("/preferred-unit",
+  verifyToken,
+  checkRole(["PM"]),
+  userController.updatePreferredUnit
+);
+
+router.get("/default-phases-config",
+  verifyToken,
+  checkRole(["PM"]),
+  userController.getDefaultPhasesConfig
+);
+
+router.put("/default-phases-config",
+  verifyToken,
+  checkRole(["PM"]),
+  userController.updateDefaultPhasesConfig
+);
+
 export default router;

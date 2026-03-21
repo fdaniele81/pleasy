@@ -287,6 +287,7 @@ const UserModal = ({
             </select>
           </div>
         </div>
+
       </div>
 
       {/* — SIMBOLO UTENTE — */}

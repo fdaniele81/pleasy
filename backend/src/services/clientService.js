@@ -5,6 +5,7 @@ import taskRepository from "../repositories/taskRepository.js";
 import checkCompanyAccess from "../utils/checkCompanyAccess.js";
 import { companyNotExistsError, clientNotExistsError, userNotExistsError } from "../utils/dbValidations.js";
 import { DEFAULT_PROJECT_PHASES_CONFIG, isValidConfig } from "../config/projectPhasesConfig.js";
+import userRepository from "../repositories/userRepository.js";
 import { serviceError } from "../utils/errorHandler.js";
 
 async function create(data, user) {
@@ -23,7 +24,14 @@ async function create(data, user) {
   }
 
   const client_id = uuidv4();
-  const phasesConfig = isValidConfig(project_phases_config) ? project_phases_config : DEFAULT_PROJECT_PHASES_CONFIG;
+
+  let phasesConfig;
+  if (isValidConfig(project_phases_config)) {
+    phasesConfig = project_phases_config;
+  } else {
+    const userDefaults = await userRepository.getDefaultPhasesConfig(user.user_id);
+    phasesConfig = isValidConfig(userDefaults) ? userDefaults : DEFAULT_PROJECT_PHASES_CONFIG;
+  }
 
   await clientRepository.beginTransaction();
 

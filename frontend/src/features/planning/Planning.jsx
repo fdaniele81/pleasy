@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsGanttOpen, setIsCalendarOpen, toggleIsCalendarOpen } from '../../store/slices/ganttModalSlice';
+import { selectCurrentUser } from '../../store/selectors/authSelectors';
 import { selectIsGanttOpen, selectIsCalendarOpen } from '../../store/selectors/ganttModalSelectors';
 import { toggleTask, setSelectedTasks as setSelectedTasksAction, mergeSelectedTasks } from '../../store/slices/planningSelectionSlice';
 import { selectSelectedTasks } from '../../store/selectors/planningSelectionSelectors';
@@ -40,6 +41,7 @@ function Pianificazione() {
   const dispatch = useDispatch();
   const showGanttModal = useSelector(selectIsGanttOpen);
   const showFloatingCalendar = useSelector(selectIsCalendarOpen);
+  const currentUser = useSelector(selectCurrentUser);
 
   const planningData = usePlanningData();
   const {
@@ -144,6 +146,12 @@ function Pianificazione() {
       }
     }
   }, [searchParams, projects]);
+
+  useEffect(() => {
+    if (currentUser?.preferred_unit === 'DAYS') {
+      setShowInDays(true);
+    }
+  }, []);
 
   const baseFilteredProjects = useMemo(() => {
     return projects

@@ -65,6 +65,12 @@ const authSlice = createSlice({
       state.mustChangePassword = false;
       localStorage.removeItem(MUST_CHANGE_PWD_KEY);
     },
+    updateCurrentUser: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        setStoredUser(state.user);
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -157,7 +163,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, localLogout, clearMustChangePassword } = authSlice.actions;
+export const { clearError, localLogout, clearMustChangePassword, updateCurrentUser } = authSlice.actions;
 
 export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;

@@ -1,12 +1,12 @@
 import pool from "../db.js";
 
-async function createUser(userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword = false, symbolLetter = null, symbolBgColor = null, symbolLetterColor = null) {
+async function createUser(userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword = false, symbolLetter = null, symbolBgColor = null, symbolLetterColor = null, preferredUnit = 'HOURS') {
   const result = await pool.query(
     `INSERT INTO users
-       (user_id, company_id, email, password_hash, role_id, status_id, created_at, updated_at, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color)
-     VALUES ($1, $2, $3, $4, $5, 'ACTIVE', NOW(), NOW(), $6, $7, $8, COALESCE($9, '#6B7280'), COALESCE($10, '#FFFFFF'))
-     RETURNING user_id, company_id, email, role_id, created_at, full_name, symbol_letter, symbol_bg_color, symbol_letter_color`,
-    [userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword, symbolLetter || null, symbolBgColor || null, symbolLetterColor || null]
+       (user_id, company_id, email, password_hash, role_id, status_id, created_at, updated_at, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color, preferred_unit)
+     VALUES ($1, $2, $3, $4, $5, 'ACTIVE', NOW(), NOW(), $6, $7, $8, COALESCE($9, '#6B7280'), COALESCE($10, '#FFFFFF'), COALESCE($11, 'HOURS'))
+     RETURNING user_id, company_id, email, role_id, created_at, full_name, symbol_letter, symbol_bg_color, symbol_letter_color, preferred_unit`,
+    [userId, companyId, email, passwordHash, roleId, fullName, mustChangePassword, symbolLetter || null, symbolBgColor || null, symbolLetterColor || null, preferredUnit || 'HOURS']
   );
   return result.rows[0];
 }
@@ -19,7 +19,7 @@ async function getUserById(userId) {
   return result.rows[0];
 }
 
-async function updateUser(userId, email, roleId, statusId, fullName, mustChangePassword, symbolLetter, symbolBgColor, symbolLetterColor) {
+async function updateUser(userId, email, roleId, statusId, fullName, mustChangePassword, symbolLetter, symbolBgColor, symbolLetterColor, preferredUnit) {
   const result = await pool.query(
     `UPDATE users
         SET email = $2,
@@ -30,10 +30,11 @@ async function updateUser(userId, email, roleId, statusId, fullName, mustChangeP
             must_change_password = COALESCE($6, must_change_password),
             symbol_letter = $7,
             symbol_bg_color = COALESCE($8, symbol_bg_color),
-            symbol_letter_color = COALESCE($9, symbol_letter_color)
+            symbol_letter_color = COALESCE($9, symbol_letter_color),
+            preferred_unit = COALESCE($10, preferred_unit)
       WHERE user_id = $1
-     RETURNING email, role_id, status_id, updated_at, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color`,
-    [userId, email, roleId, statusId, fullName, mustChangePassword, symbolLetter !== undefined ? symbolLetter : null, symbolBgColor || null, symbolLetterColor || null]
+     RETURNING email, role_id, status_id, updated_at, full_name, must_change_password, symbol_letter, symbol_bg_color, symbol_letter_color, preferred_unit`,
+    [userId, email, roleId, statusId, fullName, mustChangePassword, symbolLetter !== undefined ? symbolLetter : null, symbolBgColor || null, symbolLetterColor || null, preferredUnit || null]
   );
   return result.rows[0];
 }
@@ -57,6 +58,44 @@ async function deleteUser(userId) {
     [userId]
   );
   return result.rows[0];
+}
+
+async function updatePreferredUnit(userId, preferredUnit) {
+  const result = await pool.query(
+    `UPDATE users
+     SET preferred_unit = $1, updated_at = NOW()
+     WHERE user_id = $2
+     RETURNING preferred_unit`,
+    [preferredUnit, userId]
+  );
+  return result.rows[0]?.preferred_unit;
+}
+
+async function getPreferredUnit(userId) {
+  const result = await pool.query(
+    "SELECT preferred_unit FROM users WHERE user_id = $1",
+    [userId]
+  );
+  return result.rows[0]?.preferred_unit || 'HOURS';
+}
+
+async function getDefaultPhasesConfig(userId) {
+  const result = await pool.query(
+    "SELECT default_phases_config FROM users WHERE user_id = $1",
+    [userId]
+  );
+  return result.rows[0]?.default_phases_config || null;
+}
+
+async function updateDefaultPhasesConfig(userId, config) {
+  const result = await pool.query(
+    `UPDATE users
+     SET default_phases_config = $1, updated_at = NOW()
+     WHERE user_id = $2
+     RETURNING default_phases_config`,
+    [JSON.stringify(config), userId]
+  );
+  return result.rows[0]?.default_phases_config;
 }
 
 async function getSavedFilters(userId) {
@@ -84,6 +123,10 @@ export {
   updateUser,
   updatePassword,
   deleteUser,
+  updatePreferredUnit,
+  getPreferredUnit,
+  getDefaultPhasesConfig,
+  updateDefaultPhasesConfig,
   getSavedFilters,
   updateSavedFilters,
 };
@@ -94,6 +137,10 @@ export default {
   updateUser,
   updatePassword,
   deleteUser,
+  updatePreferredUnit,
+  getPreferredUnit,
+  getDefaultPhasesConfig,
+  updateDefaultPhasesConfig,
   getSavedFilters,
   updateSavedFilters,
 };

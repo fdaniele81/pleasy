@@ -307,7 +307,7 @@ function TemplateConfiguration() {
                       <input
                         id="excel-file-input"
                         type="file"
-                        accept=".xls,.xlsx"
+                        accept=".xls,.xlsx,.csv"
                         onChange={(e) => setExcelFile(e.target.files[0])}
                         className="hidden"
                       />

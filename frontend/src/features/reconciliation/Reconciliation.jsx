@@ -41,10 +41,12 @@ function Reconciliation() {
   };
 
   const validateFile = async (file) => {
-    const ALLOWED_EXTENSIONS = ['.xls', '.xlsx'];
+    const ALLOWED_EXTENSIONS = ['.xls', '.xlsx', '.csv'];
     const ALLOWED_MIME_TYPES = [
       'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+      'application/csv',
     ];
     const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -65,16 +67,20 @@ function Reconciliation() {
       return { valid: false, error: t('reconciliation:fileTooLarge', { max: MAX_FILE_SIZE / 1024 / 1024 }) };
     }
 
-    try {
-      const headerBytes = await readFileHeader(file, 4);
-      const isXlsx = XLSX_MAGIC.every((byte, i) => headerBytes[i] === byte);
-      const isXls = XLS_MAGIC.every((byte, i) => headerBytes[i] === byte);
+    const isCsv = fileName.endsWith('.csv');
 
-      if (!isXlsx && !isXls) {
-        return { valid: false, error: t('reconciliation:invalidContent') };
+    if (!isCsv) {
+      try {
+        const headerBytes = await readFileHeader(file, 4);
+        const isXlsx = XLSX_MAGIC.every((byte, i) => headerBytes[i] === byte);
+        const isXls = XLS_MAGIC.every((byte, i) => headerBytes[i] === byte);
+
+        if (!isXlsx && !isXls) {
+          return { valid: false, error: t('reconciliation:invalidContent') };
+        }
+      } catch {
+        return { valid: false, error: t('reconciliation:cannotVerifyFormat') };
       }
-    } catch {
-      return { valid: false, error: t('reconciliation:cannotVerifyFormat') };
     }
 
     return { valid: true };
@@ -217,7 +223,7 @@ function Reconciliation() {
               onFileChange={handleFileChange}
               onUpload={handleUpload}
               uploading={uploading}
-              accept=".xls,.xlsx"
+              accept=".xls,.xlsx,.csv"
               placeholder={t('reconciliation:clickToChooseFile')}
               buttonLabel={t('reconciliation:loadAndRecalculate')}
               loadingLabel={t('common:loading')}

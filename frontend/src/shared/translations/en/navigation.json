@@ -20,6 +20,7 @@
   "submittedTimesheets": "Submitted Timesheets",
   "timesheetReconciliation": "Timesheet Reconciliation",
   "mySubmissions": "My Submissions",
+  "defaultConfig": "Default Configuration",
   "changePassword": "Change Password",
   "logout": "Logout"
 }

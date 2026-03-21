@@ -162,8 +162,8 @@ function TMPlanning() {
           <div className="mb-4">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold flex items-center gap-3">
-                {getRouteIcon(ROUTES.HOLIDAYS) &&
-                  React.createElement(getRouteIcon(ROUTES.HOLIDAYS), { size: 28 })}
+                {getRouteIcon(ROUTES.TM_PLANNING) &&
+                  React.createElement(getRouteIcon(ROUTES.TM_PLANNING), { size: 28 })}
                 <span>{t('tmplanning:title')}</span>
               </h1>
               <div className="flex items-center gap-2">

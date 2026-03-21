@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { DEFAULT_PERCENTAGES } from "../../../constants/estimator";
 import {
@@ -29,6 +30,7 @@ const EMPTY_NEW_ACTIVITY = {
 
 export function useEstimateEditorState() {
   const { estimateId } = useParams();
+  const currentUser = useSelector(state => state.auth.user);
   const { data: clients = [] } = useGetClientsQuery();
   const { data: currentEstimate, isLoading: estimateLoading, refetch: refetchEstimate } = useGetEstimateQuery(estimateId);
   const [getClientPhasesConfig] = useLazyGetClientPhasesConfigQuery();
@@ -48,7 +50,7 @@ export function useEstimateEditorState() {
   const [editingActivityIndex, setEditingActivityIndex] = useState(null);
   const [showPercentagesModal, setShowPercentagesModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showInDays, setShowInDays] = useState(false);
+  const [showInDays, setShowInDays] = useState(currentUser?.preferred_unit === 'DAYS');
   const newActivityNameInputRef = useRef(null);
 
   const { hoveredCell, handleTooltipEnter, handleTooltipLeave, setHoveredCell } = useTooltipDelay(500);
@@ -158,17 +160,23 @@ export function useEstimateEditorState() {
           if (draftResponse.drafts && draftResponse.drafts.length > 0) {
             const draft = draftResponse.drafts[0];
             setProjectKey(draft.project_key || "");
+          } else if (currentEstimate?.project_key) {
+            // Draft deleted after conversion — use the project's key
+            setProjectKey(currentEstimate.project_key);
           }
         }
       } catch {
         // Draft lookup may fail if no draft exists yet
+        if (currentEstimate?.project_key) {
+          setProjectKey(currentEstimate.project_key);
+        }
       }
     };
 
     if (estimateId) {
       loadProjectKey();
     }
-  }, [estimateId, getDraftsByEstimate]);
+  }, [estimateId, getDraftsByEstimate, currentEstimate]);
 
   const totals = useMemo(
     () => calculateActivityTotals(activities, formData.contingency_percentage),

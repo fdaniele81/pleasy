@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,6 +20,7 @@ import logger from '../../utils/logger';
 
 function Estimator() {
   const { t } = useTranslation(['estimator', 'common']);
+  const currentUser = useSelector(state => state.auth.user);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { data: estimates = [], isLoading: loading } = useGetEstimatesQuery();
@@ -162,8 +164,14 @@ function Estimator() {
     return status;
   };
 
+  const showInDays = currentUser?.preferred_unit === 'DAYS';
+
   const formatHours = (hours) => {
     if (!hours && hours !== 0) return '-';
+    if (showInDays) {
+      const days = parseFloat(hours) / 8;
+      return `${(Math.round(days * 10) / 10).toFixed(1)}gg`;
+    }
     return `${parseFloat(hours).toFixed(1)}h`;
   };
 

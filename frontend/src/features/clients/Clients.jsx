@@ -6,11 +6,10 @@ import {
   useUpdateClientMutation,
   useDeleteClientMutation,
 } from "./api/clientEndpoints";
-import { Briefcase, Trash2, Edit2, Plus, Settings } from "lucide-react";
+import { Trash2, Edit2, Plus, Settings, Users } from "lucide-react";
 import ClientModal from "./components/ClientModal";
 import ClientPhasesConfigModal from "./components/ClientPhasesConfigModal";
 import SearchFilter from "../../shared/components/SearchFilter";
-import { getRouteIcon } from "../../constants/routeIcons";
 import { getStatusBadgeColor } from '../../utils/ui/statusUtils';
 import PageHeader from '../../shared/ui/PageHeader';
 import EmptyState from '../../shared/ui/EmptyState';
@@ -124,7 +123,7 @@ function ClientsSimple() {
           <div className="mt-16"></div>
 
           <PageHeader
-            icon={Briefcase}
+            icon={Users}
             title={t('clients:title')}
             description={t('clients:description')}
             actionButton={{
@@ -225,7 +224,7 @@ function ClientsSimple() {
 
           {filteredClients.length === 0 && (
             <EmptyState
-              icon={Briefcase}
+              icon={Users}
               title={searchTerm.trim() ? t('common:noResults') : t('clients:noClients')}
               message={
                 searchTerm.trim()

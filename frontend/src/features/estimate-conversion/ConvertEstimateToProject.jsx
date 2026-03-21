@@ -67,7 +67,7 @@ function ConvertEstimateToProject() {
   const [loading, setLoading] = useState(false);
   const [converting, setConverting] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  const [showInDays, setShowInDays] = useState(false);
+  const [showInDays, setShowInDays] = useState(currentUser?.preferred_unit === 'DAYS');
   const [keyBlocked, setKeyBlocked] = useState(false);
   const [existingProject, setExistingProject] = useState(null);
 

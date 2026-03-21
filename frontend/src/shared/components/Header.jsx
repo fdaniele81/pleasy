@@ -353,6 +353,7 @@ const Header = memo(function Header() {
 
                   {/* Configurations group */}
                   <MobileNavGroup icon={<Settings size={16} />} label={t('navigation:configurations')} isOpen={mobileOpenGroup === 'config'} onToggle={() => toggleMobileGroup('config')} isActive={isConfigMenuActive}>
+                    <MobileNavLink to={ROUTES.DEFAULT_CONFIG} icon={routeIcons[ROUTES.DEFAULT_CONFIG]} label={t('navigation:defaultConfig')} isActive={isActive(ROUTES.DEFAULT_CONFIG)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.HOLIDAYS} icon={routeIcons[ROUTES.HOLIDAYS]} label={t('navigation:holidayManagement')} isActive={isActive(ROUTES.HOLIDAYS)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.USERS} icon={routeIcons[ROUTES.USERS]} label={t('navigation:userDirectory')} isActive={isActive(ROUTES.USERS)} onClick={closeMobileMenu} />
                     <MobileNavLink to={ROUTES.CLIENTS} icon={routeIcons[ROUTES.CLIENTS]} label={t('navigation:clientDirectory')} isActive={isActive(ROUTES.CLIENTS)} onClick={closeMobileMenu} />

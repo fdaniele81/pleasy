@@ -9,7 +9,7 @@ const FileUploadArea = ({
   onFileChange,
   onUpload,
   uploading = false,
-  accept = '.xls,.xlsx',
+  accept = '.xls,.xlsx,.csv',
   placeholder,
   buttonLabel,
   loadingLabel,

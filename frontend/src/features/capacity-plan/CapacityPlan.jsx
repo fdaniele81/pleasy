@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Layers, Eye } from 'lucide-react';
@@ -13,6 +14,8 @@ import EstimateSelectionTable from './components/EstimateSelectionTable';
 
 function CapacityPlan() {
   const { t } = useTranslation(['capacityPlan', 'common']);
+  const currentUser = useSelector(state => state.auth.user);
+  const showInDays = currentUser?.preferred_unit === 'DAYS';
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { data: estimates = [], isLoading: loading } = useGetEstimatesQuery();
@@ -180,6 +183,7 @@ function CapacityPlan() {
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
               onSelectAll={handleSelectAll}
+              showInDays={showInDays}
             />
           )}
 

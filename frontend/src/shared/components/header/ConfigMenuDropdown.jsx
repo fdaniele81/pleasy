@@ -30,6 +30,14 @@ const ConfigMenuDropdown = memo(function ConfigMenuDropdown({
       {isOpen && (
         <div className={DROPDOWN_CONTAINER_CLASSES}>
           <Link
+            to={ROUTES.DEFAULT_CONFIG}
+            className={DROPDOWN_ITEM_CLASSES}
+            onClick={onToggle}
+          >
+            {routeIcons[ROUTES.DEFAULT_CONFIG] && React.createElement(routeIcons[ROUTES.DEFAULT_CONFIG], { size: 16 })}
+            <span>{t('navigation:defaultConfig')}</span>
+          </Link>
+          <Link
             to={ROUTES.HOLIDAYS}
             className={DROPDOWN_ITEM_CLASSES}
             onClick={onToggle}

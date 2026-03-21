@@ -30,6 +30,7 @@ const MySubmissions = lazy(() => import("./features/mysubmissions/MySubmissions"
 const TMPlanning = lazy(() => import("./features/tmplanning/TMPlanning"));
 const CapacityPlan = lazy(() => import("./features/capacity-plan/CapacityPlan"));
 const CapacityPlanView = lazy(() => import("./features/capacity-plan/CapacityPlanView"));
+const DefaultConfig = lazy(() => import("./features/default-config/DefaultConfig"));
 
 const PageLoader = () => {
   const { t } = useTranslation('common');
@@ -311,6 +312,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={ROLE_GROUPS.PM_ONLY}>
                 <TimesheetSnapshots />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.DEFAULT_CONFIG}
+            element={
+              <ProtectedRoute allowedRoles={ROLE_GROUPS.PM_ONLY}>
+                <DefaultConfig />
               </ProtectedRoute>
             }
           />

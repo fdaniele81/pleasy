@@ -4,7 +4,7 @@ import {
   useGetSnapshotsQuery,
   useReopenSnapshotMutation
 } from './api/snapshotEndpoints';
-import { FileText, RefreshCw, Calendar, Clock, User, ChevronDown, ChevronRight, Eye } from 'lucide-react';
+import { ClipboardCheck, FileText, RefreshCw, Calendar, Clock, User, ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import SearchFilter from '../../shared/components/SearchFilter';
 import PageHeader from '../../shared/ui/PageHeader';
 import DateInput from '../../shared/ui/DateInput';
@@ -133,7 +133,7 @@ function TimesheetSnapshots() {
           <div className="mt-16"></div>
 
           <PageHeader
-            icon={FileText}
+            icon={ClipboardCheck}
             title={t('timesheetsnapshots:title')}
             description={t('timesheetsnapshots:description')}
           />

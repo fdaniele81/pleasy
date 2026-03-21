@@ -70,7 +70,7 @@ export function validateUpdateTask(data, existingTask) {
     description: normalize(data.description) ?? existingTask.description,
     task_details: data.details !== undefined ? (data.details || null) : existingTask.task_details,
     task_status_id: data.task_status_id ?? existingTask.task_status_id,
-    owner_id: normalize(data.owner_id) ?? existingTask.owner_id,
+    owner_id: data.owner_id !== undefined ? normalize(data.owner_id) : existingTask.owner_id,
     budget: data.budget ?? existingTask.budget,
     start_date: normalize(data.start_date) ?? existingTask.start_date,
     end_date: normalize(data.end_date) ?? existingTask.end_date,

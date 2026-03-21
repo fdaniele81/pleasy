@@ -136,7 +136,8 @@ CREATE TABLE public.users (
     must_change_password boolean DEFAULT false NOT NULL,
     symbol_letter character varying(2),
     symbol_bg_color character varying(7) DEFAULT '#6B7280'::character varying,
-    symbol_letter_color character varying(7) DEFAULT '#FFFFFF'::character varying
+    symbol_letter_color character varying(7) DEFAULT '#FFFFFF'::character varying,
+    preferred_unit character varying(10) DEFAULT 'HOURS'::character varying NOT NULL
 );
 
 COMMENT ON TABLE public.users IS 'User accounts associated with companies';

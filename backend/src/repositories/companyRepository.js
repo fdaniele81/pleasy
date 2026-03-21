@@ -57,7 +57,8 @@ async function getCompaniesWithUsers(userRole, companyId) {
        u.must_change_password,
        u.symbol_letter,
        u.symbol_bg_color,
-       u.symbol_letter_color
+       u.symbol_letter_color,
+       u.preferred_unit
      FROM company c
      LEFT JOIN users u ON u.company_id = c.company_id AND u.status_id != 'DELETED'`;
 

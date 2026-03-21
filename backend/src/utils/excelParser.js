@@ -1,57 +1,127 @@
 import ExcelJS from "exceljs";
 
-export async function parseExcelFile(fileBuffer) {
+function parseCsvBuffer(fileBuffer) {
+  const text = fileBuffer.toString("utf-8");
+  const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+
+  if (lines.length === 0) {
+    throw new Error("Il file CSV non contiene dati");
+  }
+
+  const parseCsvLine = (line) => {
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (ch === '"') {
+          inQuotes = false;
+        } else {
+          current += ch;
+        }
+      } else {
+        if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === "," || ch === ";") {
+          result.push(current);
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+    }
+    result.push(current);
+    return result;
+  };
+
+  const headers = parseCsvLine(lines[0]).map((h) => h.trim());
+  if (headers.length === 0 || headers.every((h) => !h)) {
+    throw new Error("Il file CSV non contiene intestazioni valide");
+  }
+
+  const columns = headers.map((h, i) => h || `col_${i + 1}`);
+
+  const jsonData = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCsvLine(lines[i]);
+    const rowData = {};
+    columns.forEach((col, idx) => {
+      const val = values[idx]?.trim();
+      rowData[col] = val === undefined || val === "" ? null : val;
+    });
+    jsonData.push(rowData);
+  }
+
+  return { columns, jsonData };
+}
+
+export async function parseExcelFile(fileBuffer, originalName) {
   try {
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(fileBuffer);
+    const isCsv = originalName && originalName.toLowerCase().endsWith(".csv");
 
-    const sheet = workbook.worksheets[0];
-    if (!sheet) {
-      throw new Error("Il file Excel non contiene fogli");
-    }
+    let cleanColumns;
+    let jsonData;
 
-    const headerRow = sheet.getRow(1);
-    const columns = [];
-    headerRow.eachCell({ includeEmpty: false }, (cell, colNumber) => {
-      columns[colNumber] = cell.value?.toString() || `col_${colNumber}`;
-    });
+    if (isCsv) {
+      const result = parseCsvBuffer(fileBuffer);
+      cleanColumns = result.columns;
+      jsonData = result.jsonData;
+    } else {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(fileBuffer);
 
-    if (columns.length === 0) {
-      throw new Error("Il file Excel non contiene dati");
-    }
+      const sheet = workbook.worksheets[0];
+      if (!sheet) {
+        throw new Error("Il file Excel non contiene fogli");
+      }
 
-    const jsonData = [];
-    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-      if (rowNumber === 1) return;
+      const headerRow = sheet.getRow(1);
+      const columns = [];
+      headerRow.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+        columns[colNumber] = cell.value?.toString() || `col_${colNumber}`;
+      });
 
-      const rowData = {};
-      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        const colName = columns[colNumber];
-        if (colName) {
-          let value = cell.value;
-          if (value && typeof value === "object") {
-            if (value.result !== undefined) value = value.result;
-            else if (value.text) value = value.text;
-            else if (value instanceof Date) value = value.toISOString();
+      if (columns.length === 0) {
+        throw new Error("Il file Excel non contiene dati");
+      }
+
+      jsonData = [];
+      sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        if (rowNumber === 1) return;
+
+        const rowData = {};
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          const colName = columns[colNumber];
+          if (colName) {
+            let value = cell.value;
+            if (value && typeof value === "object") {
+              if (value.result !== undefined) value = value.result;
+              else if (value.text) value = value.text;
+              else if (value instanceof Date) value = value.toISOString();
+            }
+            rowData[colName] = value ?? null;
           }
-          rowData[colName] = value ?? null;
-        }
+        });
+
+        columns.forEach((col) => {
+          if (col && !(col in rowData)) {
+            rowData[col] = null;
+          }
+        });
+
+        jsonData.push(rowData);
       });
 
-      columns.forEach((col) => {
-        if (col && !(col in rowData)) {
-          rowData[col] = null;
-        }
-      });
-
-      jsonData.push(rowData);
-    });
+      cleanColumns = columns.filter(Boolean);
+    }
 
     if (jsonData.length === 0) {
-      throw new Error("Il file Excel non contiene dati");
+      throw new Error("Il file non contiene dati");
     }
-
-    const cleanColumns = columns.filter(Boolean);
 
     const sanitizedColumns = cleanColumns.map((col) =>
       col
@@ -84,8 +154,8 @@ export async function parseExcelFile(fileBuffer) {
       rowCount: sanitizedRows.length,
     };
   } catch (error) {
-    console.error("EXCEL PARSE ERROR:", error);
-    throw new Error(`Errore nel parsing del file Excel: ${error.message}`);
+    console.error("FILE PARSE ERROR:", error);
+    throw new Error(`Errore nel parsing del file: ${error.message}`);
   }
 }
 

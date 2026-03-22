@@ -255,16 +255,16 @@ function TemplateConfiguration() {
             description={t('templateconfig:description')}
           />
 
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
             {loadingTemplate ? (
               <p className="text-gray-500">{t('common:loading')}</p>
             ) : (
               <div className="space-y-4">
                 {template && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
                         <span className="text-green-700 font-medium">
                           {t('templateconfig:templateActive')}
                         </span>
@@ -273,15 +273,15 @@ function TemplateConfiguration() {
                         confirmAction
                         onConfirm={handleDeleteTemplate}
                         itemName="template"
-                        size="md"
+                        size="sm"
                       />
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <p>
+                    <div className="text-sm text-gray-600 space-y-1 overflow-hidden">
+                      <p className="break-all">
                         <strong>{t('templateconfig:stagingTable')}</strong>{" "}
                         {template.staging_table_name}
                       </p>
-                      <p>
+                      <p className="break-all">
                         <strong>{t('templateconfig:usersView')}</strong> pm_users_view_
                         {user.user_id.replace(/-/g, "_")}
                       </p>
@@ -298,11 +298,11 @@ function TemplateConfiguration() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('templateconfig:excelFileForStaging')} {!template && "*"}
-                    <span className="text-xs text-gray-500 ml-2">
+                    <span className="block sm:inline text-xs text-gray-500 sm:ml-2">
                       {t('templateconfig:uploadDataToStaging')}
                     </span>
                   </label>
-                  <div className="flex gap-2 items-start">
+                  <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-start">
                     <div className="flex-1 relative">
                       <input
                         id="excel-file-input"
@@ -325,40 +325,42 @@ function TemplateConfiguration() {
                         </p>
                       )}
                     </div>
-                    <Button
-                      onClick={handleUploadStaging}
-                      disabled={!excelFile}
-                      loading={uploadingStaging}
-                      color="cyan"
-                      className="w-40"
-                    >
-                      {uploadingStaging
-                        ? t('common:loading')
-                        : template
-                        ? t('templateconfig:updateStaging')
-                        : t('templateconfig:loadStaging')}
-                    </Button>
-                    <Button
-                      onClick={handlePreviewStaging}
-                      disabled={!template}
-                      loading={loadingStagingModal}
-                      color="cyan"
-                      icon={Database}
-                      iconSize={16}
-                      className="w-44"
-                      title={t('templateconfig:stagingPreviewTitle')}
-                    >
-                      {loadingStagingModal
-                        ? t('common:loading')
-                        : t('templateconfig:preview')}
-                    </Button>
+                    <div className="grid grid-cols-2 sm:flex gap-2">
+                      <Button
+                        onClick={handleUploadStaging}
+                        disabled={!excelFile}
+                        loading={uploadingStaging}
+                        color="cyan"
+                        className="w-full sm:w-40"
+                      >
+                        {uploadingStaging
+                          ? t('common:loading')
+                          : template
+                          ? t('templateconfig:updateStaging')
+                          : t('templateconfig:loadStaging')}
+                      </Button>
+                      <Button
+                        onClick={handlePreviewStaging}
+                        disabled={!template}
+                        loading={loadingStagingModal}
+                        color="cyan"
+                        icon={Database}
+                        iconSize={16}
+                        className="w-full sm:w-44"
+                        title={t('templateconfig:stagingPreviewTitle')}
+                      >
+                        {loadingStagingModal
+                          ? t('common:loading')
+                          : t('templateconfig:preview')}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('templateconfig:sqlQueryMapping')} *
-                    <span className="text-xs text-gray-500 ml-2">
+                    <span className="block sm:inline text-xs text-gray-500 sm:ml-2">
                       {t('templateconfig:queryMustReturn')}
                     </span>
                   </label>
@@ -368,9 +370,9 @@ function TemplateConfiguration() {
                       setSqlQuery(e.target.value);
                       setQueryTested(false);
                     }}
-                    className="w-full border border-gray-300 rounded px-3 py-2 font-mono text-sm h-64"
+                    className="w-full border border-gray-300 rounded px-3 py-2 font-mono text-sm h-40 sm:h-64"
                   />
-                  <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="mt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
                     <Button
                       onClick={handlePreviewQuery}
                       loading={loadingPreviewQuery}

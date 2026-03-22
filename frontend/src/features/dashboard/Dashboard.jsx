@@ -21,19 +21,18 @@ function Dashboard() {
   } = useDashboard();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PageHeader
-        title={t('dashboard:title')}
-        icon={LayoutDashboard}
-        actionButton={{
-          label: isLoading ? t('common:loading') : t('dashboard:refresh'),
-          onClick: handleRefresh,
-          icon: RefreshCw,
-          disabled: isLoading,
-        }}
-      />
-
+    <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <PageHeader
+          title={t('dashboard:title')}
+          icon={LayoutDashboard}
+          actionButton={{
+            label: isLoading ? t('common:loading') : t('dashboard:refresh'),
+            onClick: handleRefresh,
+            icon: RefreshCw,
+            disabled: isLoading,
+          }}
+        />
         <div className="grid grid-cols-1 gap-6">
 
           <div>

@@ -142,7 +142,7 @@ function FilterDropdown({
         onClick={handleToggle}
         style={minWidth ? { minWidth } : undefined}
         className={`
-          inline-flex items-center justify-between rounded border transition-colors font-medium
+          inline-flex w-full items-center justify-between rounded border transition-colors font-medium
           focus:outline-none focus:ring-1 focus:ring-${accentColor}-500
           ${hasSelection ? colors.active : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}
           ${sizeClasses[size]}

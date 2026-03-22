@@ -99,8 +99,8 @@ function CapacityPlan() {
             placeholder={t('capacityPlan:searchPlaceholder')}
           />
 
-          <div className="mb-6 flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex-1">
               <label
                 htmlFor="client-filter"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -122,7 +122,7 @@ function CapacityPlan() {
               </select>
             </div>
 
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1">
               <label
                 htmlFor="status-filter"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -143,9 +143,9 @@ function CapacityPlan() {
           </div>
 
           {/* Barra selezione e azione */}
-          <div className="mb-4 flex items-center justify-between bg-white rounded-lg shadow-sm px-4 py-3">
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+          <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white rounded-lg shadow-sm px-3 sm:px-4 py-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <span className="text-xs sm:text-sm text-gray-600">
                 {selectedIds.length === 0 ? (
                   t('capacityPlan:selectAtLeast')
                 ) : (
@@ -160,7 +160,7 @@ function CapacityPlan() {
               {selectedIds.length > 0 && (
                 <button
                   onClick={() => setSelectedIds([])}
-                  className="text-sm text-gray-500 hover:text-gray-700 underline"
+                  className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline"
                 >
                   {t('capacityPlan:deselectAll')}
                 </button>
@@ -172,6 +172,7 @@ function CapacityPlan() {
               color="cyan"
               icon={Eye}
               iconSize={18}
+              className="w-full sm:w-auto"
             >
               {t('capacityPlan:viewCapacityPlan')}
             </Button>

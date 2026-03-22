@@ -84,18 +84,18 @@ const ConfirmationModal = ({
 
       <div
         ref={modalRef}
-        className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all"
+        className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-3 sm:mx-4 transform transition-all"
       >
-        <div className="p-6">
-          <div className="flex items-start gap-4">
-            <div className={`w-10 h-10 rounded-full ${variantStyles.iconBg} flex items-center justify-center`}>
+        <div className="p-4 sm:p-6">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className={`w-10 h-10 rounded-full ${variantStyles.iconBg} flex items-center justify-center shrink-0`}>
               {variantStyles.icon}
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3
                 id="confirmation-title"
-                className="text-lg font-semibold text-gray-900"
+                className="text-base sm:text-lg font-semibold text-gray-900"
               >
                 {title}
               </h3>
@@ -106,11 +106,13 @@ const ConfirmationModal = ({
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="mt-5 sm:mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
             <Button
               onClick={onCancel}
               variant="ghost"
               color="gray"
+              fullWidth={false}
+              className="w-full sm:w-auto"
             >
               {cancelText}
             </Button>
@@ -119,6 +121,8 @@ const ConfirmationModal = ({
               ref={confirmButtonRef}
               onClick={onConfirm}
               color={variantStyles.confirmColor}
+              fullWidth={false}
+              className="w-full sm:w-auto"
             >
               {confirmText}
             </Button>

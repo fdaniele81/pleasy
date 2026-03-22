@@ -107,7 +107,7 @@ const ClientModal = ({ isOpen, onClose, onConfirm, client = null }) => {
     >
       {/* — DETTAGLI CLIENTE — */}
       <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('clients:detailsSection')}</p>
-      <div className="grid grid-cols-[minmax(70px,1fr)_3fr_auto_auto] gap-3 items-start mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-[minmax(70px,1fr)_3fr_auto_auto] gap-3 items-start mb-4">
         <div>
           <Label>{t('clients:clientCodeLabel')}</Label>
           <input
@@ -132,7 +132,7 @@ const ClientModal = ({ isOpen, onClose, onConfirm, client = null }) => {
             className={inputBase}
           />
         </div>
-        <div className="w-28">
+        <div className="w-full sm:w-28">
           <Label>{t('clients:statusLabel')}</Label>
           <select
             value={formData.status_id}
@@ -172,7 +172,7 @@ const ClientModal = ({ isOpen, onClose, onConfirm, client = null }) => {
             letterColor={formData.symbol_letter_color}
           />
         </div>
-        <div className="grid grid-cols-[80px_1fr_1fr] gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[80px_1fr_1fr] gap-3">
           <div>
             <Label>{t('clients:symbolLetterLabel')}</Label>
             <input

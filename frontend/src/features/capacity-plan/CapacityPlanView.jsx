@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, Layers, Download } from 'lucide-react';
 import { useLazyGetEstimateQuery } from '../estimator/api/estimateEndpoints';
 import Button from '../../shared/ui/Button';
 import MultiGanttContainer from './components/MultiGanttContainer';
+import MobileTimelineView from './components/MobileTimelineView';
 import AggregatedFTEChart from './components/AggregatedFTEChart';
 import { useCapacityPlanState } from './hooks/useCapacityPlanState';
 import { exportMultiGanttAsPNG, exportFTEChartAsPNG } from '../estimator/utils/chartExport';
@@ -145,7 +146,7 @@ function CapacityPlanView() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-18">
+      <div className="min-h-screen bg-gray-50 pt-20">
         <div className="flex items-center justify-center p-6 pt-20">
           <div className="text-xl">{t('capacityPlan:loadingEstimates')}</div>
         </div>
@@ -154,38 +155,38 @@ function CapacityPlanView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-18">
-      <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-12 py-6">
+    <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Layers className="text-gray-800" size={28} />
-            <h1 className="text-2xl font-bold text-gray-800">{t('capacityPlan:title')}</h1>
-            <span className="bg-cyan-100 text-cyan-700 text-sm font-medium px-3 py-1 rounded-full">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <Layers className="text-gray-800 hidden sm:block" size={28} />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{t('capacityPlan:title')}</h1>
+            <span className="bg-cyan-100 text-cyan-700 text-xs sm:text-sm font-medium px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
               {estimatesList.length === 1 ? t('capacityPlan:estimatesCountSingle', { count: estimatesList.length }) : t('capacityPlan:estimatesCount', { count: estimatesList.length })}
             </span>
           </div>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             {t('capacityPlan:viewEditTimelines')}
           </p>
         </div>
 
         {/* Barra info e controlli */}
-        <div className="from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 px-4 py-3 mb-4">
-          <div className="flex items-center gap-6 text-sm flex-wrap">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-600">{t('capacityPlan:selectedEstimates')}</span>
-              <span className="text-gray-900">
+        <div className="from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 px-3 sm:px-4 py-3 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm">
+            <div className="hidden sm:flex items-center gap-2 min-w-0 flex-1">
+              <span className="font-semibold text-gray-600 shrink-0">{t('capacityPlan:selectedEstimates')}</span>
+              <span className="text-gray-900 truncate">
                 {estimatesList.map((e) => e.estimate?.title).join(', ')}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="font-semibold text-gray-600">{t('capacityPlan:commonDuration')}</span>
+            <div className="flex items-center gap-2 sm:ml-auto">
+              <span className="font-semibold text-gray-600 shrink-0">{t('capacityPlan:commonDuration')}</span>
               <select
                 value={commonTotalDays}
                 onChange={handleTotalDaysChange}
-                className="w-52 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-cyan-500"
+                className="flex-1 sm:w-52 sm:flex-none px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-cyan-500"
               >
                 <option value="10">{t('capacityPlan:duration2Weeks')}</option>
                 <option value="20">{t('capacityPlan:duration1Month')}</option>
@@ -203,8 +204,8 @@ function CapacityPlanView() {
           </div>
         </div>
 
-        {/* Layout principale */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 mb-4 items-start">
+        {/* Layout principale - Desktop: Gantt + FTE side-by-side */}
+        <div className="hidden lg:grid grid-cols-1 xl:grid-cols-4 gap-4 mb-4 items-start">
           {/* Gantt Container */}
           <div className="xl:col-span-3 bg-white rounded-lg shadow-md p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
@@ -243,6 +244,32 @@ function CapacityPlanView() {
             chartRef={fteChartRef}
             estimatesCount={estimatesList.length}
             onExport={handleExportFTEChart}
+            initialChartConfig={initialChartConfig}
+            onChartConfigSave={saveCommonConfig}
+          />
+        </div>
+
+        {/* Layout Mobile: Card timeline + FTE stacked */}
+        <div className="lg:hidden space-y-4 mb-4">
+          <div>
+            <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2 mb-3">
+              <Calendar className="text-cyan-600" size={18} />
+              {t('capacityPlan:timelineE2E')}
+            </h2>
+            <MobileTimelineView
+              estimatesList={estimatesList}
+              totalDays={commonTotalDays}
+              colorMap={colorMap}
+              onDistributionConfig={setConfigEstimateId}
+            />
+          </div>
+
+          <AggregatedFTEChart
+            fteResults={aggregatedFTE}
+            totalDays={commonTotalDays}
+            chartRef={fteChartRef}
+            estimatesCount={estimatesList.length}
+            showExportButton={false}
             initialChartConfig={initialChartConfig}
             onChartConfigSave={saveCommonConfig}
           />

@@ -28,7 +28,7 @@ const FileUploadArea = ({
   return (
     <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
       <div className="flex items-center gap-4">
-        <div className="">
+        <div className="hidden sm:block">
           <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
             <FileSpreadsheet className="w-6 h-6 text-cyan-600" />
           </div>

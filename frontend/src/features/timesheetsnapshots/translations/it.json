@@ -24,5 +24,8 @@
   "noEntriesInSnapshot": "Nessun consuntivo trovato in questo snapshot",
   "submittedAt": "Sottomesso:",
   "entries": "Voci:",
-  "totalHours": "Ore Totali:"
+  "totalHours": "Ore Totali:",
+  "previousTask": "Progetto precedente",
+  "nextTask": "Progetto successivo",
+  "goToTask": "Vai al progetto"
 }

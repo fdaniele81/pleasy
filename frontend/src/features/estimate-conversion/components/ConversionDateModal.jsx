@@ -4,6 +4,7 @@ import { Calendar, FolderKanban, AlertTriangle, Check } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
 import { calculateTaskDates, formatDateDisplay } from '../utils/workingDays';
+import { useBreakpoint } from '../../../hooks/useBreakpoint';
 
 /**
  * Modal asking for start date + elapsed before final conversion.
@@ -24,6 +25,7 @@ function ConversionDateModal({
   existingProject = null,
 }) {
   const { t } = useTranslation(['estimateConversion', 'estimator', 'common']);
+  const { isMobile } = useBreakpoint();
 
   const [startDate, setStartDate] = useState('');
   const [elapsedDays, setElapsedDays] = useState(60);
@@ -106,7 +108,7 @@ function ConversionDateModal({
     >
       <div className="space-y-5">
         {/* Input fields */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {t('estimateConversion:startDate')} <span className="text-red-500">*</span>
@@ -175,60 +177,94 @@ function ConversionDateModal({
           </div>
         )}
 
-        {/* Preview table */}
+        {/* Preview — cards on mobile, table on desktop */}
         {previewRows.length > 0 && (
           <div>
             <h4 className="text-sm font-semibold text-gray-700 mb-2">
               {t('estimateConversion:datePreview')}
             </h4>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">#</th>
-                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
-                      {t('estimateConversion:taskName')}
-                    </th>
-                    <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500">
-                      {t('common:budget')}
-                    </th>
-                    <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">
-                      {t('estimateConversion:startDateCol')}
-                    </th>
-                    <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">
-                      {t('estimateConversion:endDateCol')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewRows.map((row, index) => (
-                    <tr key={row.id} className="border-b border-gray-100 last:border-0">
-                      <td className="px-3 py-1.5 text-gray-400 font-mono text-xs">{index + 1}</td>
-                      <td className="px-3 py-1.5">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: row.color }}
-                          />
-                          <span className="text-gray-800">
-                            {row.title || (row.titleKey ? t('estimator:' + row.titleKey) : t('estimateConversion:untitledTask'))}
+
+            {isMobile ? (
+              /* Mobile: compact task cards */
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {previewRows.map((row, index) => (
+                  <div key={row.id} className="bg-gray-50 rounded-lg border border-gray-200 p-2.5">
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] text-gray-400 font-mono mt-0.5">{index + 1}</span>
+                      <div
+                        className="w-2.5 h-2.5 rounded-full shrink-0 mt-1"
+                        style={{ backgroundColor: row.color }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-gray-800 font-medium truncate">
+                          {row.title || (row.titleKey ? t('estimator:' + row.titleKey) : t('estimateConversion:untitledTask'))}
+                        </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-xs font-mono text-cyan-700 font-semibold">
+                            {formatValue(row.budget)} {unitLabel}
+                          </span>
+                          <span className="text-[11px] text-gray-500">
+                            {row.start_date ? formatDateDisplay(row.start_date) : '-'}
+                            {' → '}
+                            {row.end_date ? formatDateDisplay(row.end_date) : '-'}
                           </span>
                         </div>
-                      </td>
-                      <td className="px-3 py-1.5 text-right font-mono text-gray-700">
-                        {formatValue(row.budget)}{unitLabel}
-                      </td>
-                      <td className="px-3 py-1.5 text-center text-gray-700">
-                        {row.start_date ? formatDateDisplay(row.start_date) : '-'}
-                      </td>
-                      <td className="px-3 py-1.5 text-center text-gray-700">
-                        {row.end_date ? formatDateDisplay(row.end_date) : '-'}
-                      </td>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Desktop: full table */
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">#</th>
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
+                        {t('estimateConversion:taskName')}
+                      </th>
+                      <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500">
+                        {t('common:budget')}
+                      </th>
+                      <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">
+                        {t('estimateConversion:startDateCol')}
+                      </th>
+                      <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">
+                        {t('estimateConversion:endDateCol')}
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((row, index) => (
+                      <tr key={row.id} className="border-b border-gray-100 last:border-0">
+                        <td className="px-3 py-1.5 text-gray-400 font-mono text-xs">{index + 1}</td>
+                        <td className="px-3 py-1.5">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: row.color }}
+                            />
+                            <span className="text-gray-800">
+                              {row.title || (row.titleKey ? t('estimator:' + row.titleKey) : t('estimateConversion:untitledTask'))}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-1.5 text-right font-mono text-gray-700">
+                          {formatValue(row.budget)}{unitLabel}
+                        </td>
+                        <td className="px-3 py-1.5 text-center text-gray-700">
+                          {row.start_date ? formatDateDisplay(row.start_date) : '-'}
+                        </td>
+                        <td className="px-3 py-1.5 text-center text-gray-700">
+                          {row.end_date ? formatDateDisplay(row.end_date) : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

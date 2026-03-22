@@ -25,7 +25,7 @@ const MobileNavLink = memo(function MobileNavLink({ to, icon, label, isActive, o
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${
+      className={`flex items-center gap-3 px-3 py-3 min-h-11 text-sm rounded-lg transition-colors ${
         isActive
           ? 'bg-blue-50 text-blue-700 font-medium'
           : 'text-gray-700 hover:bg-gray-50'
@@ -42,7 +42,7 @@ const MobileNavGroup = memo(function MobileNavGroup({ icon, label, isOpen, onTog
     <div className="mb-1">
       <button
         onClick={onToggle}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${
+        className={`w-full flex items-center gap-3 px-3 py-3 min-h-11 text-sm rounded-lg transition-colors ${
           isActive
             ? 'bg-blue-50 text-blue-700 font-medium'
             : 'text-gray-700 hover:bg-gray-50'
@@ -169,9 +169,9 @@ const Header = memo(function Header() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 shadow-sm border-b z-50 ${IS_NON_PROD ? 'bg-amber-50 border-amber-300' : 'bg-white border-gray-200'}`}>
-      <div className="max-w-full mx-auto px-6 py-4">
+      <div className="max-w-full mx-auto px-4 sm:px-8 py-4">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-4 sm:space-x-8">
             {HOME_URL ? (
               <a
                 href={`${HOME_URL}?lng=${i18n.language}`}
@@ -274,7 +274,7 @@ const Header = memo(function Header() {
             {/* Hamburger button - visible below xl */}
             {isAuthenticated && (
               <button
-                className="xl:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="xl:hidden p-2.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
                 onClick={() => setIsMobileMenuOpen(true)}
                 aria-label="Menu"
               >
@@ -392,14 +392,14 @@ const Header = memo(function Header() {
             <div className="border-t border-gray-100 px-3 py-3 space-y-1">
               <button
                 onClick={handleChangePassword}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-3 min-h-11 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 <KeyRound size={16} className="text-gray-400" />
                 <span>{t('navigation:changePassword')}</span>
               </button>
               <button
                 onClick={handleLogoutClick}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-3 min-h-11 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <LogOut size={16} />
                 <span>{t('navigation:logout')}</span>

@@ -109,79 +109,122 @@ function Companies() {
           />
 
           {filteredCompanies.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('companies:code')}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('companies:businessName')}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('companies:vatNumber')}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common:status')}
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common:actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredCompanies.map((company) => (
-                      <tr key={company.company_id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Building size={16} className="text-cyan-600" />
-                            <span className="text-sm font-medium text-gray-900">
-                              {company.company_key}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-700">
-                            {company.legal_name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-700">
-                            {company.vat_number}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(company.status_id)}`}>
-                            {company.status_id}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              onClick={() => handleEdit(company)}
-                              variant="ghost"
-                              color="blue"
-                              size="sm"
-                              icon={Edit2}
-                              iconSize={18}
-                              title={t('common:edit')}
-                            />
-                            <Button
-                              confirmAction
-                              onConfirm={() => handleDeleteCompany(company.company_id)}
-                              itemName={company.legal_name}
-                              size="md"
-                            />
-                          </div>
-                        </td>
+            <>
+              {/* Desktop table */}
+              <div className="hidden lg:block bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('companies:code')}
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('companies:businessName')}
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('companies:vatNumber')}
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('common:status')}
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('common:actions')}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredCompanies.map((company) => (
+                        <tr key={company.company_id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <Building size={16} className="text-cyan-600" />
+                              <span className="text-sm font-medium text-gray-900">
+                                {company.company_key}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-700">
+                              {company.legal_name}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-700">
+                              {company.vat_number}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(company.status_id)}`}>
+                              {company.status_id}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                onClick={() => handleEdit(company)}
+                                variant="ghost"
+                                color="blue"
+                                size="sm"
+                                icon={Edit2}
+                                iconSize={18}
+                                title={t('common:edit')}
+                              />
+                              <Button
+                                confirmAction
+                                onConfirm={() => handleDeleteCompany(company.company_id)}
+                                itemName={company.legal_name}
+                                size="md"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+
+              {/* Mobile card list */}
+              <div className="lg:hidden space-y-3">
+                {filteredCompanies.map((company) => (
+                  <div key={company.company_id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Building size={16} className="text-cyan-600 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{company.legal_name}</p>
+                          <p className="text-xs text-gray-500">{company.company_key}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full shrink-0 ${getStatusBadgeColor(company.status_id)}`}>
+                        {company.status_id}
+                      </span>
+                    </div>
+                    {company.vat_number && (
+                      <p className="text-xs text-gray-500 mb-2">{t('companies:vatNumber')}: {company.vat_number}</p>
+                    )}
+                    <div className="flex items-center justify-end gap-1 pt-2 border-t border-gray-100">
+                      <Button
+                        onClick={() => handleEdit(company)}
+                        variant="ghost"
+                        color="blue"
+                        size="sm"
+                        icon={Edit2}
+                        iconSize={18}
+                        title={t('common:edit')}
+                      />
+                      <Button
+                        confirmAction
+                        onConfirm={() => handleDeleteCompany(company.company_id)}
+                        itemName={company.legal_name}
+                        size="md"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {filteredCompanies.length === 0 && (

@@ -60,11 +60,9 @@ function ProtectedRoute({ children, allowedRoles }) {
 }
 
 function App() {
-  const [isDesktop, setIsDesktop] = React.useState(window.innerWidth >= 1024);
   const { user, isAuthenticated, mustChangePassword } = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { t } = useTranslation('common');
 
   useEffect(() => {
     const handleUnauthorized = () => {
@@ -75,43 +73,6 @@ function App() {
     window.addEventListener("unauthorized", handleUnauthorized);
     return () => window.removeEventListener("unauthorized", handleUnauthorized);
   }, [dispatch, navigate]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  if (!isDesktop) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-          <svg
-            className="w-16 h-16 mx-auto mb-4 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">
-            {t('desktopRequired')}
-          </h2>
-          <p className="text-gray-600">
-            {t('desktopRequiredMessage')}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const HomeRedirect = () => {
     if (!isAuthenticated || mustChangePassword) {

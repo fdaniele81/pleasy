@@ -5,3 +5,4 @@ export { default as EstimateInfoBar } from './EstimateInfoBar';
 export { default as EstimateActivityRow } from './EstimateActivityRow';
 export { default as EstimateNewActivityRow } from './EstimateNewActivityRow';
 export { default as EstimateTotalsRow } from './EstimateTotalsRow';
+export { default as EstimateMobileView } from './EstimateMobileView';

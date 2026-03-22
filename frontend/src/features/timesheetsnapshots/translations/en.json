@@ -24,5 +24,8 @@
   "noEntriesInSnapshot": "No entries found in this snapshot",
   "submittedAt": "Submitted:",
   "entries": "Entries:",
-  "totalHours": "Total Hours:"
+  "totalHours": "Total Hours:",
+  "previousTask": "Previous project",
+  "nextTask": "Next project",
+  "goToTask": "Go to project"
 }

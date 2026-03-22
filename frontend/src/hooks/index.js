@@ -1,4 +1,5 @@
 export { useAuth } from './useAuth';
+export { useBreakpoint } from './useBreakpoint';
 export { useFilteredList } from './useFilteredList';
 export { useLocale } from './useLocale';
 

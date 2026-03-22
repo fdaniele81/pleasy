@@ -8,6 +8,7 @@ import { ClipboardCheck, FileText, RefreshCw, Calendar, Clock, User, ChevronDown
 import SearchFilter from '../../shared/components/SearchFilter';
 import PageHeader from '../../shared/ui/PageHeader';
 import DateInput from '../../shared/ui/DateInput';
+import Toast from '../../shared/ui/Toast';
 import { useAuth } from '../../hooks';
 import { useLocale } from '../../hooks/useLocale';
 
@@ -32,8 +33,6 @@ function TimesheetSnapshots() {
     { startDate, endDate }
   );
   const [reopenSnapshot, { isLoading: reopenLoading }] = useReopenSnapshotMutation();
-
-  const canViewAllSnapshots = isAdmin() || isPM();
 
   const INITIAL_SNAPSHOT_COUNT = 10;
 
@@ -120,6 +119,14 @@ function TimesheetSnapshots() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <Suspense fallback={null}>
         <SnapshotDetailsModal
           isOpen={selectedSnapshotId !== null}
@@ -144,10 +151,10 @@ function TimesheetSnapshots() {
             placeholder={t('timesheetsnapshots:searchPlaceholder')}
           />
 
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <label className="text-sm font-medium text-gray-700 whitespace-nowrap">{t('timesheetsnapshots:periodLabel')}</label>
-            <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
-            <div className="min-w-[130px]">
+            <Calendar className="h-4 w-4 text-gray-500 shrink-0 hidden sm:block" />
+            <div className="min-w-[130px] flex-1 sm:flex-none">
               <DateInput
                 value={startDate}
                 onChange={setStartDate}
@@ -155,7 +162,7 @@ function TimesheetSnapshots() {
               />
             </div>
             <span className="text-gray-400 text-xs">&mdash;</span>
-            <div className="min-w-[130px]">
+            <div className="min-w-[130px] flex-1 sm:flex-none">
               <DateInput
                 value={endDate}
                 onChange={setEndDate}
@@ -198,10 +205,10 @@ function TimesheetSnapshots() {
                 <div key={userGroup.user_id} className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div className="bg-linear-to-r from-cyan-50 to-cyan-100 px-4 py-3 border-b border-cyan-200">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
                         <button
                           onClick={() => toggleUserCollapse(userGroup.user_id)}
-                          className="text-cyan-600 hover:text-cyan-800 transition-colors"
+                          className="text-cyan-600 hover:text-cyan-800 transition-colors shrink-0"
                           aria-label={isCollapsed ? t('common:expand') : t('common:collapse')}
                         >
                           {isCollapsed ? (
@@ -210,10 +217,10 @@ function TimesheetSnapshots() {
                             <ChevronDown className="h-5 w-5" />
                           )}
                         </button>
-                        <User className="h-5 w-5 text-cyan-600" />
-                        <h3 className="text-lg font-semibold text-gray-900">{userGroup.user_name}</h3>
+                        <User className="h-5 w-5 text-cyan-600 shrink-0 hidden sm:block" />
+                        <h3 className="text-sm sm:text-lg font-semibold text-gray-900 truncate">{userGroup.user_name}</h3>
                       </div>
-                      <div className="flex items-center space-x-4 text-xs text-gray-600">
+                      <div className="hidden sm:flex items-center space-x-4 text-xs text-gray-600 shrink-0">
                         <span>
                           {t('timesheetsnapshots:snapshotCount', { count: userGroup.snapshots.length })}
                         </span>
@@ -229,12 +236,16 @@ function TimesheetSnapshots() {
                           </span>
                         )}
                       </div>
+                      <span className="sm:hidden text-xs font-medium text-gray-600 shrink-0">
+                        {userGroup.snapshots.reduce((sum, s) => sum + s.total_hours, 0).toFixed(1)}h
+                      </span>
                     </div>
                   </div>
 
                   {!isCollapsed && (
                     <>
-                      <div className="overflow-x-auto">
+                      {/* Desktop table */}
+                      <div className="hidden lg:block overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
@@ -324,6 +335,62 @@ function TimesheetSnapshots() {
                             ))}
                           </tbody>
                         </table>
+                      </div>
+
+                      {/* Mobile card list */}
+                      <div className="lg:hidden divide-y divide-gray-200">
+                        {visibleSnapshots.map((snapshot) => (
+                          <div key={snapshot.snapshot_id} className="px-4 py-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1.5 text-xs text-gray-900">
+                                <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                <span>{formatDateTime(snapshot.submitted_at)}</span>
+                              </div>
+                              <span className="text-sm font-medium text-gray-900">{snapshot.total_hours.toFixed(2)}h</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                                <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                                <span>{formatDate(snapshot.min_date)} - {formatDate(snapshot.max_date)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {confirmReopenId === snapshot.snapshot_id ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleReopen(snapshot.snapshot_id)}
+                                      disabled={reopenLoading}
+                                      className="text-green-600 text-xs min-h-11 px-2"
+                                    >
+                                      {t('common:confirm')}
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmReopenId(null)}
+                                      className="text-gray-600 text-xs min-h-11 px-2"
+                                    >
+                                      {t('common:cancel')}
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => setSelectedSnapshotId(snapshot.snapshot_id)}
+                                      className="inline-flex items-center text-cyan-600 text-xs min-h-11 px-2"
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      {t('common:details')}
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmReopenId(snapshot.snapshot_id)}
+                                      className="inline-flex items-center text-cyan-600 text-xs min-h-11 px-2"
+                                    >
+                                      <RefreshCw className="h-3.5 w-3.5" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
 
                       {hasMore && (

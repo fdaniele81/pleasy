@@ -42,7 +42,16 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
   const [savingAll, setSavingAll] = useState(false);
   const [categoryKeys, setCategoryKeys] = useState(['functional', 'technical', 'governance']);
 
+  const [isMobileElapsed, setIsMobileElapsed] = useState(false);
   const teamTabRef = useRef(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 799px)');
+    setIsMobileElapsed(mql.matches);
+    const handler = (e) => setIsMobileElapsed(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   const { data: configData, isLoading: loading } = useGetClientPhasesConfigQuery(
     client?.client_id,
@@ -223,6 +232,27 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
     setConfig(newConfig);
   };
 
+  const getPhaseStartEnd = (phaseKey) => {
+    const values = config?.[phaseKey]?.values || [];
+    if (values.length === 0) return { start: 1, end: 1 };
+    const sorted = [...values].sort((a, b) => a - b);
+    return { start: sorted[0], end: sorted[sorted.length - 1] };
+  };
+
+  const handleMobileIntervalChange = (phaseKey, field, value) => {
+    const current = getPhaseStartEnd(phaseKey);
+    let newStart = field === 'start' ? parseInt(value) : current.start;
+    let newEnd = field === 'end' ? parseInt(value) : current.end;
+    if (newStart > newEnd) {
+      if (field === 'start') newEnd = newStart;
+      else newStart = newEnd;
+    }
+    const newValues = [];
+    for (let i = newStart; i <= newEnd; i++) newValues.push(i);
+    const ganttKey = `intervals_${phaseKey}`;
+    handleGanttIntervalsChange({ ...configToGanttIntervals(), [ganttKey]: newValues });
+  };
+
   const ganttPhases = PHASES
     .filter(p => p.key !== 'contingency')
     .map(p => ({
@@ -286,19 +316,19 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
 
       {!loading && config && (
         <>
-          <div className="flex gap-2 mb-6 border-b border-gray-200">
+          <div className="flex justify-around sm:justify-start sm:gap-2 mb-4 sm:mb-6 border-b border-gray-200 sticky top-0 z-10 bg-white -mt-0.5 pt-0.5">
             {TABS.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setMainTab(tab.key)}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-2 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 whitespace-nowrap ${
                   mainTab === tab.key
                     ? 'border-cyan-600 text-cyan-600'
                     : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <tab.icon size={18} />
-                {tab.label}
+                <tab.icon size={18} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -306,21 +336,19 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
           {mainTab === 'elapsed' && (
             <div className="space-y-4">
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-1">
+                    {t('clients:projectTimeline')}
+                  </h3>
+                  <p className="text-xs text-gray-600 mb-3">
+                    {t('clients:timelineDescription')}
+                  </p>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-1">
-                      {t('clients:projectTimeline')}
-                    </h3>
-                    <p className="text-xs text-gray-600">
-                      {t('clients:timelineDescription')}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-600">{t('clients:projectDuration')}</span>
+                    <span className="block text-sm font-medium text-gray-600 mb-1">{t('clients:projectDuration')}</span>
                     <select
                       value={config?.elapsed_days ?? 10}
                       onChange={(e) => handleElapsedDaysChange(e.target.value)}
-                      className="w-52 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-cyan-500"
+                      className="w-full sm:w-52 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-cyan-500"
                     >
                       <option value="10">{t('clients:twoWeeks')}</option>
                       <option value="20">{t('clients:oneMonth')}</option>
@@ -331,17 +359,62 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
                     </select>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <PhaseIntervalsGantt
-                    phaseIntervals={configToGanttIntervals()}
-                    onIntervalsChange={handleGanttIntervalsChange}
-                    draggedPhase={draggedPhase}
-                    setDraggedPhase={setDraggedPhase}
-                    totalDays={config?.elapsed_days ?? 10}
-                    isReadOnly={false}
-                    phases={ganttPhases}
-                  />
-                </div>
+
+                {isMobileElapsed ? (
+                  <table className="w-full border-collapse table-fixed">
+                    <thead>
+                      <tr className="bg-gray-100 border-b-2 border-gray-300">
+                        <th className="px-2 py-1.5 text-left text-sm font-semibold text-gray-700">{t('common:phase')}</th>
+                        <th className="px-1 py-1.5 text-center text-sm font-semibold text-gray-700 w-16">{t('clients:start')}</th>
+                        <th className="px-1 py-1.5 text-center text-sm font-semibold text-gray-700 w-16">{t('clients:end')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {PHASES_NO_CONTINGENCY.map((phase, idx) => {
+                        const { start, end } = getPhaseStartEnd(phase.key);
+                        return (
+                          <tr key={phase.key} className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="px-2 py-1.5 text-sm font-medium text-gray-900 truncate">{phase.label}</td>
+                            <td className="px-1 py-1.5 text-center">
+                              <select
+                                value={start}
+                                onChange={(e) => handleMobileIntervalChange(phase.key, 'start', e.target.value)}
+                                className="w-14 px-0.5 py-1 border border-gray-300 rounded text-sm text-center focus:ring-2 focus:ring-cyan-500"
+                              >
+                                {Array.from({ length: 10 }, (_, i) => i + 1).map(v => (
+                                  <option key={v} value={v}>{v}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-1 py-1.5 text-center">
+                              <select
+                                value={end}
+                                onChange={(e) => handleMobileIntervalChange(phase.key, 'end', e.target.value)}
+                                className="w-14 px-0.5 py-1 border border-gray-300 rounded text-sm text-center focus:ring-2 focus:ring-cyan-500"
+                              >
+                                {Array.from({ length: 10 }, (_, i) => i + 1).map(v => (
+                                  <option key={v} value={v}>{v}</option>
+                                ))}
+                              </select>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <PhaseIntervalsGantt
+                      phaseIntervals={configToGanttIntervals()}
+                      onIntervalsChange={handleGanttIntervalsChange}
+                      draggedPhase={draggedPhase}
+                      setDraggedPhase={setDraggedPhase}
+                      totalDays={config?.elapsed_days ?? 10}
+                      isReadOnly={false}
+                      phases={ganttPhases}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -388,7 +461,7 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
                               onChange={(e) => handlePercentageChange(phase.key, e.target.value)}
                               onFocus={(e) => e.target.select()}
                               onWheel={(e) => e.target.blur()}
-                              className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-full sm:w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                           </td>
                         </tr>
@@ -409,7 +482,7 @@ const ClientPhasesConfigModal = ({ isOpen, onClose, client }) => {
                           onChange={(e) => handlePercentageChange('contingency', e.target.value)}
                           onFocus={(e) => e.target.select()}
                           onWheel={(e) => e.target.blur()}
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-full sm:w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </td>
                     </tr>

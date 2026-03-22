@@ -141,7 +141,36 @@ function SplitModal({
     setSplitBudgets(newBudgets);
   };
 
-  // --- Draggable bar ---
+  // --- Draggable bar (mouse + touch) ---
+
+  const handleDragMove = useCallback((clientX) => {
+    const drag = dragRef.current;
+    if (!drag || !barRef.current) return;
+
+    const barRect = barRef.current.getBoundingClientRect();
+    const barWidth = barRect.width;
+    if (barWidth <= 0) return;
+
+    const deltaX = clientX - drag.startX;
+    const barTotal = Math.max(drag.startBudgets.reduce((s, v) => s + v, 0), totalBudget);
+    const deltaBudget = (barTotal * deltaX) / barWidth;
+
+    const leftIdx = drag.dividerIndex;
+    const rightIdx = drag.dividerIndex + 1;
+    const leftOriginal = drag.startBudgets[leftIdx];
+    const rightOriginal = drag.startBudgets[rightIdx];
+    const combined = leftOriginal + rightOriginal;
+
+    const minBudget = 0.1;
+    let newLeft = Math.round((leftOriginal + deltaBudget) * 10) / 10;
+    newLeft = Math.max(minBudget, Math.min(combined - minBudget, newLeft));
+    const newRight = Math.round((combined - newLeft) * 10) / 10;
+
+    const newBudgets = [...drag.startBudgets];
+    newBudgets[leftIdx] = newLeft;
+    newBudgets[rightIdx] = newRight;
+    setSplitBudgets(newBudgets);
+  }, [totalBudget]);
 
   const handleDividerMouseDown = useCallback((e, dividerIndex) => {
     e.preventDefault();
@@ -151,35 +180,7 @@ function SplitModal({
       startBudgets: [...splitBudgets],
     };
 
-    const handleMouseMove = (moveEvent) => {
-      const drag = dragRef.current;
-      if (!drag || !barRef.current) return;
-
-      const barRect = barRef.current.getBoundingClientRect();
-      const barWidth = barRect.width;
-      if (barWidth <= 0) return;
-
-      const deltaX = moveEvent.clientX - drag.startX;
-      const barTotal = Math.max(drag.startBudgets.reduce((s, v) => s + v, 0), totalBudget);
-      const deltaBudget = (barTotal * deltaX) / barWidth;
-
-      const leftIdx = drag.dividerIndex;
-      const rightIdx = drag.dividerIndex + 1;
-      const leftOriginal = drag.startBudgets[leftIdx];
-      const rightOriginal = drag.startBudgets[rightIdx];
-      const combined = leftOriginal + rightOriginal;
-
-      const minBudget = 0.1;
-      let newLeft = Math.round((leftOriginal + deltaBudget) * 10) / 10;
-      newLeft = Math.max(minBudget, Math.min(combined - minBudget, newLeft));
-      const newRight = Math.round((combined - newLeft) * 10) / 10;
-
-      const newBudgets = [...drag.startBudgets];
-      newBudgets[leftIdx] = newLeft;
-      newBudgets[rightIdx] = newRight;
-      setSplitBudgets(newBudgets);
-    };
-
+    const handleMouseMove = (moveEvent) => handleDragMove(moveEvent.clientX);
     const handleMouseUp = () => {
       dragRef.current = null;
       document.removeEventListener('mousemove', handleMouseMove);
@@ -188,7 +189,29 @@ function SplitModal({
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [splitBudgets, totalBudget]);
+  }, [splitBudgets, handleDragMove]);
+
+  const handleDividerTouchStart = useCallback((e, dividerIndex) => {
+    const touch = e.touches[0];
+    dragRef.current = {
+      dividerIndex,
+      startX: touch.clientX,
+      startBudgets: [...splitBudgets],
+    };
+
+    const handleTouchMove = (moveEvent) => {
+      moveEvent.preventDefault();
+      handleDragMove(moveEvent.touches[0].clientX);
+    };
+    const handleTouchEnd = () => {
+      dragRef.current = null;
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  }, [splitBudgets, handleDragMove]);
 
   // Assign the missing gap to a specific row
   const handleFillGap = (index) => {
@@ -307,13 +330,14 @@ function SplitModal({
                     </div>
                     {index < splitBudgets.length - 1 && (
                       <div
-                        className="absolute top-0 h-full w-4 z-10 cursor-col-resize flex items-center justify-center group"
+                        className="absolute top-0 h-full w-6 lg:w-4 z-10 cursor-col-resize flex items-center justify-center group touch-none"
                         style={{
-                          left: `calc(${splitBudgets.slice(0, index + 1).reduce((s, b) => s + getBarPercent(b), 0)}% - 8px)`,
+                          left: `calc(${splitBudgets.slice(0, index + 1).reduce((s, b) => s + getBarPercent(b), 0)}% - 12px)`,
                         }}
                         onMouseDown={(e) => handleDividerMouseDown(e, index)}
+                        onTouchStart={(e) => handleDividerTouchStart(e, index)}
                       >
-                        <div className="w-1 h-5 rounded-full bg-white/70 group-hover:bg-white group-hover:shadow-md transition-all" />
+                        <div className="w-1.5 lg:w-1 h-5 rounded-full bg-white/70 group-hover:bg-white group-hover:shadow-md transition-all" />
                       </div>
                     )}
                   </React.Fragment>
@@ -335,7 +359,7 @@ function SplitModal({
                 const pct = getPercent(budget);
                 return (
                   <div key={index} className={showNames ? 'space-y-1' : ''}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap lg:flex-nowrap items-center gap-1.5 lg:gap-2">
                       <div
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: SEGMENT_COLORS[index % SEGMENT_COLORS.length] }}
@@ -359,7 +383,7 @@ function SplitModal({
                           type="number"
                           value={pct}
                           onChange={(e) => handlePercentChange(index, e.target.value)}
-                          className="w-20 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right pr-6 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                          className="w-[72px] lg:w-20 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right pr-6 focus:outline-none focus:ring-1 focus:ring-cyan-500"
                           step="1"
                           min="0"
                         />
@@ -369,7 +393,7 @@ function SplitModal({
                         type="number"
                         value={displayValue(budget)}
                         onChange={(e) => handleBudgetChange(index, e.target.value)}
-                        className="w-24 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                        className="w-20 lg:w-24 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-right focus:outline-none focus:ring-1 focus:ring-cyan-500"
                         step="0.1"
                         min="0"
                       />
@@ -378,13 +402,13 @@ function SplitModal({
                     {hasDeficit ? (
                       <button
                         onClick={() => handleFillGap(index)}
-                        className="ml-1 px-1.5 py-0.5 text-[11px] font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded hover:bg-cyan-100 transition-colors whitespace-nowrap"
+                        className="ml-0.5 lg:ml-1 px-1.5 py-0.5 text-[11px] font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded hover:bg-cyan-100 transition-colors whitespace-nowrap"
                         title={t('estimateConversion:splitFillGapTooltip')}
                       >
                         +{formatValue(deficit)}{unitLabel}
                       </button>
                     ) : (
-                      <span className="ml-1 w-16" />
+                      <span className="ml-1 w-16 hidden lg:inline" />
                     )}
                     </div>
                   </div>

@@ -60,5 +60,7 @@
   "duplicateKeyWarning": "Code {{projectKey}} is already in use. Tasks will be appended to the existing project.",
   "deletedKeyError": "Code {{projectKey}} belongs to a deleted project and cannot be reused.",
   "suggestedKey": "Suggested code: {{suggestedKey}}",
-  "applySuggestedKey": "Use {{suggestedKey}}"
+  "applySuggestedKey": "Use {{suggestedKey}}",
+  "selectAll": "Select all",
+  "swipeToScroll": "Swipe to scroll the grid"
 }

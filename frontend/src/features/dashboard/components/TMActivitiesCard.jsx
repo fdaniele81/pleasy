@@ -11,7 +11,7 @@ import { SkeletonLine, SkeletonBlock } from '../../../shared/components/skeleton
 const TMActivitiesSkeleton = memo(function TMActivitiesSkeleton() {
   return (
     <div className="animate-pulse">
-      <div className="mb-4 grid grid-cols-3 gap-4">
+      <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {['bg-emerald-50', 'bg-amber-50', 'bg-gray-50'].map((bg, idx) => (
           <div key={idx} className={`${bg} rounded-lg p-3`}>
             <SkeletonLine width="70px" height="0.75rem" className="mb-2" />
@@ -47,7 +47,7 @@ const TMActivitiesCard = () => {
     >
       {tmActivities && tmActivities.length > 0 ? (
         <>
-          <div className="mb-4 grid grid-cols-3 gap-4">
+          <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="bg-emerald-50 rounded-lg p-3">
               <p className="text-xs text-emerald-600 font-medium">{t('dashboard:hoursDelivered')}</p>
               <p className="text-xl font-bold text-emerald-700">{totals.actual_hours || 0}h</p>

@@ -46,5 +46,8 @@
   "phaseDocumentation": "Documentazione",
   "phaseStartup": "Post Avvio",
   "phasePm": "PM",
-  "phaseContingency": "Contingency"
+  "phaseContingency": "Contingency",
+  "start": "Inizio",
+  "end": "Fine",
+  "position": "Pos."
 }

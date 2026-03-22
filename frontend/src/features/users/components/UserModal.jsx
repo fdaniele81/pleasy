@@ -300,7 +300,7 @@ const UserModal = ({
             letterColor={formData.symbol_letter_color}
           />
         </div>
-        <div className="grid grid-cols-[80px_1fr_1fr] gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[80px_1fr_1fr] gap-3">
           <div>
             <Label>{t('users:symbolLetterLabel')}</Label>
             <input

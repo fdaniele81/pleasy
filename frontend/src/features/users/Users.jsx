@@ -185,7 +185,7 @@ function Users() {
           <div className="mt-16"></div>
 
           <PageHeader
-            icon={Users}
+            icon={UsersIcon}
             title={t('users:title')}
             description={isAdmin ? t('users:descriptionAdmin') : t('users:descriptionPm')}
             actionButton={{
@@ -221,122 +221,188 @@ function Users() {
           />
 
           {filteredUsers.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('users:name')}
-                      </th>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('users:email')}
-                      </th>
-                      {isAdmin && (
+            <>
+              {/* Desktop table */}
+              <div className="hidden lg:block bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
                         <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {t('users:company')}
+                          {t('users:name')}
                         </th>
-                      )}
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('users:role')}
-                      </th>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common:status')}
-                      </th>
-                      <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common:actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredUsers.map((user) => (
-                      <tr key={user.user_id} className="hover:bg-gray-50">
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold shrink-0 select-none"
-                              style={{
-                                backgroundColor: user.symbol_bg_color || '#6B7280',
-                                color: user.symbol_letter_color || '#FFFFFF'
-                              }}
-                            >
-                              {user.symbol_letter || (user.full_name ? user.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : '?')}
-                            </span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {user.full_name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Mail size={14} className="text-gray-400" />
-                            <span className="text-sm text-gray-700">
-                              {user.email}
-                            </span>
-                          </div>
-                        </td>
+                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('users:email')}
+                        </th>
                         {isAdmin && (
+                          <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {t('users:company')}
+                          </th>
+                        )}
+                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('users:role')}
+                        </th>
+                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('common:status')}
+                        </th>
+                        <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('common:actions')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredUsers.map((user) => (
+                        <tr key={user.user_id} className="hover:bg-gray-50">
                           <td className="px-6 py-2 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <Building size={14} className="text-gray-400" />
-                              <span className="text-sm text-gray-700">
-                                {user.company_name}
+                              <span
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold shrink-0 select-none"
+                                style={{
+                                  backgroundColor: user.symbol_bg_color || '#6B7280',
+                                  color: user.symbol_letter_color || '#FFFFFF'
+                                }}
+                              >
+                                {user.symbol_letter || (user.full_name ? user.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : '?')}
+                              </span>
+                              <span className="text-sm font-medium text-gray-900">
+                                {user.full_name}
                               </span>
                             </div>
                           </td>
-                        )}
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Shield size={14} className="text-gray-400" />
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(user.role_id)}`}>
-                              {user.role_id}
+                          <td className="px-6 py-2 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <Mail size={14} className="text-gray-400" />
+                              <span className="text-sm text-gray-700">
+                                {user.email}
+                              </span>
+                            </div>
+                          </td>
+                          {isAdmin && (
+                            <td className="px-6 py-2 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <Building size={14} className="text-gray-400" />
+                                <span className="text-sm text-gray-700">
+                                  {user.company_name}
+                                </span>
+                              </div>
+                            </td>
+                          )}
+                          <td className="px-6 py-2 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <Shield size={14} className="text-gray-400" />
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(user.role_id)}`}>
+                                {user.role_id}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(user.status_id)}`}>
+                              {user.status_id}
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(user.status_id)}`}>
-                            {user.status_id}
-                          </span>
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              onClick={() => handleEdit(user)}
-                              variant="ghost"
-                              color="blue"
-                              size="sm"
-                              icon={Edit2}
-                              iconSize={18}
-                              title={t('common:edit')}
-                            />
-                            <Button
-                              onClick={() => handleResetPassword(user)}
-                              variant="ghost"
-                              color="blue"
-                              size="sm"
-                              icon={KeyRound}
-                              iconSize={18}
-                              title={t('users:resetPassword')}
-                            />
-                            <Button
-                              confirmAction
-                              onConfirm={() => handleDeleteUser(user)}
-                              itemName={user.full_name}
-                              size="md"
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                onClick={() => handleEdit(user)}
+                                variant="ghost"
+                                color="blue"
+                                size="sm"
+                                icon={Edit2}
+                                iconSize={18}
+                                title={t('common:edit')}
+                              />
+                              <Button
+                                onClick={() => handleResetPassword(user)}
+                                variant="ghost"
+                                color="blue"
+                                size="sm"
+                                icon={KeyRound}
+                                iconSize={18}
+                                title={t('users:resetPassword')}
+                              />
+                              <Button
+                                confirmAction
+                                onConfirm={() => handleDeleteUser(user)}
+                                itemName={user.full_name}
+                                size="md"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+
+              {/* Mobile card list */}
+              <div className="lg:hidden space-y-3">
+                {filteredUsers.map((user) => (
+                  <div key={user.user_id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-[11px] font-bold shrink-0 select-none"
+                          style={{
+                            backgroundColor: user.symbol_bg_color || '#6B7280',
+                            color: user.symbol_letter_color || '#FFFFFF'
+                          }}
+                        >
+                          {user.symbol_letter || (user.full_name ? user.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : '?')}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{user.full_name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className={`hidden min-[500px]:inline px-2 py-0.5 text-xs font-medium rounded-full ${getRoleBadgeColor(user.role_id)}`}>
+                          {user.role_id}
+                        </span>
+                        <span className={`hidden min-[500px]:inline px-2 py-0.5 text-xs font-medium rounded-full ${getStatusBadgeColor(user.status_id)}`}>
+                          {user.status_id}
+                        </span>
+                        <Button
+                          onClick={() => handleEdit(user)}
+                          variant="ghost"
+                          color="blue"
+                          size="sm"
+                          icon={Edit2}
+                          iconSize={18}
+                          title={t('common:edit')}
+                        />
+                        <Button
+                          onClick={() => handleResetPassword(user)}
+                          variant="ghost"
+                          color="blue"
+                          size="sm"
+                          icon={KeyRound}
+                          iconSize={18}
+                          title={t('users:resetPassword')}
+                        />
+                        <Button
+                          confirmAction
+                          onConfirm={() => handleDeleteUser(user)}
+                          itemName={user.full_name}
+                          size="md"
+                        />
+                      </div>
+                    </div>
+                    {isAdmin && user.company_name && (
+                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                        <Building size={12} className="text-gray-400" />
+                        {user.company_name}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {filteredUsers.length === 0 && (
             <EmptyState
-              icon={Users}
+              icon={UsersIcon}
               title={searchTerm.trim() ? t('common:noResults') : t('users:noUsers')}
               message={
                 searchTerm.trim()

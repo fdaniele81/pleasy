@@ -5,6 +5,7 @@ import Button from '../../../shared/ui/Button';
 import BaseModal from '../../../shared/components/BaseModal';
 import TaskRowsTable from './TaskRowsTable';
 import SplitModal from './SplitModal';
+import { useBreakpoint } from '../../../hooks/useBreakpoint';
 
 /**
  * Simple mode view: toolbar (merge/split/advanced/reset) + shared task rows table.
@@ -25,6 +26,7 @@ function PhaseTaskList({
   showInDays = false,
 }) {
   const { t } = useTranslation(['estimateConversion', 'estimator', 'common']);
+  const { isMobile } = useBreakpoint();
   const [showMergePopup, setShowMergePopup] = useState(false);
   const [mergeTitle, setMergeTitle] = useState('');
   const [showSplitPopup, setShowSplitPopup] = useState(false);
@@ -77,20 +79,20 @@ function PhaseTaskList({
   return (
     <>
       {/* Toolbar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-3 lg:px-4 py-2 lg:py-3 mb-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 lg:gap-3 min-w-0">
+            <span className="text-xs lg:text-sm text-gray-600 shrink-0">
               {taskRows.length} {taskRows.length === 1 ? t('estimateConversion:taskRow') : t('estimateConversion:taskRows')}
             </span>
             {selectedCount > 0 && (
-              <span className="text-xs bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-medium">
+              <span className="text-xs bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-medium shrink-0">
                 {selectedCount} {t('estimateConversion:selected')}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 lg:gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -99,7 +101,7 @@ function PhaseTaskList({
               disabled={!canMerge}
               title={t('estimateConversion:mergeTooltip')}
             >
-              {t('estimateConversion:merge')}
+              {!isMobile && t('estimateConversion:merge')}
             </Button>
             <Button
               variant="outline"
@@ -109,18 +111,23 @@ function PhaseTaskList({
               disabled={!canSplit}
               title={t('estimateConversion:splitTooltip')}
             >
-              {t('estimateConversion:split')}
+              {!isMobile && t('estimateConversion:split')}
             </Button>
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            <Button
-              variant="outline"
-              size="sm"
-              icon={Settings2}
-              onClick={onSwitchToAdvanced}
-            >
-              {t('estimateConversion:advancedMode')}
-            </Button>
-            <div className="w-px h-6 bg-gray-300 mx-1" />
+            {!isMobile && (
+              <>
+                <div className="w-px h-6 bg-gray-300 mx-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={Settings2}
+                  onClick={onSwitchToAdvanced}
+                  title={t('estimateConversion:advancedMode')}
+                >
+                  {t('estimateConversion:advancedMode')}
+                </Button>
+              </>
+            )}
+            <div className="w-px h-6 bg-gray-300 mx-0.5 lg:mx-1" />
             <Button
               variant="outline"
               size="sm"
@@ -129,7 +136,7 @@ function PhaseTaskList({
               title={t('estimateConversion:resetTooltip')}
               disabled={taskRows.length === 0}
             >
-              {t('estimateConversion:reset')}
+              {!isMobile && t('estimateConversion:reset')}
             </Button>
           </div>
         </div>

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useLocale } from '../../../hooks/useLocale';
+import { useBreakpoint } from '../../../hooks/useBreakpoint';
 import SelectionCheckbox from '../../../shared/ui/table/SelectionCheckbox';
 
 const TimeOffPlanSummary = ({
@@ -15,6 +17,9 @@ const TimeOffPlanSummary = ({
 }) => {
   const { t } = useTranslation(['timeoffplan', 'common']);
   const locale = useLocale();
+
+  const { isMobile } = useBreakpoint();
+  const [visibleMonthIdx, setVisibleMonthIdx] = useState(0);
 
   const { months, userMonthTotals } = monthlyBreakdown;
 
@@ -42,6 +47,128 @@ const TimeOffPlanSummary = ({
 
   const grandTotal = monthTotalsRow.reduce((sum, v) => sum + v, 0);
 
+  // ── Mobile View ──
+  if (isMobile && months.length > 0) {
+    const safeIdx = Math.min(visibleMonthIdx, months.length - 1);
+    const currentMonth = months[safeIdx];
+    const { monthName, yearStr } = formatMonthLabel(currentMonth);
+    const isMonthSelected = selectedMonths.includes(currentMonth);
+    const currentMonthTotal = monthTotalsRow[safeIdx] || 0;
+
+    return (
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 flex-1 min-h-0 flex flex-col overflow-hidden">
+        {/* Month Navigator */}
+        <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 bg-gray-50">
+          <button
+            onClick={() => setVisibleMonthIdx(i => Math.max(0, i - 1))}
+            disabled={safeIdx === 0}
+            className="p-1.5 rounded-full transition-colors disabled:opacity-25 active:bg-gray-200"
+          >
+            <ChevronLeft size={22} className="text-gray-600" />
+          </button>
+
+          <button
+            onClick={() => onMonthToggle(currentMonth)}
+            className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all active:scale-95 ${
+              isMonthSelected
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span className="capitalize">{monthName} {yearStr}</span>
+            {isMonthSelected && <Check size={16} strokeWidth={3} />}
+          </button>
+
+          <button
+            onClick={() => setVisibleMonthIdx(i => Math.min(months.length - 1, i + 1))}
+            disabled={safeIdx === months.length - 1}
+            className="p-1.5 rounded-full transition-colors disabled:opacity-25 active:bg-gray-200"
+          >
+            <ChevronRight size={22} className="text-gray-600" />
+          </button>
+        </div>
+
+        {/* Dots Indicator */}
+        <div className="flex justify-center gap-1.5 py-2 border-b border-gray-100 bg-gray-50/50">
+          {months.map((m, i) => (
+            <button
+              key={m}
+              onClick={() => setVisibleMonthIdx(i)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                i === safeIdx
+                  ? 'bg-cyan-600 scale-125'
+                  : selectedMonths.includes(m)
+                    ? 'bg-cyan-300'
+                    : 'bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* User List */}
+        <div className="overflow-y-auto flex-1 min-h-0">
+          {/* Select all users row */}
+          <button
+            onClick={onSelectAllUsers}
+            className="flex items-center gap-3 w-full px-4 py-2.5 border-b border-gray-200 bg-gray-50/50 active:bg-gray-100"
+          >
+            <SelectionCheckbox
+              checked={allUsersSelected}
+              indeterminate={selectedUserIds.length > 0 && !allUsersSelected}
+              onChange={onSelectAllUsers}
+              size="sm"
+            />
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {allUsersSelected ? t('timeoffplan:deselectAll') : t('timeoffplan:selectAll')}
+            </span>
+          </button>
+
+          {users.map(user => {
+            const mt = userMonthTotals.get(user.user_id) || new Map();
+            const hours = mt.get(currentMonth) || 0;
+            const isSelected = selectedUserIds.includes(user.user_id);
+
+            return (
+              <button
+                key={user.user_id}
+                onClick={() => onUserToggle(user.user_id)}
+                className={`flex items-center justify-between w-full px-4 py-3 border-b border-gray-100 transition-colors active:bg-gray-100 ${
+                  isSelected ? 'bg-cyan-50' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <SelectionCheckbox
+                    checked={isSelected}
+                    onChange={() => onUserToggle(user.user_id)}
+                    size="sm"
+                    className="shrink-0"
+                  />
+                  <span className={`text-sm truncate ${isSelected ? 'font-medium text-cyan-800' : 'text-gray-800'}`}>
+                    {user.full_name || user.email}
+                  </span>
+                </div>
+                <span className={`text-sm ml-3 shrink-0 tabular-nums ${
+                  hours > 0 ? 'font-semibold text-cyan-700' : 'text-gray-300'
+                }`}>
+                  {hours > 0 ? `${hours.toFixed(1)}h` : '\u2013'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer Total */}
+        <div className="flex items-center justify-between px-4 py-3 border-t-2 border-gray-300 bg-gray-50 shrink-0">
+          <span className="text-xs font-bold text-gray-600 uppercase">{t('timeoffplan:totalShort')}</span>
+          <span className="text-sm font-bold text-cyan-800 tabular-nums">
+            {currentMonthTotal > 0 ? `${currentMonthTotal.toFixed(1)}h` : '\u2013'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Desktop View ──
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden flex-1 min-h-0 flex flex-col">
       <div className="overflow-auto flex-1 min-h-0">

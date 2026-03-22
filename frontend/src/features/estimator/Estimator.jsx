@@ -245,118 +245,190 @@ function Estimator() {
           </div>
 
           {filteredEstimates.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('estimator:tableTitle')}
-                      </th>
-                      <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[180px] xl:w-[220px]">
-                        {t('estimator:tableClient')}
-                      </th>
-                      <th className="hidden xl:table-cell px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[120px]">
-                        {t('estimator:tableCode')}
-                      </th>
-                      <th className="hidden xl:table-cell px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[50px]">
-                        {t('estimator:tableItems')}
-                      </th>
-                      <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[65px]">
-                        {t('estimator:tableEstimate')}
-                      </th>
-                      <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[90px]">
-                        {t('estimator:tableStatus')}
-                      </th>
-                      <th className="px-3 xl:px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                        {t('estimator:tableActions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredEstimates.map((estimate) => (
-                      <tr key={estimate.estimate_id} className="hover:bg-gray-50">
-                        <td className="px-3 xl:px-4 py-2 overflow-hidden">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <Calculator size={14} className="text-cyan-600 shrink-0" />
-                            <span className="text-sm font-medium text-gray-900 truncate">
-                              {estimate.title}
+            <>
+              {/* Desktop table */}
+              <div className="hidden lg:block bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full table-fixed">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('estimator:tableTitle')}
+                        </th>
+                        <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[180px] xl:w-[220px]">
+                          {t('estimator:tableClient')}
+                        </th>
+                        <th className="hidden xl:table-cell px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[120px]">
+                          {t('estimator:tableCode')}
+                        </th>
+                        <th className="hidden xl:table-cell px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[50px]">
+                          {t('estimator:tableItems')}
+                        </th>
+                        <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[65px]">
+                          {t('estimator:tableEstimate')}
+                        </th>
+                        <th className="px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[90px]">
+                          {t('estimator:tableStatus')}
+                        </th>
+                        <th className="px-3 xl:px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                          {t('estimator:tableActions')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredEstimates.map((estimate) => (
+                        <tr key={estimate.estimate_id} className="hover:bg-gray-50">
+                          <td className="px-3 xl:px-4 py-2 overflow-hidden">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Calculator size={14} className="text-cyan-600 shrink-0" />
+                              <span className="text-sm font-medium text-gray-900 truncate">
+                                {estimate.title}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 xl:px-4 py-2 overflow-hidden">
+                            <span className="text-sm text-gray-700 truncate block">
+                              {estimate.client_name || '-'}
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-3 xl:px-4 py-2 overflow-hidden">
-                          <span className="text-sm text-gray-700 truncate block">
-                            {estimate.client_name || '-'}
-                          </span>
-                        </td>
-                        <td className="hidden xl:table-cell px-3 xl:px-4 py-2 overflow-hidden">
-                          <span className="text-sm font-mono text-gray-900 truncate block">
-                            {estimate.project_key || '-'}
-                          </span>
-                        </td>
-                        <td className="hidden xl:table-cell px-3 xl:px-4 py-2 whitespace-nowrap">
-                          <span className="text-sm text-gray-700">
-                            {estimate.tasks_count || 0}
-                          </span>
-                        </td>
-                        <td className="px-3 xl:px-4 py-2 whitespace-nowrap">
-                          <span className="text-sm text-gray-700 font-medium">
-                            {formatHours(estimate.total_hours_with_contingency)}
-                          </span>
-                        </td>
-                        <td className="px-3 xl:px-4 py-2 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getEstimateStatusBadge(estimate.status)}`}>
-                            {getEstimateStatusLabel(estimate.status)}
-                          </span>
-                        </td>
-                        <td className="px-3 xl:px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-1">
-                            {estimate.status === 'CONVERTED' ? (
-                              <Button
-                                onClick={() => handleViewEstimate(estimate)}
-                                variant="ghost"
-                                color="gray"
-                                size="sm"
-                                icon={Eye}
-                                iconSize={16}
-                                title={t('estimator:viewTitle')}
-                              />
-                            ) : (
-                              <>
+                          </td>
+                          <td className="hidden xl:table-cell px-3 xl:px-4 py-2 overflow-hidden">
+                            <span className="text-sm font-mono text-gray-900 truncate block">
+                              {estimate.project_key || '-'}
+                            </span>
+                          </td>
+                          <td className="hidden xl:table-cell px-3 xl:px-4 py-2 whitespace-nowrap">
+                            <span className="text-sm text-gray-700">
+                              {estimate.tasks_count || 0}
+                            </span>
+                          </td>
+                          <td className="px-3 xl:px-4 py-2 whitespace-nowrap">
+                            <span className="text-sm text-gray-700 font-medium">
+                              {formatHours(estimate.total_hours_with_contingency)}
+                            </span>
+                          </td>
+                          <td className="px-3 xl:px-4 py-2 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getEstimateStatusBadge(estimate.status)}`}>
+                              {getEstimateStatusLabel(estimate.status)}
+                            </span>
+                          </td>
+                          <td className="px-3 xl:px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-1">
+                              {estimate.status === 'CONVERTED' ? (
                                 <Button
-                                  onClick={() => handleEditEstimate(estimate)}
+                                  onClick={() => handleViewEstimate(estimate)}
                                   variant="ghost"
-                                  color="blue"
+                                  color="gray"
                                   size="sm"
-                                  icon={Edit2}
+                                  icon={Eye}
                                   iconSize={16}
-                                  title={t('estimator:editTitle')}
+                                  title={t('estimator:viewTitle')}
                                 />
-                                <Button
-                                  onClick={() => handleOpenCloneModal(estimate)}
-                                  variant="ghost"
-                                  color="blue"
-                                  size="sm"
-                                  icon={Copy}
-                                  iconSize={16}
-                                  title={t('estimator:cloneTitle')}
-                                />
-                                <Button
-                                  confirmAction
-                                  onConfirm={() => handleDeleteEstimate(estimate)}
-                                  itemName={estimate.title}
-                                  size="md"
-                                />
-                              </>
+                              ) : (
+                                <>
+                                  <Button
+                                    onClick={() => handleEditEstimate(estimate)}
+                                    variant="ghost"
+                                    color="blue"
+                                    size="sm"
+                                    icon={Edit2}
+                                    iconSize={16}
+                                    title={t('estimator:editTitle')}
+                                  />
+                                  <Button
+                                    onClick={() => handleOpenCloneModal(estimate)}
+                                    variant="ghost"
+                                    color="blue"
+                                    size="sm"
+                                    icon={Copy}
+                                    iconSize={16}
+                                    title={t('estimator:cloneTitle')}
+                                  />
+                                  <Button
+                                    confirmAction
+                                    onConfirm={() => handleDeleteEstimate(estimate)}
+                                    itemName={estimate.title}
+                                    size="md"
+                                  />
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="lg:hidden space-y-3">
+                {filteredEstimates.map((estimate) => (
+                  <div key={estimate.estimate_id} className="bg-white rounded-lg shadow-sm border border-gray-200 px-3 py-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Calculator size={16} className="text-cyan-600 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{estimate.title}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span className="truncate">{estimate.client_name || '-'}</span>
+                            {estimate.project_key && (
+                              <span className="font-mono shrink-0">{estimate.project_key}</span>
+                            )}
+                            <span className="font-medium text-gray-700 shrink-0">{formatHours(estimate.total_hours_with_contingency)}</span>
+                            {estimate.tasks_count > 0 && (
+                              <span className="shrink-0">{estimate.tasks_count} {t('estimator:tableItems').toLowerCase()}</span>
                             )}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className={`hidden xs:inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getEstimateStatusBadge(estimate.status)}`}>
+                          {getEstimateStatusLabel(estimate.status)}
+                        </span>
+                        {estimate.status === 'CONVERTED' ? (
+                          <Button
+                            onClick={() => handleViewEstimate(estimate)}
+                            variant="ghost"
+                            color="gray"
+                            size="sm"
+                            icon={Eye}
+                            iconSize={16}
+                            title={t('estimator:viewTitle')}
+                          />
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => handleEditEstimate(estimate)}
+                              variant="ghost"
+                              color="blue"
+                              size="sm"
+                              icon={Edit2}
+                              iconSize={16}
+                              title={t('estimator:editTitle')}
+                            />
+                            <Button
+                              onClick={() => handleOpenCloneModal(estimate)}
+                              variant="ghost"
+                              color="blue"
+                              size="sm"
+                              icon={Copy}
+                              iconSize={16}
+                              title={t('estimator:cloneTitle')}
+                            />
+                            <Button
+                              confirmAction
+                              onConfirm={() => handleDeleteEstimate(estimate)}
+                              itemName={estimate.title}
+                              size="md"
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            </>
           )}
 
           {filteredEstimates.length === 0 && (

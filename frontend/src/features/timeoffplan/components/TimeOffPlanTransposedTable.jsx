@@ -1,7 +1,9 @@
 import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { isWeekend, isHoliday } from '../../../utils/date/workingDays';
 import { useLocale } from '../../../hooks/useLocale';
+import { useBreakpoint } from '../../../hooks/useBreakpoint';
 
 const TimeOffPlanTransposedTable = ({
   users,
@@ -57,6 +59,8 @@ const TimeOffPlanTransposedTable = ({
     [users, getGrandTotal]
   );
 
+  const { isMobile } = useBreakpoint();
+
   const containerRef = useRef(null);
   const [useVerticalNames, setUseVerticalNames] = useState(false);
 
@@ -74,8 +78,114 @@ const TimeOffPlanTransposedTable = ({
     return () => observer.disconnect();
   }, [users.length]);
 
+  const [mobileUserIdx, setMobileUserIdx] = useState(0);
+
   if (dateRange.length === 0 || users.length === 0) return null;
 
+  // ── Mobile View: navigate between users, dates listed vertically ──
+  if (isMobile) {
+    const safeIdx = Math.min(mobileUserIdx, users.length - 1);
+    const currentUser = users[safeIdx];
+    const userTotal = getTotalHoursForUserAndType(currentUser, 'VACATION');
+
+    return (
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 flex-1 min-h-0 flex flex-col overflow-hidden">
+        {/* User Navigator */}
+        <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 bg-gray-50 shrink-0">
+          <button
+            onClick={() => setMobileUserIdx(i => Math.max(0, i - 1))}
+            disabled={safeIdx === 0}
+            className="p-2 rounded-full transition-colors disabled:opacity-25 active:bg-gray-200"
+          >
+            <ChevronLeft size={22} className="text-gray-600" />
+          </button>
+          <div className="flex flex-col items-center min-w-0 px-2">
+            <span className="text-sm font-semibold text-gray-800 truncate max-w-[200px]">
+              {currentUser.full_name || currentUser.email}
+            </span>
+            <span className="text-[11px] text-gray-400">
+              {safeIdx + 1} / {users.length}
+            </span>
+          </div>
+          <button
+            onClick={() => setMobileUserIdx(i => Math.min(users.length - 1, i + 1))}
+            disabled={safeIdx === users.length - 1}
+            className="p-2 rounded-full transition-colors disabled:opacity-25 active:bg-gray-200"
+          >
+            <ChevronRight size={22} className="text-gray-600" />
+          </button>
+        </div>
+
+        {/* Dots (only if reasonable number of users) */}
+        {users.length > 1 && users.length <= 20 && (
+          <div className="flex justify-center gap-1.5 py-2 border-b border-gray-100 bg-gray-50/50 shrink-0">
+            {users.map((u, i) => (
+              <button
+                key={u.user_id}
+                onClick={() => setMobileUserIdx(i)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === safeIdx ? 'bg-cyan-600 scale-125' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Dates List */}
+        <div className="overflow-y-auto flex-1 min-h-0">
+          {dateRange.map(date => {
+            const nonWorking = isNonWorkingDay(date);
+            const holidayName = getHolidayName(date);
+            const today = isToday(date);
+            const { dayMonth, weekday } = formatDayHeader(date);
+            const hours = getTimeOffForDate(currentUser, 'VACATION', date);
+
+            return (
+              <div
+                key={date}
+                className={`flex items-center justify-between px-4 py-2.5 border-b border-gray-100 ${
+                  today
+                    ? 'bg-cyan-50 border-l-[3px] border-l-cyan-500'
+                    : nonWorking
+                      ? 'bg-gray-50'
+                      : ''
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`text-sm font-semibold tabular-nums ${today ? 'text-cyan-700' : 'text-gray-800'}`}>
+                    {dayMonth}
+                  </span>
+                  <span className={`text-xs capitalize ${nonWorking ? 'text-gray-400' : today ? 'text-cyan-500' : 'text-gray-400'}`}>
+                    {weekday}
+                  </span>
+                  {holidayName && (
+                    <span className="text-[10px] text-amber-600 font-medium truncate max-w-[120px]">
+                      {holidayName}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-sm tabular-nums shrink-0 ml-2 ${
+                  hours > 0 ? 'font-semibold text-cyan-700' : 'text-gray-300'
+                }`}>
+                  {hours > 0 ? `${fmtNum(hours)}h` : '\u2013'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer Total */}
+        <div className="flex items-center justify-between px-4 py-3 border-t-2 border-gray-300 bg-gray-50 shrink-0">
+          <span className="text-xs font-bold text-gray-600 uppercase">{t('timeoffplan:totalShort')}</span>
+          <span className="text-sm font-bold text-cyan-800 tabular-nums">
+            {userTotal > 0 ? `${fmtNum(userTotal)}h` : '\u2013'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Desktop View ──
   return (
     <div ref={containerRef} className="overflow-auto flex-1 min-h-0 bg-white rounded-lg shadow-md border border-gray-200">
       <table className="w-full text-sm" style={{ borderSpacing: 0, borderCollapse: 'separate' }}>

@@ -119,10 +119,10 @@ function MySubmissions() {
             }}
           />
 
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <label className="text-sm font-medium text-gray-700 whitespace-nowrap">{t('timesheetsnapshots:periodLabel')}</label>
-            <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
-            <div className="min-w-[130px]">
+            <Calendar className="h-4 w-4 text-gray-500 shrink-0 hidden sm:block" />
+            <div className="min-w-[130px] flex-1 sm:flex-none">
               <DateInput
                 value={startDate}
                 onChange={setStartDate}
@@ -130,7 +130,7 @@ function MySubmissions() {
               />
             </div>
             <span className="text-gray-400 text-xs">&mdash;</span>
-            <div className="min-w-[130px]">
+            <div className="min-w-[130px] flex-1 sm:flex-none">
               <DateInput
                 value={endDate}
                 onChange={setEndDate}
@@ -167,7 +167,7 @@ function MySubmissions() {
           ) : (
             <div className="bg-white rounded-lg shadow-md flex flex-col h-full overflow-hidden">
               <div className="shrink-0 bg-linear-to-r from-cyan-50 to-cyan-100 px-4 py-3 border-b border-cyan-200">
-                <div className="flex items-center justify-end space-x-4 text-xs text-gray-600">
+                <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs text-gray-600">
                   <span>
                     {t('timesheetsnapshots:snapshotCount', { count: snapshots.length })}
                   </span>
@@ -180,7 +180,8 @@ function MySubmissions() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto min-h-0">
+              {/* Desktop table */}
+              <div className="hidden lg:block flex-1 overflow-y-auto min-h-0">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                     <tr>
@@ -240,6 +241,35 @@ function MySubmissions() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="lg:hidden flex-1 overflow-y-auto min-h-0 divide-y divide-gray-200">
+                {visibleSnapshots.map((snapshot) => (
+                  <div key={snapshot.snapshot_id} className="px-4 py-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-900">
+                        <Clock className="h-3.5 w-3.5 text-gray-400" />
+                        <span>{formatDateTime(snapshot.submitted_at)}</span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">{snapshot.total_hours.toFixed(2)}h</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                        <span>{formatDate(snapshot.min_date)} - {formatDate(snapshot.max_date)}</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedSnapshotId(snapshot.snapshot_id)}
+                        className="inline-flex items-center text-cyan-600 hover:text-cyan-900 text-xs min-h-11 px-2"
+                        title={t('timesheetsnapshots:viewDetailsTitle')}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        {t('common:details')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {hasMore && (

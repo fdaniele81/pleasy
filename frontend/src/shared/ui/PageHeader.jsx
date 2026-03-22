@@ -11,14 +11,14 @@ const PageHeader = ({
   const ActionIcon = actionButton?.icon || Plus;
 
   return (
-    <div className="mb-4 flex items-center justify-between">
+    <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-          {Icon && <Icon size={28} />}
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+          {Icon && <Icon size={24} className="sm:w-7 sm:h-7 shrink-0" />}
           <span>{title}</span>
         </h1>
         {description && (
-          <p className="text-gray-600">{description}</p>
+          <p className="text-sm sm:text-base text-gray-600">{description}</p>
         )}
       </div>
 
@@ -28,6 +28,8 @@ const PageHeader = ({
           color={actionButton.color || "cyan"}
           icon={ActionIcon}
           disabled={actionButton.disabled}
+          fullWidth={false}
+          className="w-full sm:w-auto"
         >
           {actionButton.label}
         </Button>

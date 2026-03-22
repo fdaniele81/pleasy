@@ -64,5 +64,8 @@
   "configureFTE": "Configure FTE distribution",
   "clientLabel": "Client",
   "projectLabel": "Project",
-  "ftePerPeriod": "FTE per Period"
+  "ftePerPeriod": "FTE per Period",
+  "mobileDay": "D{{day}}",
+  "mobilePhases": "phases",
+  "mobileTimespan": "From day {{start}} to day {{end}}"
 }

@@ -75,5 +75,7 @@
   "phaseDocumentation": "Documentation",
   "phaseStartup": "Post Go-Live",
   "phasePm": "PM",
-  "phaseContingency": "Contingency"
+  "phaseContingency": "Contingency",
+  "start": "Start",
+  "end": "End"
 }

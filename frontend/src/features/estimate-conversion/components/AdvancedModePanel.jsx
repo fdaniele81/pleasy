@@ -7,6 +7,7 @@ import BaseModal from '../../../shared/components/BaseModal';
 import TaskNamePopup from './TaskNamePopup';
 import TaskRowsTable from './TaskRowsTable';
 import SplitModal from './SplitModal';
+import { useBreakpoint } from '../../../hooks/useBreakpoint';
 
 /**
  * Advanced mode panel: same toolbar as simple mode (merge/split/reset)
@@ -33,6 +34,7 @@ function AdvancedModePanel({
   showInDays = false,
 }) {
   const { t } = useTranslation(['estimateConversion', 'estimator', 'common']);
+  const { isMobile } = useBreakpoint();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [autoTaskName, setAutoTaskName] = useState('');
   const [selectionBudget, setSelectionBudget] = useState(0);
@@ -166,24 +168,33 @@ function AdvancedModePanel({
 
   return (
     <div>
-      {/* Cell grid */}
+      {/* Cell grid — horizontal scroll on mobile */}
       {estimateDetails.tasks && estimateDetails.tasks.length > 0 && (
-        <SelectableCellsTable
-          estimateTasks={estimateDetails.tasks}
-          contingencyPercentage={estimateDetails.contingency_percentage}
-          selectedCells={selectedCells}
-          cellToTaskMap={cellToTaskMap}
-          onCellClick={onSelectedCellsChange}
-          showInDays={showInDays}
-        />
+        <div className={isMobile ? 'overflow-x-auto -mx-4 px-4 pb-2' : ''}>
+          <div className={isMobile ? 'min-w-[700px]' : ''}>
+            <SelectableCellsTable
+              estimateTasks={estimateDetails.tasks}
+              contingencyPercentage={estimateDetails.contingency_percentage}
+              selectedCells={selectedCells}
+              cellToTaskMap={cellToTaskMap}
+              onCellClick={onSelectedCellsChange}
+              showInDays={showInDays}
+            />
+          </div>
+          {isMobile && (
+            <p className="text-[10px] text-gray-400 mt-1 text-center">
+              {t('estimateConversion:swipeToScroll')}
+            </p>
+          )}
+        </div>
       )}
 
       {/* Selection bar */}
       {availableCells.length > 0 && (
-        <div className="bg-white border-2 border-cyan-500 rounded-lg shadow-md p-4 mb-6 mt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-xs font-semibold">
+        <div className="bg-white border-2 border-cyan-500 rounded-lg shadow-md p-3 lg:p-4 mb-4 lg:mb-6 mt-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2 lg:gap-0">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="bg-cyan-100 text-cyan-800 px-2 lg:px-3 py-1 rounded-full text-xs font-semibold">
                 {availableCells.length} {availableCells.length === 1 ? t('estimator:cellSelected') : t('estimator:cellsSelected')}
               </div>
               <div className="text-sm text-gray-600">
@@ -194,11 +205,11 @@ function AdvancedModePanel({
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleClearSelection}>
+            <div className="flex gap-2 w-full lg:w-auto">
+              <Button variant="outline" onClick={handleClearSelection} size={isMobile ? 'sm' : undefined}>
                 {t('common:cancel')}
               </Button>
-              <Button color="cyan" icon={Save} onClick={handleCreate}>
+              <Button color="cyan" icon={Save} onClick={handleCreate} size={isMobile ? 'sm' : undefined}>
                 {t('estimateConversion:createTask')}
               </Button>
             </div>
@@ -207,20 +218,20 @@ function AdvancedModePanel({
       )}
 
       {/* Toolbar — below the cell grid, above the task list */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 mt-4 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-3 lg:px-4 py-2 lg:py-3 mt-4 mb-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 lg:gap-3 min-w-0">
+            <span className="text-xs lg:text-sm text-gray-600 shrink-0">
               {taskRows.length} {taskRows.length === 1 ? t('estimateConversion:taskRow') : t('estimateConversion:taskRows')}
             </span>
             {selectedCount > 0 && (
-              <span className="text-xs bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-medium">
+              <span className="text-xs bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-medium shrink-0">
                 {selectedCount} {t('estimateConversion:selected')}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 lg:gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -229,7 +240,7 @@ function AdvancedModePanel({
               disabled={!canMerge}
               title={t('estimateConversion:mergeTooltip')}
             >
-              {t('estimateConversion:merge')}
+              {!isMobile && t('estimateConversion:merge')}
             </Button>
             <Button
               variant="outline"
@@ -239,18 +250,19 @@ function AdvancedModePanel({
               disabled={!canSplit}
               title={t('estimateConversion:splitTooltip')}
             >
-              {t('estimateConversion:split')}
+              {!isMobile && t('estimateConversion:split')}
             </Button>
-            <div className="w-px h-6 bg-gray-300 mx-1" />
+            <div className="w-px h-6 bg-gray-300 mx-0.5 lg:mx-1" />
             <Button
               variant="outline"
               size="sm"
               icon={ArrowLeft}
               onClick={onBack}
+              title={t('estimateConversion:backToSimple')}
             >
-              {t('estimateConversion:backToSimple')}
+              {!isMobile && t('estimateConversion:backToSimple')}
             </Button>
-            <div className="w-px h-6 bg-gray-300 mx-1" />
+            <div className="w-px h-6 bg-gray-300 mx-0.5 lg:mx-1" />
             <Button
               variant="outline"
               size="sm"
@@ -259,7 +271,7 @@ function AdvancedModePanel({
               title={t('estimateConversion:resetTooltip')}
               disabled={taskRows.length === 0}
             >
-              {t('estimateConversion:reset')}
+              {!isMobile && t('estimateConversion:reset')}
             </Button>
           </div>
         </div>

@@ -5,8 +5,8 @@ const EstimateInfoBar = memo(function EstimateInfoBar({ clients, formData, proje
   const { t } = useTranslation(['estimator']);
 
   return (
-    <div className="from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 px-4 py-2 mb-4">
-      <div className="flex items-center gap-6 text-sm">
+    <div className="from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 px-3 sm:px-4 py-2 mb-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-gray-600">{t('estimator:infoClientLabel')}</span>
           <span className="text-gray-900">

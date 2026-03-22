@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2, AlertTriangle, Check } from 'lucide-react';
+import { useBreakpoint } from '../../../hooks/useBreakpoint';
 
 /**
  * Shared table for displaying task rows with:
@@ -68,6 +69,130 @@ function TaskRowsTable({
     if (e.key === 'Escape') setEditingTitle(null);
   };
 
+  const { isMobile } = useBreakpoint();
+
+  // --- Mobile card layout ---
+  if (isMobile) {
+    return (
+      <>
+        {/* Select all (mobile) */}
+        {showCheckboxes && taskRows.length > 1 && (
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <input
+              type="checkbox"
+              checked={taskRows.length > 0 && selectedRowIds?.size === taskRows.length}
+              ref={el => { if (el) el.indeterminate = selectedRowIds?.size > 0 && selectedRowIds.size < taskRows.length; }}
+              onChange={() => {
+                if (!onToggleRow) return;
+                const allSelected = selectedRowIds?.size === taskRows.length;
+                taskRows.forEach(row => {
+                  const isSelected = selectedRowIds?.has(row.id);
+                  if (allSelected ? isSelected : !isSelected) {
+                    onToggleRow(row.id);
+                  }
+                });
+              }}
+              className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500"
+            />
+            <span className="text-xs text-gray-500">{t('estimateConversion:selectAll')}</span>
+          </div>
+        )}
+
+        {/* Task cards */}
+        <div className="space-y-2 mb-4">
+          {taskRows.map((row) => {
+            const title = getRowTitle(row);
+            const isSelected = showCheckboxes && selectedRowIds?.has(row.id);
+
+            return (
+              <div
+                key={row.id}
+                className={`bg-white rounded-lg shadow-sm border p-3 transition-colors ${
+                  isSelected ? 'border-cyan-400 bg-cyan-50/50' : 'border-gray-200'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Checkbox */}
+                  {showCheckboxes && (
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onToggleRow(row.id)}
+                      className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500 shrink-0"
+                    />
+                  )}
+
+                  {/* Color dot */}
+                  <div
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: row.color }}
+                  />
+
+                  {/* Content — title + budget inline */}
+                  <div className="flex-1 min-w-0">
+                    {editingTitle === row.id ? (
+                      <input
+                        ref={editInputRef}
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={handleTitleBlur}
+                        onKeyDown={handleTitleKeyDown}
+                        className="w-full px-2 py-1 border border-cyan-400 rounded text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                        maxLength={255}
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-sm text-gray-900 cursor-pointer hover:text-cyan-700 truncate flex-1 min-w-0"
+                          onClick={() => handleTitleClick(row.id, title)}
+                        >
+                          {title}
+                        </span>
+                        <span className="text-sm font-mono font-semibold text-cyan-700 shrink-0">
+                          {formatValue(row.budget)} {unitLabel}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => onRemoveRow(row.id)}
+                    className="text-gray-300 hover:text-red-500 transition-colors p-1 shrink-0"
+                    title={t('estimator:removeTask')}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Total + budget validation (mobile) */}
+        <div className={`rounded-lg border-2 px-3 py-2 mb-4 ${
+          budgetOk ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              {budgetOk ? (
+                <Check size={14} className="text-green-600 shrink-0" />
+              ) : (
+                <AlertTriangle size={14} className="text-amber-600 shrink-0" />
+              )}
+              <span className="text-xs text-gray-600">{t('common:total')}</span>
+            </div>
+            <span className={`text-sm font-mono font-bold ${budgetOk ? 'text-green-700' : 'text-red-600'}`}>
+              {formatValue(currentTotal)} / {formatValue(originalTotal)} {unitLabel}
+            </span>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // --- Desktop table layout ---
   return (
     <>
       {/* Task rows table */}

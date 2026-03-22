@@ -15,6 +15,7 @@ import {
   EstimateActivityRow,
   EstimateNewActivityRow,
   EstimateTotalsRow,
+  EstimateMobileView,
 } from "./components";
 
 function EstimateEditorTasks() {
@@ -116,8 +117,8 @@ function EstimateEditorTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-18">
-      <div className="max-w-full mx-auto px-6 lg:px-2 xl:px-12 py-6">
+    <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="max-w-full mx-auto px-3 sm:px-6 lg:px-2 xl:px-12 py-4 sm:py-6">
         <EstimateInfoBar
           clients={clients}
           formData={formData}
@@ -125,8 +126,8 @@ function EstimateEditorTasks() {
         />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <div className="flex items-baseline gap-2">
+          <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex flex-wrap items-baseline gap-2">
               <h2 className="text-lg font-semibold text-gray-800">
                 {t('estimator:estimateItems')}
               </h2>
@@ -215,11 +216,12 @@ function EstimateEditorTasks() {
             </div>
           </div>
 
-          <div className="overflow-x-auto lg:overflow-x-visible">
+          {/* Desktop table view (lg+) */}
+          <div className="hidden lg:block overflow-x-visible">
             <table className="w-full text-sm table-fixed border-collapse">
               <colgroup>
-                <col className="w-[18%] lg:w-[17%]" />
-                <col className="w-[15%] lg:w-[14%]" />
+                <col className="w-[17%]" />
+                <col className="w-[14%]" />
                 <col className="w-[6%]" />
                 <col className="w-[6%]" />
                 <col className="w-[6%]" />
@@ -230,7 +232,7 @@ function EstimateEditorTasks() {
                 <col className="w-[6%]" />
                 <col className="w-[6%]" />
                 <col className="w-[6%]" />
-                <col className="w-[7%] lg:w-[9%]" />
+                <col className="w-[9%]" />
               </colgroup>
               <ActivityTableHeader formData={formData} showInDays={showInDays} />
               <tbody className="bg-white divide-y divide-gray-200">
@@ -279,6 +281,33 @@ function EstimateEditorTasks() {
             </table>
           </div>
 
+          {/* Mobile card view (< lg) */}
+          <div className="lg:hidden p-3">
+            <EstimateMobileView
+              activities={activities}
+              editingActivityIndex={editingActivityIndex}
+              currentEstimate={currentEstimate}
+              formatHours={formatHours}
+              getContingencyHours={getContingencyHours}
+              onFieldChange={handleActivityFieldChange}
+              onHoursBlur={handleHoursBlur}
+              onSave={handleSaveActivity}
+              onEdit={handleEditActivity}
+              onCancelEdit={handleCancelEdit}
+              onRecalculate={handleRecalculateActivity}
+              onDelete={handleDeleteActivity}
+              showInDays={showInDays}
+              totals={totals}
+              newActivity={newActivity}
+              setNewActivity={setNewActivity}
+              formData={formData}
+              onDevInputChange={handleDevInputChange}
+              onAdd={handleAddActivity}
+              onCancel={handleCancelNewActivity}
+              newActivityNameInputRef={newActivityNameInputRef}
+            />
+          </div>
+
           {activities.length === 0 && (
             <div className="p-8 text-center text-gray-500">
               {t('estimator:noItemsMessage')}
@@ -286,7 +315,7 @@ function EstimateEditorTasks() {
           )}
         </div>
 
-        <div className="flex justify-between gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
           <Button
             onClick={() => navigate('/estimator')}
             variant="outline"

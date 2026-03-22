@@ -187,7 +187,7 @@ function Reconciliation() {
       <div className="min-h-screen bg-gray-100">
         <div className="flex items-center justify-center p-6 pt-20">
           <Loader2 className="w-8 h-8 animate-spin text-cyan-600 mr-3" />
-          <span className="text-xl text-gray-700">{t('reconciliation:loadingData')}</span>
+          <span className="text-lg sm:text-xl text-gray-700">{t('reconciliation:loadingData')}</span>
         </div>
       </div>
     );
@@ -195,9 +195,9 @@ function Reconciliation() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="p-4">
+      <div className="p-2 sm:p-4">
         <div className="max-w-full mx-auto">
-          <div className="mt-16"></div>
+          <div className="mt-20 sm:mt-16"></div>
 
           <PageHeader
             icon={FileSpreadsheet}
@@ -252,103 +252,169 @@ function Reconciliation() {
                     <div key={externalKey}>
                       <button
                         onClick={() => toggleKey(externalKey)}
-                        className="w-full bg-gray-50 hover:bg-gray-100 px-4 py-3 flex items-center gap-3 transition-colors text-left"
+                        className="w-full bg-gray-50 hover:bg-gray-100 active:bg-gray-200 px-3 sm:px-4 py-3 sm:py-3 flex items-center gap-2 sm:gap-3 transition-colors text-left min-h-[52px]"
                       >
                         {isExpanded ? (
-                          <ChevronDown className="w-5 h-5 text-gray-500" />
+                          <ChevronDown className="w-5 h-5 text-gray-500 shrink-0" />
                         ) : (
-                          <ChevronRight className="w-5 h-5 text-gray-500" />
+                          <ChevronRight className="w-5 h-5 text-gray-500 shrink-0" />
                         )}
 
-                        <div className={`w-3 h-3 rounded-full ${isKeyMatch ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <div className={`w-3 h-3 rounded-full shrink-0 ${isKeyMatch ? 'bg-green-500' : 'bg-red-500'}`} />
 
-                        <span className="font-semibold text-gray-900 flex-1 truncate">{externalKey}</span>
-
-                        <span className="text-sm text-gray-500">
-                          <span className="font-medium">{keyData.length}</span> {keyData.length === 1 ? t('reconciliation:userSingular') : t('reconciliation:usersPlural')}
-                        </span>
-
-                        <span className="text-sm text-gray-500 ml-4">
-                          {t('reconciliation:diff')}:{' '}
-                          <span className={`font-semibold ${isKeyMatch ? 'text-green-600' : 'text-red-600'}`}>
-                            {formatHours(Math.abs(keyTotalDiff))}h
-                          </span>
-                        </span>
+                        <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3">
+                          <span className="font-semibold text-gray-900 truncate text-sm sm:text-base">{externalKey}</span>
+                          <div className="flex items-center gap-3 text-xs sm:text-sm text-gray-500">
+                            <span>
+                              <span className="font-medium">{keyData.length}</span> {keyData.length === 1 ? t('reconciliation:userSingular') : t('reconciliation:usersPlural')}
+                            </span>
+                            <span>
+                              {t('reconciliation:diff')}:{' '}
+                              <span className={`font-semibold ${isKeyMatch ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatHours(Math.abs(keyTotalDiff))}h
+                              </span>
+                            </span>
+                          </div>
+                        </div>
                       </button>
 
                       {isExpanded && (
-                        <div className="overflow-x-auto">
-                          <table className="w-full border-collapse text-sm">
-                            <thead>
-                              <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
-                                  {t('reconciliation:userColumn')}
-                                </th>
-                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                                  {t('reconciliation:externalTimesheets')}
-                                </th>
-                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                                  {t('reconciliation:pleasy')}
-                                </th>
-                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                                  {t('reconciliation:diff')}
-                                </th>
-                                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                                  {t('reconciliation:statusColumn')}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-100">
-                              {keyData.map((row, idx) => {
-                                const diff = parseFloat(row.actual_hours || 0) - parseFloat(row.reconciliation_hours || 0);
-                                const isMatch = Math.abs(diff) < 0.01;
+                        <>
+                          {/* Desktop table */}
+                          <div className="hidden sm:block overflow-x-auto">
+                            <table className="w-full border-collapse text-sm">
+                              <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+                                    {t('reconciliation:userColumn')}
+                                  </th>
+                                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                                    {t('reconciliation:externalTimesheets')}
+                                  </th>
+                                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                                    {t('reconciliation:pleasy')}
+                                  </th>
+                                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                                    {t('reconciliation:diff')}
+                                  </th>
+                                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                                    {t('reconciliation:statusColumn')}
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-100">
+                                {keyData.map((row, idx) => {
+                                  const diff = parseFloat(row.actual_hours || 0) - parseFloat(row.reconciliation_hours || 0);
+                                  const isMatch = Math.abs(diff) < 0.01;
 
-                                return (
-                                  <tr key={idx} className="hover:bg-gray-50">
-                                    <td className="px-4 py-2 text-gray-900">
+                                  return (
+                                    <tr key={idx} className="hover:bg-gray-50">
+                                      <td className="px-4 py-2 text-gray-900">
+                                        {row.user_name || row.user_id}
+                                      </td>
+                                      <td className="px-4 py-2 text-right font-medium text-gray-700">
+                                        {formatHours(row.reconciliation_hours)}h
+                                      </td>
+                                      <td className="px-4 py-2 text-right font-medium text-gray-700">
+                                        {formatHours(row.actual_hours)}h
+                                      </td>
+                                      <td className="px-4 py-2 text-right font-medium">
+                                        <span className={isMatch ? 'text-green-600' : 'text-red-600'}>
+                                          {formatHours(Math.abs(diff))}h
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-2 text-center">
+                                        {isMatch ? (
+                                          <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
+                                        ) : (
+                                          <AlertCircle className="w-5 h-5 text-red-500 mx-auto" />
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                              <tfoot>
+                                <tr className="bg-gray-50 font-semibold border-t border-gray-200">
+                                  <td className="px-4 py-2 text-gray-900">{t('reconciliation:total')}</td>
+                                  <td className="px-4 py-2 text-right text-gray-700">
+                                    {formatHours(keyTotalReconciliation)}h
+                                  </td>
+                                  <td className="px-4 py-2 text-right text-gray-700">
+                                    {formatHours(keyTotalActual)}h
+                                  </td>
+                                  <td className="px-4 py-2 text-right">
+                                    <span className={isKeyMatch ? 'text-green-600' : 'text-red-600'}>
+                                      {formatHours(Math.abs(keyTotalDiff))}h
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-2"></td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+
+                          {/* Mobile card layout */}
+                          <div className="sm:hidden divide-y divide-gray-100 bg-white">
+                            {keyData.map((row, idx) => {
+                              const diff = parseFloat(row.actual_hours || 0) - parseFloat(row.reconciliation_hours || 0);
+                              const isMatch = Math.abs(diff) < 0.01;
+
+                              return (
+                                <div key={idx} className="px-3 py-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium text-gray-900 text-sm truncate mr-2">
                                       {row.user_name || row.user_id}
-                                    </td>
-                                    <td className="px-4 py-2 text-right font-medium text-gray-700">
-                                      {formatHours(row.reconciliation_hours)}h
-                                    </td>
-                                    <td className="px-4 py-2 text-right font-medium text-gray-700">
-                                      {formatHours(row.actual_hours)}h
-                                    </td>
-                                    <td className="px-4 py-2 text-right font-medium">
-                                      <span className={isMatch ? 'text-green-600' : 'text-red-600'}>
+                                    </span>
+                                    {isMatch ? (
+                                      <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                                    ) : (
+                                      <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                                    )}
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2 text-xs">
+                                    <div>
+                                      <span className="text-gray-500 block">{t('reconciliation:externalTimesheets')}</span>
+                                      <span className="font-medium text-gray-700">{formatHours(row.reconciliation_hours)}h</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500 block">{t('reconciliation:pleasy')}</span>
+                                      <span className="font-medium text-gray-700">{formatHours(row.actual_hours)}h</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500 block">{t('reconciliation:diff')}</span>
+                                      <span className={`font-semibold ${isMatch ? 'text-green-600' : 'text-red-600'}`}>
                                         {formatHours(Math.abs(diff))}h
                                       </span>
-                                    </td>
-                                    <td className="px-4 py-2 text-center">
-                                      {isMatch ? (
-                                        <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                                      ) : (
-                                        <AlertCircle className="w-5 h-5 text-red-500 mx-auto" />
-                                      )}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                            <tfoot>
-                              <tr className="bg-gray-50 font-semibold border-t border-gray-200">
-                                <td className="px-4 py-2 text-gray-900">{t('reconciliation:total')}</td>
-                                <td className="px-4 py-2 text-right text-gray-700">
-                                  {formatHours(keyTotalReconciliation)}h
-                                </td>
-                                <td className="px-4 py-2 text-right text-gray-700">
-                                  {formatHours(keyTotalActual)}h
-                                </td>
-                                <td className="px-4 py-2 text-right">
-                                  <span className={isKeyMatch ? 'text-green-600' : 'text-red-600'}>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {/* Mobile totals */}
+                            <div className="px-3 py-3 bg-gray-50">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-gray-900 text-sm">{t('reconciliation:total')}</span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div>
+                                  <span className="text-gray-500 block">{t('reconciliation:externalTimesheets')}</span>
+                                  <span className="font-semibold text-gray-700">{formatHours(keyTotalReconciliation)}h</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 block">{t('reconciliation:pleasy')}</span>
+                                  <span className="font-semibold text-gray-700">{formatHours(keyTotalActual)}h</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 block">{t('reconciliation:diff')}</span>
+                                  <span className={`font-semibold ${isKeyMatch ? 'text-green-600' : 'text-red-600'}`}>
                                     {formatHours(Math.abs(keyTotalDiff))}h
                                   </span>
-                                </td>
-                                <td className="px-4 py-2"></td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </>
                       )}
                     </div>
                   );

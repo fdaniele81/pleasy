@@ -60,5 +60,7 @@
   "duplicateKeyWarning": "Il codice {{projectKey}} è già in uso. I task verranno accodati al progetto esistente.",
   "deletedKeyError": "Il codice {{projectKey}} appartiene a un progetto eliminato e non può essere riutilizzato.",
   "suggestedKey": "Codice suggerito: {{suggestedKey}}",
-  "applySuggestedKey": "Usa {{suggestedKey}}"
+  "applySuggestedKey": "Usa {{suggestedKey}}",
+  "selectAll": "Seleziona tutto",
+  "swipeToScroll": "Scorri per vedere la griglia"
 }

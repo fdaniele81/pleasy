@@ -153,7 +153,7 @@ body {
   }
 
   .modal-content {
-    @apply bg-white rounded-lg shadow-xl max-h-[90vh] overflow-auto;
+    @apply bg-white rounded-lg shadow-xl max-h-[90vh] overflow-auto w-[95vw] sm:w-auto;
   }
 
   .modal-header {
@@ -169,15 +169,15 @@ body {
   }
 
   .page-container {
-    @apply min-h-screen bg-gray-50 pt-18 px-6 lg:px-2 xl:px-12 py-6;
+    @apply min-h-screen bg-gray-50 pt-20 px-3 sm:px-4 lg:px-2 xl:px-12 py-4 sm:py-6;
   }
 
   .page-header {
-    @apply flex items-center justify-between mb-6;
+    @apply flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4 sm:mb-6;
   }
 
   .page-title {
-    @apply text-2xl font-bold text-gray-900;
+    @apply text-xl sm:text-2xl font-bold text-gray-900;
   }
 
   .tooltip {

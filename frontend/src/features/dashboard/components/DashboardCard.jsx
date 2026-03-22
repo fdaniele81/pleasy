@@ -25,7 +25,7 @@ const DashboardCard = ({
   headerClassName = '',
 }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm p-3 sm:p-6 overflow-hidden ${className}`}>
       {(title || Icon || action) && (
         <div className={`flex items-center justify-between mb-4 ${headerClassName}`}>
           <div className="flex items-center gap-2">

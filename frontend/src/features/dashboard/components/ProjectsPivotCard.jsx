@@ -175,29 +175,29 @@ const ProjectsPivotCard = () => {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div>
+        <table className="w-full divide-y divide-gray-200 table-fixed min-[700px]:table-auto">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-[55%] min-[400px]:w-[50%] min-[700px]:w-auto px-1.5 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {groupBy === "client" ? t('dashboard:clientProject') : t('dashboard:projectLabel')}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden lg:table-cell px-1.5 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('dashboard:budgetDays')}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden xl:table-cell px-1.5 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('dashboard:actualDays')}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden min-[400px]:table-cell px-1.5 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('dashboard:etcDays')}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden md:table-cell px-1.5 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('dashboard:eacDays')}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden min-[700px]:table-cell px-1.5 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('dashboard:deltaDays')}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-1.5 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('dashboard:utilizationPct')}
               </th>
             </tr>
@@ -210,14 +210,14 @@ const ProjectsPivotCard = () => {
                     className="bg-gray-50 hover:bg-gray-100 cursor-pointer font-medium"
                     onClick={() => toggleClientExpand(client.client_id)}
                   >
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center">
+                    <td className="px-1.5 sm:px-4 py-3">
+                      <div className="flex items-center min-w-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleClientExpand(client.client_id);
                           }}
-                          className="mr-2 text-gray-500 hover:text-gray-700"
+                          className="mr-1 sm:mr-2 shrink-0 text-gray-500 hover:text-gray-700"
                         >
                           {expandedClients[client.client_id] ? (
                             <ChevronDown size={16} />
@@ -226,43 +226,43 @@ const ProjectsPivotCard = () => {
                           )}
                         </button>
                         <div
-                          className="w-3 h-3 rounded-full mr-2"
+                          className="w-3 h-3 rounded-full mr-1 sm:mr-2 shrink-0"
                           style={{ backgroundColor: client.client_color }}
                         />
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-gray-900 truncate">
                           {client.client_name}
                         </span>
-                        <span className="ml-2 text-xs text-gray-500">
+                        <span className="hidden min-[700px]:inline ml-2 text-xs text-gray-500 shrink-0">
                           ({t('dashboard:projectsCount', { count: client.projects.length })})
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+                    <td className="hidden lg:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
                       {formatDays(client.totals.budget)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+                    <td className="hidden xl:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
                       {formatDays(client.totals.actual)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+                    <td className="hidden min-[400px]:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
                       {formatDays(client.totals.etc)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+                    <td className="hidden md:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
                       {formatDays(client.totals.eac)}
                     </td>
                     <td
-                      className={`px-4 py-3 whitespace-nowrap text-right text-sm font-semibold ${getDeltaClass(
+                      className={`hidden min-[700px]:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm font-semibold ${getDeltaClass(
                         client.totals.delta
                       )}`}
                     >
                       {client.totals.delta >= 0 ? "+" : ""}
                       {formatDays(client.totals.delta)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
+                    <td className="px-1.5 sm:px-4 py-3 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end">
-                        <span className="text-sm font-semibold text-gray-900 mr-2">
+                        <span className="text-sm font-semibold text-gray-900 lg:mr-2">
                           {client.totals.utilization}%
                         </span>
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div className="hidden lg:block w-20 bg-gray-200 rounded-full h-2">
                           <div
                             className={`h-2 rounded-full ${getUtilizationColor(
                               client.totals.utilization
@@ -286,44 +286,44 @@ const ProjectsPivotCard = () => {
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
                         onClick={() => handleProjectClick(project)}
                       >
-                        <td className="px-4 py-2 pl-12 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <span className="text-sm text-gray-700">
+                        <td className="px-1.5 sm:px-4 py-2 pl-6 sm:pl-12">
+                          <div className="flex items-center min-w-0">
+                            <span className="text-sm text-gray-700 truncate">
                               {project.project_key} - {project.project_title}
                             </span>
                             {project.status_id !== "ACTIVE" && (
-                              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gray-200 text-gray-600">
+                              <span className="ml-1 sm:ml-2 px-1.5 py-0.5 text-xs rounded bg-gray-200 text-gray-600 shrink-0">
                                 {project.status_id}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
+                        <td className="hidden lg:table-cell px-1.5 sm:px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
                           {formatDays(project.budget)}
                         </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
+                        <td className="hidden xl:table-cell px-1.5 sm:px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
                           {formatDays(project.actual)}
                         </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
+                        <td className="hidden min-[400px]:table-cell px-1.5 sm:px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
                           {formatDays(project.etc)}
                         </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
+                        <td className="hidden md:table-cell px-1.5 sm:px-4 py-2 whitespace-nowrap text-right text-sm text-gray-600">
                           {formatDays(project.eac)}
                         </td>
                         <td
-                          className={`px-4 py-2 whitespace-nowrap text-right text-sm ${getDeltaClass(
+                          className={`hidden min-[700px]:table-cell px-1.5 sm:px-4 py-2 whitespace-nowrap text-right text-sm ${getDeltaClass(
                             project.delta
                           )}`}
                         >
                           {project.delta >= 0 ? "+" : ""}
                           {formatDays(project.delta)}
                         </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-right">
+                        <td className="px-1.5 sm:px-4 py-2 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end">
-                            <span className="text-sm text-gray-600 mr-2">
+                            <span className="text-sm text-gray-600 lg:mr-2">
                               {project.utilization}%
                             </span>
-                            <div className="w-20 bg-gray-200 rounded-full h-1.5">
+                            <div className="hidden lg:block w-20 bg-gray-200 rounded-full h-1.5">
                               <div
                                 className={`h-1.5 rounded-full ${getUtilizationColor(
                                   project.utilization
@@ -345,35 +345,35 @@ const ProjectsPivotCard = () => {
             </>
 
             <tr className="bg-blue-50 font-bold border-t-2 border-blue-200">
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-900">
+              <td className="px-1.5 sm:px-4 py-3 whitespace-nowrap text-sm text-blue-900">
                 {t('dashboard:grandTotal')}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
+              <td className="hidden lg:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
                 {formatDays(grandTotals.budget)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
+              <td className="hidden xl:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
                 {formatDays(grandTotals.actual)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
+              <td className="hidden min-[400px]:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
                 {formatDays(grandTotals.etc)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
+              <td className="hidden md:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm text-blue-900">
                 {formatDays(grandTotals.eac)}
               </td>
               <td
-                className={`px-4 py-3 whitespace-nowrap text-right text-sm font-bold ${getDeltaClass(
+                className={`hidden min-[700px]:table-cell px-1.5 sm:px-4 py-3 whitespace-nowrap text-right text-sm font-bold ${getDeltaClass(
                   grandTotals.delta
                 )}`}
               >
                 {grandTotals.delta >= 0 ? "+" : ""}
                 {formatDays(grandTotals.delta)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right">
+              <td className="px-1.5 sm:px-4 py-3 whitespace-nowrap text-right">
                 <div className="flex items-center justify-end">
-                  <span className="text-sm font-bold text-blue-900 mr-2">
+                  <span className="text-sm font-bold text-blue-900 lg:mr-2">
                     {grandTotals.utilization}%
                   </span>
-                  <div className="w-20 bg-blue-200 rounded-full h-2">
+                  <div className="hidden lg:block w-20 bg-blue-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${getUtilizationColor(
                         grandTotals.utilization

@@ -120,75 +120,117 @@ function Holidays() {
           />
 
           {filteredHolidays.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('holidays:name')}
-                      </th>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('holidays:date')}
-                      </th>
-                      <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('holidays:recurring')}
-                      </th>
-                      <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common:actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredHolidays.map((holiday) => (
-                      <tr key={holiday.holiday_id} className="hover:bg-gray-50">
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Calendar size={16} className="text-cyan-600" />
-                            <span className="text-sm font-medium text-gray-900">
-                              {holiday.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
-                          {formatDate(holiday.date)}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          {holiday.is_recurring ? (
-                            <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                              {t('common:yes')}
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                              {t('common:no')}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              onClick={() => handleEdit(holiday)}
-                              variant="ghost"
-                              color="blue"
-                              size="sm"
-                              icon={Edit2}
-                              iconSize={18}
-                              title={t('common:edit')}
-                            />
-                            <Button
-                              confirmAction
-                              onConfirm={() => handleDeleteHoliday(holiday.holiday_id)}
-                              itemName={holiday.name}
-                              size="md"
-                            />
-                          </div>
-                        </td>
+            <>
+              {/* Desktop table */}
+              <div className="hidden lg:block bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('holidays:name')}
+                        </th>
+                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('holidays:date')}
+                        </th>
+                        <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('holidays:recurring')}
+                        </th>
+                        <th className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('common:actions')}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredHolidays.map((holiday) => (
+                        <tr key={holiday.holiday_id} className="hover:bg-gray-50">
+                          <td className="px-6 py-2 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <Calendar size={16} className="text-cyan-600" />
+                              <span className="text-sm font-medium text-gray-900">
+                                {holiday.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+                            {formatDate(holiday.date)}
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap">
+                            {holiday.is_recurring ? (
+                              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                {t('common:yes')}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                {t('common:no')}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                onClick={() => handleEdit(holiday)}
+                                variant="ghost"
+                                color="blue"
+                                size="sm"
+                                icon={Edit2}
+                                iconSize={18}
+                                title={t('common:edit')}
+                              />
+                              <Button
+                                confirmAction
+                                onConfirm={() => handleDeleteHoliday(holiday.holiday_id)}
+                                itemName={holiday.name}
+                                size="md"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+
+              {/* Mobile card list */}
+              <div className="lg:hidden space-y-3">
+                {filteredHolidays.map((holiday) => (
+                  <div key={holiday.holiday_id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Calendar size={16} className="text-cyan-600 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{holiday.name}</p>
+                          <p className="text-xs text-gray-500">{formatDate(holiday.date)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {holiday.is_recurring ? (
+                          <span className="hidden min-[500px]:inline px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                            {t('holidays:recurring')}
+                          </span>
+                        ) : null}
+                        <Button
+                          onClick={() => handleEdit(holiday)}
+                          variant="ghost"
+                          color="blue"
+                          size="sm"
+                          icon={Edit2}
+                          iconSize={18}
+                          title={t('common:edit')}
+                        />
+                        <Button
+                          confirmAction
+                          onConfirm={() => handleDeleteHoliday(holiday.holiday_id)}
+                          itemName={holiday.name}
+                          size="md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {filteredHolidays.length === 0 && (

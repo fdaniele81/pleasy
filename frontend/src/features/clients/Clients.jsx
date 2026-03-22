@@ -140,86 +140,143 @@ function ClientsSimple() {
           />
 
           {filteredClients.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full" aria-label="Lista clienti">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('clients:name')}
-                      </th>
-                      <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('clients:key')}
-                      </th>
-                      <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common:status')}
-                      </th>
-                      <th scope="col" className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common:actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredClients.map((client) => (
-                      <tr key={client.client_id} className="hover:bg-gray-50">
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold tracking-tight shrink-0 select-none"
-                              style={{
-                                backgroundColor: client.symbol_bg_color || client.color || '#6B7280',
-                                color: client.symbol_letter_color || '#FFFFFF',
-                              }}
-                            >
-                              {client.symbol_letter || getDefaultInitials(client.client_name)}
-                            </span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {client.client_name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
-                          {client.client_key}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(client.status_id)}`}>
-                            {client.status_id}
-                          </span>
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              onClick={() => handleConfigurePhases(client)}
-                              variant="ghost"
-                              color="purple"
-                              size="sm"
-                              icon={Settings}
-                              iconSize={18}
-                              title={t('clients:configurePhases')}
-                            />
-                            <Button
-                              onClick={() => handleEdit(client)}
-                              variant="ghost"
-                              color="blue"
-                              size="sm"
-                              icon={Edit2}
-                              iconSize={18}
-                              title={t('common:edit')}
-                            />
-                            <Button
-                              confirmAction
-                              onConfirm={() => handleDeleteClient(client.client_id)}
-                              itemName={client.client_name}
-                              size="md"
-                            />
-                          </div>
-                        </td>
+            <>
+              {/* Desktop table */}
+              <div className="hidden lg:block bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full" aria-label="Lista clienti">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('clients:name')}
+                        </th>
+                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('clients:key')}
+                        </th>
+                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('common:status')}
+                        </th>
+                        <th scope="col" className="px-6 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {t('common:actions')}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredClients.map((client) => (
+                        <tr key={client.client_id} className="hover:bg-gray-50">
+                          <td className="px-6 py-2 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold tracking-tight shrink-0 select-none"
+                                style={{
+                                  backgroundColor: client.symbol_bg_color || client.color || '#6B7280',
+                                  color: client.symbol_letter_color || '#FFFFFF',
+                                }}
+                              >
+                                {client.symbol_letter || getDefaultInitials(client.client_name)}
+                              </span>
+                              <span className="text-sm font-medium text-gray-900">
+                                {client.client_name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+                            {client.client_key}
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(client.status_id)}`}>
+                              {client.status_id}
+                            </span>
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                onClick={() => handleConfigurePhases(client)}
+                                variant="ghost"
+                                color="purple"
+                                size="sm"
+                                icon={Settings}
+                                iconSize={18}
+                                title={t('clients:configurePhases')}
+                              />
+                              <Button
+                                onClick={() => handleEdit(client)}
+                                variant="ghost"
+                                color="blue"
+                                size="sm"
+                                icon={Edit2}
+                                iconSize={18}
+                                title={t('common:edit')}
+                              />
+                              <Button
+                                confirmAction
+                                onConfirm={() => handleDeleteClient(client.client_id)}
+                                itemName={client.client_name}
+                                size="md"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+
+              {/* Mobile card list */}
+              <div className="lg:hidden space-y-3">
+                {filteredClients.map((client) => (
+                  <div key={client.client_id} className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-[11px] font-bold tracking-tight shrink-0 select-none"
+                          style={{
+                            backgroundColor: client.symbol_bg_color || client.color || '#6B7280',
+                            color: client.symbol_letter_color || '#FFFFFF',
+                          }}
+                        >
+                          {client.symbol_letter || getDefaultInitials(client.client_name)}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{client.client_name}</p>
+                          <p className="text-xs text-gray-500">{client.client_key}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full max-[500px]:hidden ${getStatusBadgeColor(client.status_id)}`}>
+                          {client.status_id}
+                        </span>
+                        <Button
+                          onClick={() => handleConfigurePhases(client)}
+                          variant="ghost"
+                          color="purple"
+                          size="sm"
+                          icon={Settings}
+                          iconSize={18}
+                          title={t('clients:configurePhases')}
+                        />
+                        <Button
+                          onClick={() => handleEdit(client)}
+                          variant="ghost"
+                          color="blue"
+                          size="sm"
+                          icon={Edit2}
+                          iconSize={18}
+                          title={t('common:edit')}
+                        />
+                        <Button
+                          confirmAction
+                          onConfirm={() => handleDeleteClient(client.client_id)}
+                          itemName={client.client_name}
+                          size="md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {filteredClients.length === 0 && (

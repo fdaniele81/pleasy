@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { ArrowRightLeft, FolderKanban, Calculator, ChevronDown, ClipboardList } from 'lucide-react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import logger from '../../utils/logger';
 import { useLazyGetEstimateQuery } from '../estimator/api/estimateEndpoints';
 import {
@@ -34,6 +35,7 @@ function ConvertEstimateToProject() {
   const { t } = useTranslation(['estimateConversion', 'estimator', 'common', 'navigation']);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isMobile } = useBreakpoint();
   const currentUser = useSelector(state => state.auth.user);
   const { toggleDropdown, isDropdownOpen, getDropdownRef } = useDropdownManager();
 
@@ -382,9 +384,9 @@ function ConvertEstimateToProject() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="p-4 xl:px-12">
+      <div className="p-3 lg:p-4 xl:px-12">
         <div className="max-w-full mx-auto">
-          <div className="mt-16"></div>
+          <div className="mt-20 lg:mt-16"></div>
 
           <PageHeader
             title={t('estimator:convertEstimate')}
@@ -412,59 +414,61 @@ function ConvertEstimateToProject() {
           {selectedEstimate && estimateDetails && (
             <>
               {/* Info bar */}
-              <div className="from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 px-4 py-2 mb-4">
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-600">{t('estimator:infoClientLabel')}</span>
-                    <span className="text-gray-900">{estimateDetails.client_name}</span>
+              <div className="rounded-lg shadow-sm border border-gray-200 bg-white px-3 lg:px-4 py-2 mb-4">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  {/* Client & title */}
+                  <div className="flex items-center gap-3 lg:gap-5 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-semibold text-gray-500 text-xs lg:text-sm shrink-0">{t('estimator:infoClientLabel')}</span>
+                      <span className="text-gray-900 text-xs lg:text-sm truncate">{estimateDetails.client_name}</span>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-1.5 min-w-0">
+                      <span className="font-semibold text-gray-500 text-xs lg:text-sm shrink-0">{t('estimator:infoTitleLabel')}</span>
+                      <span className="text-gray-900 text-xs lg:text-sm truncate">{estimateDetails.title}</span>
+                    </div>
+                    {!isMobile && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-gray-500 text-sm">{t('estimator:estimateItemsLabel')}</span>
+                        <span className="text-gray-900 text-sm">{estimateDetails.tasks?.length || 0}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-600">{t('estimator:infoTitleLabel')}</span>
-                    <span className="text-gray-900">{estimateDetails.title}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-600">{t('estimator:estimateItemsLabel')}</span>
-                    <span className="text-gray-900">{estimateDetails.tasks?.length || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-2 ml-auto">
-                    <span className="text-xs text-gray-500">
-                      {showInDays ? t('estimator:valuesInDays') : t('estimator:valuesInHours')}
-                    </span>
-                    <div className="relative">
-                      <button
-                        onClick={() => toggleDropdown('unit-dropdown')}
-                        className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium border border-gray-300 rounded bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-cyan-500 min-w-[75px] justify-between"
-                      >
-                        <span className="truncate">{showInDays ? t('estimator:unitDays') : t('estimator:unitHours')}</span>
-                        <ChevronDown size={14} className="shrink-0" />
-                      </button>
-                      <div
-                        ref={getDropdownRef('unit-dropdown')}
-                        className={`${isDropdownOpen('unit-dropdown') ? '' : 'hidden'} absolute top-full left-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg z-50`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="py-1">
-                          <button
-                            onClick={() => { setShowInDays(false); toggleDropdown('unit-dropdown'); }}
-                            className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!showInDays ? 'bg-cyan-50 text-cyan-700 font-medium' : 'text-gray-700'}`}
-                          >
-                            {t('estimator:unitHours')}
-                          </button>
-                          <button
-                            onClick={() => { setShowInDays(true); toggleDropdown('unit-dropdown'); }}
-                            className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${showInDays ? 'bg-cyan-50 text-cyan-700 font-medium' : 'text-gray-700'}`}
-                          >
-                            {t('estimator:unitDays')}
-                          </button>
-                        </div>
+
+                  {/* Unit selector */}
+                  <div className="relative shrink-0">
+                    <button
+                      onClick={() => toggleDropdown('unit-dropdown')}
+                      className="inline-flex items-center gap-1.5 px-2 lg:px-3 py-1 text-xs font-medium border border-gray-300 rounded bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-cyan-500 min-w-[60px] lg:min-w-[75px] justify-between"
+                    >
+                      <span className="truncate">{showInDays ? t('estimator:unitDays') : t('estimator:unitHours')}</span>
+                      <ChevronDown size={14} className="shrink-0" />
+                    </button>
+                    <div
+                      ref={getDropdownRef('unit-dropdown')}
+                      className={`${isDropdownOpen('unit-dropdown') ? '' : 'hidden'} absolute top-full right-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg z-50`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => { setShowInDays(false); toggleDropdown('unit-dropdown'); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!showInDays ? 'bg-cyan-50 text-cyan-700 font-medium' : 'text-gray-700'}`}
+                        >
+                          {t('estimator:unitHours')}
+                        </button>
+                        <button
+                          onClick={() => { setShowInDays(true); toggleDropdown('unit-dropdown'); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${showInDays ? 'bg-cyan-50 text-cyan-700 font-medium' : 'text-gray-700'}`}
+                        >
+                          {t('estimator:unitDays')}
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Main content: Simple or Advanced mode */}
-              {conversion.mode === 'simple' ? (
+              {/* Main content: Simple only on mobile, Simple or Advanced on desktop */}
+              {(isMobile || conversion.mode === 'simple') ? (
                 <PhaseTaskList
                   taskRows={conversion.taskRows}
                   selectedRowIds={conversion.selectedRowIds}
@@ -503,15 +507,16 @@ function ConvertEstimateToProject() {
                 />
               )}
 
-              {/* Action buttons */}
+              {/* Action buttons — sticky on mobile */}
               {conversion.taskRows.length > 0 && (
-                <div className="flex justify-end mt-6">
+                <div className={`mt-4 lg:mt-6 ${isMobile ? 'sticky bottom-0 z-30 -mx-3 px-3 py-3 bg-gray-100/95 backdrop-blur-sm border-t border-gray-200' : 'flex justify-end'}`}>
                   <Button
                     color="cyan"
                     icon={FolderKanban}
                     onClick={handleStartConvert}
                     loading={converting}
                     disabled={converting}
+                    fullWidth={isMobile}
                   >
                     {converting ? t('estimator:converting') : t('estimator:convertButton')}
                   </Button>
@@ -536,15 +541,15 @@ function ConvertEstimateToProject() {
 
           {/* Empty state */}
           {!selectedEstimate && (
-            <div className="bg-white rounded-lg shadow-md p-12">
+            <div className="bg-white rounded-lg shadow-md p-8 lg:p-12">
               <div className="text-center">
                 <div className="mb-4">
-                  <Calculator size={64} className="mx-auto text-gray-300" />
+                  <Calculator size={isMobile ? 48 : 64} className="mx-auto text-gray-300" />
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-3 lg:mb-4">
                   {t('estimator:selectEstimateMessage')}
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm lg:text-base text-gray-600">
                   {t('estimator:selectEstimateDescription')}
                 </p>
               </div>

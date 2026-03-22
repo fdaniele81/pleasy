@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ROUTES } from "../../constants";
 import ContextMenu from "../../shared/ui/ContextMenu";
 import { useTimesheetData } from "./hooks/useTimesheetData";
 import { useTimesheetCalculations } from "./hooks/useTimesheetCalculations";
@@ -10,8 +8,10 @@ import { useTimesheetActions } from "./hooks/useTimesheetActions";
 import { useTimesheetFilters } from "./hooks/useTimesheetFilters";
 import { formatDateLocal, generateDateRange } from "../../utils/table/tableUtils";
 import { getColumnCountForWidth } from "../../constants/breakpoints";
+import { useBreakpoint } from "../../hooks/useBreakpoint";
 import TimesheetHeader from "./components/TimesheetHeader";
 import TimesheetTable from "./components/TimesheetTable";
+import TimesheetMobile from "./components/TimesheetMobile";
 import { useLocale } from "../../hooks/useLocale";
 import { useTimesheetUndo } from "./hooks/useTimesheetUndo";
 
@@ -26,7 +26,8 @@ const TaskHistorySummaryModal = lazy(() => import("./components/TaskHistorySumma
 function Timesheet() {
   const { t } = useTranslation(['timesheet', 'common']);
   const locale = useLocale();
-  const navigate = useNavigate();
+  const { isBelow } = useBreakpoint();
+  const isMobileTimesheet = isBelow(800);
 
   const [startDate, setStartDate] = useState("");
 
@@ -285,7 +286,7 @@ function Timesheet() {
 
   if (loading && !taskEditCell.editingCell && !timeOffEditCell.editingCell) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 pt-20">
         <div className="flex items-center justify-center p-6">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
@@ -293,8 +294,35 @@ function Timesheet() {
     );
   }
 
+  if (isMobileTimesheet) {
+    return (
+      <div className="min-h-screen bg-gray-100 pt-20">
+        <Suspense fallback={null}><SubmissionPreviewModal isOpen={showSubmissionPreview} onClose={closeSubmissionPreview} onConfirm={handleConfirmSubmission} /></Suspense>
+        <Suspense fallback={null}><TimeOffModal isOpen={showTimeOffModal} onClose={handleTimeOffModalClose} onConfirm={handleTimeOffModalConfirm} timeOffData={timeOffModalData} date={timeOffModalDate} /></Suspense>
+
+        <TimesheetMobile
+          dateRange={dateRange}
+          allTasksFlat={allTasksFlat}
+          timeOffs={timeOffs}
+          holidays={holidays}
+          editingCell={timeOffEditCell.editingCell}
+          editValue={timeOffEditCell.editValue}
+          onTimeOffCellClick={handleTimeOffCellClick}
+          onTimeOffCellBlur={handleTimeOffCellBlur}
+          onTimeOffCellNoteClick={handleTimeOffCellNoteClick}
+          onEditValueChange={(value) => timeOffEditCell.handleCellChange(value)}
+          onPreviousPeriod={goToPreviousPeriod}
+          onNextPeriod={goToNextPeriod}
+          periodLabel={getPeriodLabel()}
+          onSubmitTimesheets={handleSubmitTimesheets}
+          onSaveTimesheetDetails={handleTimesheetDetailsModalConfirm}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 pt-20">
       {contextMenu && (
         <ContextMenu
           x={contextMenu.x}
@@ -318,8 +346,6 @@ function Timesheet() {
 
       <div className="p-4">
         <div className="max-w-full mx-auto">
-          <div className="mt-16"></div>
-
           <TimesheetHeader
             searchTerm={searchTerm} onSearchChange={setSearchTerm}
             selectionFilters={selectionFilters} onSelectionFiltersChange={setSelectionFilters}
@@ -328,7 +354,7 @@ function Timesheet() {
             filterProjectType={filterProjectType} onFilterProjectTypeChange={setFilterProjectType}
             uniqueClients={uniqueClients} uniqueProjects={uniqueProjects}
             onClearAllFilters={clearAllFilters} onApplySavedFilter={applySavedFilter} onExport={openExportModal}
-            onSubmit={() => navigate(ROUTES.MY_SUBMISSIONS)} loading={loading}
+            onSubmit={handleSubmitTimesheets} loading={loading}
             startDate={startDate}
             onStartDateChange={setStartDate}
             onClearDates={resetToDefaultDates} isDefaultDateRange={isDefaultDateRange}

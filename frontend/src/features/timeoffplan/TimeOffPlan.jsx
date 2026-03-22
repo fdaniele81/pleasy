@@ -182,11 +182,9 @@ function TimeOffPlan() {
   // === PAGINA 1: Selezione ===
   if (page === 'selection') {
     return (
-      <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+      <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-20">
         <div className="shrink-0 p-4 pb-0">
           <div className="max-w-full mx-auto">
-            <div className="mt-16"></div>
-
             <PageHeader
               icon={getRouteIcon('/timeoff-plan')}
               title={t('timeoffplan:title')}
@@ -234,11 +232,9 @@ function TimeOffPlan() {
 
   // === PAGINA 2: Dettaglio ===
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-20">
       <div className="shrink-0 p-4 pb-0">
         <div className="max-w-full mx-auto">
-          <div className="mt-16"></div>
-
           <div className="mb-2">
             <button
               onClick={() => setPage('selection')}

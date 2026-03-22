@@ -77,7 +77,7 @@ function PeriodNavigator({
       </button>
 
       {label && (
-        <span className={`font-semibold text-gray-700 ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
+        <span className={`font-semibold text-gray-700 hidden lg:inline ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
           {label}
         </span>
       )}

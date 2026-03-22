@@ -268,5 +268,15 @@
   "calendarMonthSep": "September",
   "calendarMonthOct": "October",
   "calendarMonthNov": "November",
-  "calendarMonthDec": "December"
+  "calendarMonthDec": "December",
+  "activities": "activities",
+  "selected": "selected",
+  "noActivities": "No activities in this project",
+  "noResults": "No projects match the current filters",
+  "clearFilters": "Clear all filters",
+  "hours": "Hours",
+  "days": "Days",
+  "deleteConfirmTitle": "Delete tasks",
+  "deleteConfirmMessage": "Are you sure you want to delete {{count}} task(s)?",
+  "filterLabel": "Filters"
 }

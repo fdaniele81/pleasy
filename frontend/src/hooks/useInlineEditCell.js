@@ -45,7 +45,7 @@ export function useInlineEditCell({
   const [editingCell, setEditingCell] = useState(null);
   const [editingRowId, setEditingRowId] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [isNavigatingWithTab, setIsNavigatingWithTab] = useState(false);
+  const isNavigatingWithTabRef = useRef(false);
 
   const editingCellRef = useRef(null);
   const editValueRef = useRef('');
@@ -105,7 +105,13 @@ export function useInlineEditCell({
 
       executeClearCallbacks();
 
-      await onSave(rowId, columnKey, parsedNewValue, previousValue, metadata);
+      try {
+        await onSave(rowId, columnKey, parsedNewValue, previousValue, metadata);
+      } catch (error) {
+        // Save failed — keep cell in editing mode so user can retry
+        logger.error('Save failed:', error);
+        return;
+      }
     }
 
     if (editingCellRef.current === cellKey) {
@@ -124,13 +130,13 @@ export function useInlineEditCell({
       return;
     }
 
-    if (isNavigatingWithTab) {
-      setIsNavigatingWithTab(false);
+    if (isNavigatingWithTabRef.current) {
+      isNavigatingWithTabRef.current = false;
       return;
     }
 
     await saveAndClose(rowId, columnKey, previousValue, metadata);
-  }, [getCellKey, isNavigatingWithTab, saveAndClose]);
+  }, [getCellKey, saveAndClose]);
 
   const handleKeyDown = useCallback(async (
     event,
@@ -162,7 +168,7 @@ export function useInlineEditCell({
       const { direction, isTab } = keyAction;
 
       if (isTab) {
-        setIsNavigatingWithTab(true);
+        isNavigatingWithTabRef.current = true;
       }
 
       await saveAndClose(rowId, columnKey, previousValue, metadata);
@@ -214,7 +220,7 @@ export function useInlineEditCell({
     setEditingCell(null);
     setEditingRowId(null);
     setEditValue('');
-    setIsNavigatingWithTab(false);
+    isNavigatingWithTabRef.current = false;
   }, [executeClearCallbacks]);
 
   return {

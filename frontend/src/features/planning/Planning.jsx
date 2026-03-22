@@ -7,6 +7,7 @@ import { selectCurrentUser } from '../../store/selectors/authSelectors';
 import { selectIsGanttOpen, selectIsCalendarOpen } from '../../store/selectors/ganttModalSelectors';
 import { toggleTask, setSelectedTasks as setSelectedTasksAction, mergeSelectedTasks } from '../../store/slices/planningSelectionSlice';
 import { selectSelectedTasks } from '../../store/selectors/planningSelectionSelectors';
+import { useBreakpoint } from '../../hooks';
 
 const GanttModal = lazy(() => import('./components/gantt-globale/GanttModal'));
 const TaskModal = lazy(() => import('../../shared/components/modals/TaskModal'));
@@ -33,12 +34,15 @@ import { exportPianificazioneToExcel } from '../../utils/export/excel';
 import { PlanningHeader } from './components/PlanningHeader';
 import { PlanningFilters } from './components/PlanningFilters';
 import { PlanningTable } from './components/PlanningTable';
+import { MobilePlanningView } from './components/mobile/MobilePlanningView';
 
 function Pianificazione() {
   const { t } = useTranslation(['planning', 'common', 'estimateConversion']);
   const [searchParams] = useSearchParams();
   const confirmation = useConfirmation();
   const dispatch = useDispatch();
+  const { isBelow } = useBreakpoint();
+  const isMobile = isBelow('LG');
   const showGanttModal = useSelector(selectIsGanttOpen);
   const showFloatingCalendar = useSelector(selectIsCalendarOpen);
   const currentUser = useSelector(selectCurrentUser);
@@ -477,7 +481,7 @@ function Pianificazione() {
 
   if (loading && projects.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 pt-20">
         <div className="flex items-center justify-center p-6">
           <div className="text-xl">{t('planning:loadingPlanning')}</div>
         </div>
@@ -485,8 +489,187 @@ function Pianificazione() {
     );
   }
 
+  if (isMobile) {
+    return (
+      <>
+        <MobilePlanningView
+          filteredProjects={filteredProjects}
+          projects={projects}
+          loading={loading}
+          selectedTasks={selectedTasks}
+          toggleTaskSelection={toggleTaskSelection}
+          toggleProjectSelection={toggleProjectSelection}
+          setSelectedTasks={setSelectedTasks}
+          expandedProjects={expandedProjects}
+          toggleProjectExpansion={toggleProjectExpansion}
+          toggleAllProjects={toggleAllProjects}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterUserIds={filterUserIds}
+          setFilterUserIds={setFilterUserIds}
+          filterStatuses={filterStatuses}
+          setFilterStatuses={setFilterStatuses}
+          filterClientIds={filterClientIds}
+          setFilterClientIds={setFilterClientIds}
+          allUsers={allUsers}
+          allClients={allClients}
+          totalTaskCount={totalTaskCount}
+          filteredTaskCount={filteredTaskCount}
+          showInDays={showInDays}
+          setShowInDays={setShowInDays}
+          handleStartAddingTask={handleStartAddingTask}
+          handleTaskDetailsClick={handleTaskDetailsClick}
+          onStartMerge={taskMergeSplit.handleStartMerge}
+          onStartSplit={taskMergeSplit.handleStartSplit}
+          onCloneTasks={taskMergeSplit.handleCloneTasks}
+          handleDeleteTask={handleDeleteTask}
+          confirmFn={confirmation.confirm}
+          reorderingProjectId={taskReorder.reorderingProjectId}
+          localTaskOrder={taskReorder.localTaskOrder}
+          onStartReordering={taskReorder.startReordering}
+          onSaveReordering={taskReorder.saveReordering}
+          onCancelReordering={taskReorder.cancelReordering}
+          onDragStart={taskReorder.handleDragStart}
+          onDragOver={taskReorder.handleDragOver}
+          onDragEnd={taskReorder.handleDragEnd}
+        />
+
+        {/* Shared modals - needed on mobile too */}
+        <Suspense fallback={null}>
+          <PlanningTaskHistoryModal
+            isOpen={showInitialActualModal}
+            onClose={() => {
+              setShowInitialActualModal(false);
+              setSelectedTaskForInitialActual(null);
+            }}
+            task={selectedTaskForInitialActual}
+            onConfirmInitialActual={(initialActual) => handleInitialActualConfirm(initialActual, selectedTaskForInitialActual?.task_id)}
+          />
+        </Suspense>
+
+        <Suspense fallback={null}>
+          {(() => {
+            const selectedProject = projects.find(p => p.project_id === taskModalProjectId);
+            return (
+              <TaskModal
+                isOpen={showTaskModal}
+                onClose={handleCloseTaskModal}
+                onConfirm={handleSaveNewTask}
+                projectTitle={selectedProject?.title || ''}
+                projectId={taskModalProjectId}
+                clientName={selectedProject?.client_name || ''}
+                clientKey={selectedProject?.client_key || ''}
+                availableUsers={availableUsers[taskModalProjectId]?.users || []}
+              />
+            );
+          })()}
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <TaskModal
+            key={selectedTask?.task_id || 'task-details-modal'}
+            isOpen={showTaskDetailsModal}
+            onClose={handleCloseTaskDetailsModal}
+            onConfirm={handleSaveEditTask}
+            projectTitle={selectedTaskProject?.title || ''}
+            projectId={selectedTaskProject?.project_id}
+            clientName={selectedTaskProject?.client_name || ''}
+            clientKey={selectedTaskProject?.client_key || ''}
+            availableUsers={availableUsers[selectedTaskProject?.project_id]?.users || []}
+            task={selectedTask}
+          />
+        </Suspense>
+
+        {/* Merge modal */}
+        <BaseModal
+          isOpen={taskMergeSplit.showMergeModal}
+          onClose={taskMergeSplit.closeMergeModal}
+          title={t('planning:mergeTitle')}
+          icon={null}
+          size="sm"
+          customFooter={
+            <>
+              <button
+                onClick={taskMergeSplit.closeMergeModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                {t('common:cancel')}
+              </button>
+              <button
+                onClick={taskMergeSplit.handleConfirmMerge}
+                disabled={!taskMergeSplit.mergeTitle.trim() || taskMergeSplit.processing}
+                className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {taskMergeSplit.processing ? t('common:saving') : t('planning:mergeConfirm')}
+              </button>
+            </>
+          }
+        >
+          {taskMergeSplit.mergeContext && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                {t('planning:mergeDescription', { count: taskMergeSplit.mergeContext.tasks.length })}
+              </p>
+              <div className="space-y-1">
+                {taskMergeSplit.mergeContext.tasks.map(task => (
+                  <div key={task.task_id} className="text-xs text-gray-500 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full shrink-0" />
+                    <span className="truncate">{task.title}</span>
+                    <span className="ml-auto font-mono text-gray-400 shrink-0">
+                      {showInDays ? (Math.round((task.budget || 0) / 8 * 10) / 10) : (task.budget || 0)}
+                      {showInDays ? 'gg' : 'h'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('planning:mergedTaskName')}
+                </label>
+                <input
+                  type="text"
+                  value={taskMergeSplit.mergeTitle}
+                  onChange={(e) => taskMergeSplit.setMergeTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && taskMergeSplit.mergeTitle.trim()) {
+                      taskMergeSplit.handleConfirmMerge();
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+          )}
+        </BaseModal>
+
+        {/* Split modal */}
+        <SplitModal
+          isOpen={taskMergeSplit.showSplitModal}
+          onClose={taskMergeSplit.closeSplitModal}
+          onConfirm={taskMergeSplit.handleConfirmSplit}
+          sourceRow={taskMergeSplit.splitContext?.task ? {
+            budget: taskMergeSplit.splitContext.task.budget || 0,
+            color: '#06b6d4',
+            title: taskMergeSplit.splitContext.task.title,
+          } : null}
+          showInDays={showInDays}
+          getRowTitle={(row) => row.title || ''}
+          showNames
+        />
+
+        <ConfirmationModal
+          isOpen={confirmation.isOpen}
+          config={confirmation.config}
+          onConfirm={confirmation.handleConfirm}
+          onCancel={confirmation.handleCancel}
+        />
+      </>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 overflow-x-hidden overscroll-y-none">
+    <div className="min-h-screen bg-gray-100 overflow-x-hidden overscroll-y-none pt-20">
       <Suspense fallback={null}>
         <GanttModal
           isOpen={showGanttModal}
@@ -557,8 +740,6 @@ function Pianificazione() {
 
       <div className="py-4">
         <div className="w-full px-2">
-          <div className="mt-16"></div>
-
           <PlanningHeader
             onExport={handleExport}
             onShowGlobalGantt={handleShowGlobalGantt}

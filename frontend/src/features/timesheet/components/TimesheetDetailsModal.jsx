@@ -37,7 +37,7 @@ const TimesheetDetailsModal = ({
       return null;
     },
     onSubmit: async (data) => {
-      onConfirm({
+      await onConfirm({
         hours: parseFloat(data.hours) || 0,
         details: data.details?.trim() || '',
         external_key: showExternalKey ? (data.external_key?.trim() || null) : undefined

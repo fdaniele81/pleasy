@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Clock, AlertCircle, X } from 'lucide-react';
+import { FileText, Clock, AlertCircle, X, ChevronLeft, ChevronRight, Calendar, Check } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
 import DateInput from '../../../shared/ui/DateInput';
@@ -9,9 +9,12 @@ import TransposedTimesheetGrid from '../../../shared/components/TransposedTimesh
 import { formatDateLocal } from '../../../utils/table/tableUtils';
 import { useLazyGetPreviewSubmissionQuery } from '../api/timesheetEndpoints';
 import { useGetHolidaysQuery } from '../../holidays/api/holidayEndpoints';
+import { useLocale } from '../../../hooks/useLocale';
+import { isWeekend, isHoliday } from '../../../utils/date/workingDays';
 
 const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
   const { t } = useTranslation(['timesheet', 'common']);
+  const locale = useLocale();
   const [fetchPreview, { data: previewTasks = [], isLoading: previewLoading }] = useLazyGetPreviewSubmissionQuery();
   const { data: holidays = [] } = useGetHolidaysQuery();
   const [selectedTimesheetIds, setSelectedTimesheetIds] = useState(new Set());
@@ -22,6 +25,8 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
   // Pending state for dropdowns — applied only when dropdown closes
   const [pendingClientIds, setPendingClientIds] = useState([]);
   const [pendingProjectIds, setPendingProjectIds] = useState([]);
+  // Mobile carousel state
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
   const applyClientFilter = useCallback(() => {
     setFilterClientIds(pendingClientIds);
@@ -108,6 +113,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       setFilterProjectIds([]);
       setPendingClientIds([]);
       setPendingProjectIds([]);
+      setCurrentTaskIndex(0);
     }
   }, [isOpen, fetchPreview]);
 
@@ -121,6 +127,11 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       return next;
     });
   }, [filteredTimesheetIds]);
+
+  // Reset carousel index when filtered tasks change
+  useEffect(() => {
+    setCurrentTaskIndex(0);
+  }, [filteredPreviewTasks.length]);
 
   const handleClose = () => {
     onClose();
@@ -154,6 +165,71 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
     setFilterStartDate('');
     setFilterEndDate('');
   }, []);
+
+  // Mobile carousel helpers
+  const currentTask = filteredPreviewTasks[currentTaskIndex];
+
+  const sortedTimesheets = useMemo(() => {
+    if (!currentTask?.timesheets) return [];
+    return [...currentTask.timesheets].sort((a, b) => a.timesheet_date.localeCompare(b.timesheet_date));
+  }, [currentTask]);
+
+  const goToPrev = () => {
+    setCurrentTaskIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const goToNext = () => {
+    setCurrentTaskIndex(prev => Math.min(filteredPreviewTasks.length - 1, prev + 1));
+  };
+
+  const formatDate = useCallback((dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString(locale, {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit'
+    });
+  }, [locale]);
+
+  const isNonWorkingDay = useCallback((dateStr) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    return isWeekend(date) || isHoliday(date, holidays);
+  }, [holidays]);
+
+  const toggleTimesheetSelection = useCallback((timesheetId) => {
+    setSelectedTimesheetIds(prev => {
+      const next = new Set(prev);
+      if (next.has(timesheetId)) next.delete(timesheetId);
+      else next.add(timesheetId);
+      return next;
+    });
+  }, []);
+
+  const toggleTaskSelection = useCallback((task) => {
+    if (!task) return;
+    const taskTsIds = task.timesheets.map(ts => ts.timesheet_id);
+    setSelectedTimesheetIds(prev => {
+      const next = new Set(prev);
+      const allSelected = taskTsIds.every(id => next.has(id));
+      if (allSelected) {
+        taskTsIds.forEach(id => next.delete(id));
+      } else {
+        taskTsIds.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  }, []);
+
+  const isTaskFullySelected = useCallback((task) => {
+    if (!task || task.timesheets.length === 0) return false;
+    return task.timesheets.every(ts => selectedTimesheetIds.has(ts.timesheet_id));
+  }, [selectedTimesheetIds]);
+
+  const isTaskPartiallySelected = useCallback((task) => {
+    if (!task || task.timesheets.length === 0) return false;
+    return task.timesheets.some(ts => selectedTimesheetIds.has(ts.timesheet_id)) && !isTaskFullySelected(task);
+  }, [selectedTimesheetIds, isTaskFullySelected]);
 
 
   // Modal size based on filtered tasks — changes only when filters are applied (on dropdown close)
@@ -282,22 +358,170 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
               </div>
             </div>
             {selectedTimesheetIds.size === 0 && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 hidden sm:inline">
                 {t('timesheet:selectEntriesToSubmit')}
               </span>
             )}
           </div>
 
           {filteredPreviewTasks.length > 0 ? (
-            <TransposedTimesheetGrid
-              tasks={filteredPreviewTasks}
-              holidays={holidays}
-              selectable
-              selectedTimesheetIds={selectedTimesheetIds}
-              onSelectionChange={setSelectedTimesheetIds}
-              filterStartDate={filterStartDate}
-              filterEndDate={filterEndDate}
-            />
+            <>
+              {/* Desktop: TransposedTimesheetGrid */}
+              <div className="hidden lg:flex flex-col flex-1 min-h-0">
+                <TransposedTimesheetGrid
+                  tasks={filteredPreviewTasks}
+                  holidays={holidays}
+                  selectable
+                  selectedTimesheetIds={selectedTimesheetIds}
+                  onSelectionChange={setSelectedTimesheetIds}
+                  filterStartDate={filterStartDate}
+                  filterEndDate={filterEndDate}
+                />
+              </div>
+
+              {/* Mobile: Task-by-task carousel with selection */}
+              <div className="lg:hidden flex flex-col flex-1 min-h-0">
+                {/* Navigation header */}
+                <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 mb-3">
+                  <button
+                    onClick={goToPrev}
+                    disabled={currentTaskIndex === 0}
+                    className="p-2 min-h-11 min-w-11 flex items-center justify-center rounded-lg text-cyan-600 hover:bg-cyan-50 disabled:text-gray-300 disabled:hover:bg-transparent transition-colors"
+                    aria-label={t('timesheet:previousTask')}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+
+                  <div className="flex flex-col items-center gap-0.5 min-w-0 flex-1 px-2">
+                    {currentTask && (
+                      <>
+                        <div className="flex items-center gap-1.5 max-w-full">
+                          <div
+                            className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
+                            style={{
+                              backgroundColor: currentTask.symbol_bg_color || currentTask.client_color || '#6366F1',
+                              color: currentTask.symbol_letter_color || '#FFFFFF',
+                            }}
+                          >
+                            {currentTask.symbol_letter || (currentTask.client_name || '?')[0].toUpperCase()}
+                          </div>
+                          <span className="text-xs font-semibold text-gray-800 truncate">
+                            {currentTask.project_title || currentTask.project_key}
+                          </span>
+                        </div>
+                        {currentTask.project_type_id !== 'TM' && currentTask.task_title && (
+                          <span className="text-[11px] text-gray-500 truncate max-w-full">
+                            {currentTask.task_title}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-gray-400">
+                          {currentTaskIndex + 1} / {filteredPreviewTasks.length}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={goToNext}
+                    disabled={currentTaskIndex === filteredPreviewTasks.length - 1}
+                    className="p-2 min-h-11 min-w-11 flex items-center justify-center rounded-lg text-cyan-600 hover:bg-cyan-50 disabled:text-gray-300 disabled:hover:bg-transparent transition-colors"
+                    aria-label={t('timesheet:nextTask')}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Dot indicators */}
+                {filteredPreviewTasks.length > 1 && filteredPreviewTasks.length <= 15 && (
+                  <div className="flex items-center justify-center gap-1.5 mb-3">
+                    {filteredPreviewTasks.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentTaskIndex(idx)}
+                        className={`rounded-full transition-all ${
+                          idx === currentTaskIndex
+                            ? 'w-2.5 h-2.5 bg-cyan-600'
+                            : 'w-1.5 h-1.5 bg-gray-300'
+                        }`}
+                        aria-label={`${t('timesheet:goToTask')} ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Task hours summary + select all for task */}
+                {currentTask && (
+                  <div className="flex items-center justify-between px-3 py-2 bg-cyan-50 rounded-lg mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-600">
+                        {t('timesheet:entries')} <span className="font-semibold text-gray-800">{currentTask.timesheets.length}</span>
+                      </span>
+                      <span className="text-sm font-bold text-cyan-700">
+                        {currentTask.total_hours.toFixed(1)}h
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => toggleTaskSelection(currentTask)}
+                      className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                        isTaskFullySelected(currentTask)
+                          ? 'bg-cyan-600 border-cyan-600 text-white hover:bg-cyan-700'
+                          : isTaskPartiallySelected(currentTask)
+                            ? 'bg-cyan-50 border-cyan-300 text-cyan-700 hover:bg-cyan-100'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {isTaskFullySelected(currentTask) ? t('common:deselectAll') : t('common:selectAll')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Timesheet entries list with selection */}
+                <div className="flex-1 overflow-y-auto min-h-0 -mx-1">
+                  {sortedTimesheets.map((ts) => {
+                    const nonWorking = isNonWorkingDay(ts.timesheet_date);
+                    const isSelected = selectedTimesheetIds.has(ts.timesheet_id);
+                    return (
+                      <button
+                        key={ts.timesheet_id}
+                        type="button"
+                        onClick={() => toggleTimesheetSelection(ts.timesheet_id)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 border-b border-gray-100 transition-colors text-left ${
+                          isSelected
+                            ? 'bg-cyan-100'
+                            : nonWorking
+                              ? 'bg-gray-50 hover:bg-gray-100'
+                              : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`w-5 h-5 min-w-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? 'bg-cyan-600 border-cyan-600'
+                              : 'bg-white border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="h-3 w-3 text-white" />}
+                          </div>
+                          <Calendar className={`h-3.5 w-3.5 shrink-0 ${nonWorking ? 'text-gray-400' : 'text-cyan-500'}`} />
+                          <span className={`text-sm ${nonWorking ? 'text-gray-500' : 'text-gray-700'}`}>
+                            {formatDate(ts.timesheet_date)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {ts.details && (
+                            <div className="w-2 h-2 rounded-full bg-blue-400 shrink-0" title={ts.details} />
+                          )}
+                          <span className={`text-sm font-semibold tabular-nums ${
+                            isSelected ? 'text-cyan-700' : nonWorking ? 'text-gray-600' : 'text-gray-800'
+                          }`}>
+                            {ts.hours.toFixed(ts.hours % 1 === 0 ? 0 : 1)}h
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded flex items-center gap-3">
               <AlertCircle size={20} />

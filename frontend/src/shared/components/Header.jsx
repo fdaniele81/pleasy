@@ -169,8 +169,8 @@ const Header = memo(function Header() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 shadow-sm border-b z-50 ${IS_NON_PROD ? 'bg-amber-50 border-amber-300' : 'bg-white border-gray-200'}`}>
-      <div className="max-w-full mx-auto px-4 sm:px-8 py-4">
-        <div className="flex justify-between items-center">
+      <div className="max-w-full mx-auto px-4 sm:px-8 py-3">
+        <div className="flex justify-between items-center h-11">
           <div className="flex items-center space-x-4 sm:space-x-8">
             {HOME_URL ? (
               <a
@@ -407,6 +407,9 @@ const Header = memo(function Header() {
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-xs text-gray-400">{t('common:language')}</span>
                 <LanguageSwitcher />
+              </div>
+              <div className="px-3 py-1.5 text-center">
+                <span className="text-[11px] text-gray-400">v{__APP_VERSION__}</span>
               </div>
             </div>
           </div>

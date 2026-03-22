@@ -383,11 +383,9 @@ function ConvertEstimateToProject() {
   ]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 pt-20">
       <div className="p-3 lg:p-4 xl:px-12">
         <div className="max-w-full mx-auto">
-          <div className="mt-20 lg:mt-16"></div>
-
           <PageHeader
             title={t('estimator:convertEstimate')}
             icon={ArrowRightLeft}

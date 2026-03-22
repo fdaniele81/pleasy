@@ -229,7 +229,7 @@ function EstimateEditorInfo() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-16">
+    <div className="min-h-screen bg-gray-100 pt-20">
       <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-12 py-6">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">

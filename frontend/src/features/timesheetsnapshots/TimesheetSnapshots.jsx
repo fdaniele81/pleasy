@@ -118,7 +118,7 @@ function TimesheetSnapshots() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 pt-20">
       {toast && (
         <Toast
           message={toast.message}
@@ -137,8 +137,6 @@ function TimesheetSnapshots() {
 
       <div className="p-4">
         <div className="max-w-full mx-auto">
-          <div className="mt-16"></div>
-
           <PageHeader
             icon={ClipboardCheck}
             title={t('timesheetsnapshots:title')}

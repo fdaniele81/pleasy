@@ -19,8 +19,10 @@ import { useTMPlanningState } from "./hooks/useTMPlanningState";
 import { useTMPlanningData } from "./hooks/useTMPlanningData";
 import { useTMPlanningActions } from "./hooks/useTMPlanningActions";
 import { useTMPlanningUndo } from "./hooks/useTMPlanningUndo";
+import { useBreakpoint } from "../../hooks/useBreakpoint";
 import TMPlanningUserGroupRows from "./components/TMPlanningUserGroupRows";
 import TMPlanningClientGroupRows from "./components/TMPlanningClientGroupRows";
+import TMPlanningMobile from "./components/TMPlanningMobile";
 
 const GanttModal = lazy(() =>
   import("../planning/components/gantt-globale/GanttModal")
@@ -37,6 +39,8 @@ const TaskHistorySummaryModal = lazy(() =>
 
 function TMPlanning() {
   const { t } = useTranslation(['tmplanning', 'common']);
+  const { isBelow } = useBreakpoint();
+  const isMobile = isBelow(800);
 
   const state = useTMPlanningState();
   const {
@@ -145,7 +149,7 @@ function TMPlanning() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 pt-20">
         <div className="flex items-center justify-center p-6">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
@@ -153,12 +157,61 @@ function TMPlanning() {
     );
   }
 
+  // ── Mobile view ──
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-gray-100 pt-20">
+        <Suspense fallback={null}>
+          <TimesheetDetailsModal
+            isOpen={showDetailsModal}
+            onClose={handleDetailsModalClose}
+            onConfirm={handleDetailsModalConfirm}
+            timesheetData={detailsModalData}
+            date={detailsModalDate}
+            taskTitle={detailsModalTask?.client_name}
+            isSubmitted={detailsModalIsSubmitted}
+            showExternalKey={true}
+            defaultExternalKey={detailsModalTask?.project_key}
+          />
+        </Suspense>
+
+        <TMPlanningMobile
+          dateRange={dateRange}
+          tmUsers={tmUsers}
+          filteredUsers={filteredUsers}
+          filteredClients={filteredClients}
+          groupBy={groupBy}
+          getDateInfo={getDateInfo}
+          getUserTotal={getUserTotal}
+          getUserDayTotal={getUserDayTotal}
+          getClientTotal={getClientTotal}
+          getClientDayTotal={getClientDayTotal}
+          getTimesheetForDate={getTimesheetForDate}
+          onPreviousPeriod={goToPreviousPeriod}
+          onNextPeriod={goToNextPeriod}
+          onToday={goToToday}
+          isAtToday={isAtToday}
+          periodLabel={getPeriodLabel()}
+          hoursEditCell={hoursEditCell}
+          onCellClick={handleCellClick}
+          onCellBlur={handleCellBlur}
+          onCellContextMenu={handleCellContextMenu}
+          onCellNoteClick={handleCellNoteClick}
+          onDetailsModalConfirm={handleDetailsModalConfirm}
+          holidays={state.holidays}
+          locale={locale}
+          saveTMTimesheet={state.saveTMTimesheet}
+          refetch={state.refetch}
+        />
+      </div>
+    );
+  }
+
+  // ── Desktop view (unchanged) ──
   return (
-    <div className="min-h-screen bg-gray-100 overflow-x-hidden overscroll-y-none">
+    <div className="min-h-screen bg-gray-100 overflow-x-hidden overscroll-y-none pt-20">
       <div className="py-4">
         <div className="w-full px-2">
-          <div className="mt-16"></div>
-
           <div className="mb-4">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold flex items-center gap-3">

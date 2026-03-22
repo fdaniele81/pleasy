@@ -80,7 +80,7 @@ function MySubmissions() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-20">
       <Suspense fallback={null}>
         <SnapshotDetailsModal
           isOpen={selectedSnapshotId !== null}
@@ -98,8 +98,6 @@ function MySubmissions() {
 
       <div className="shrink-0 p-4 pb-0">
         <div className="max-w-full mx-auto">
-          <div className="mt-16"></div>
-
           <button
             onClick={() => navigate('/timesheet')}
             className="inline-flex items-center gap-1 text-sm text-cyan-600 hover:text-cyan-800 font-medium mb-2"

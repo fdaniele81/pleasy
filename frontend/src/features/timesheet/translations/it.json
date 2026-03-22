@@ -128,5 +128,10 @@
   "taskHistoryBudget": "Budget",
   "timeOffEntries": "Tutte le Registrazioni",
   "timeOffNoEntries": "Nessuna registrazione trovata",
-  "last12months": "Ultimi 12 mesi"
+  "last12months": "Ultimi 12 mesi",
+  "mobileOtherActivities": "Altre attività ({{count}})",
+  "mobileShowLess": "Mostra meno",
+  "previousTask": "Attività precedente",
+  "nextTask": "Attività successiva",
+  "goToTask": "Vai all'attività"
 }

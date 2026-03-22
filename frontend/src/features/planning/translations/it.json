@@ -268,5 +268,15 @@
   "calendarMonthSep": "Settembre",
   "calendarMonthOct": "Ottobre",
   "calendarMonthNov": "Novembre",
-  "calendarMonthDec": "Dicembre"
+  "calendarMonthDec": "Dicembre",
+  "activities": "attività",
+  "selected": "selezionate",
+  "noActivities": "Nessuna attività in questo progetto",
+  "noResults": "Nessun progetto corrisponde ai filtri attuali",
+  "clearFilters": "Rimuovi tutti i filtri",
+  "hours": "Ore",
+  "days": "Giorni",
+  "deleteConfirmTitle": "Elimina attività",
+  "deleteConfirmMessage": "Sei sicuro di voler eliminare {{count}} attività?",
+  "filterLabel": "Filtri"
 }

@@ -13,9 +13,11 @@ import { useLocale } from "../../../hooks/useLocale";
 import { useTMPlanningFilters } from "./useTMPlanningFilters";
 import logger from "../../../utils/logger";
 
+const DAYS_MOBILE = 7;
 const DAYS_DEFAULT = 14;
 const DAYS_LARGE_SCREEN = 21;
 const DAYS_XLARGE_SCREEN = 28;
+const MOBILE_BREAKPOINT = 1024;
 const LARGE_SCREEN_BREAKPOINT = 1280;
 const XLARGE_SCREEN_BREAKPOINT = 1536;
 
@@ -30,6 +32,7 @@ export function useTMPlanningState() {
     if (typeof window === "undefined") return DAYS_DEFAULT;
     if (window.innerWidth > XLARGE_SCREEN_BREAKPOINT) return DAYS_XLARGE_SCREEN;
     if (window.innerWidth > LARGE_SCREEN_BREAKPOINT) return DAYS_LARGE_SCREEN;
+    if (window.innerWidth < MOBILE_BREAKPOINT) return DAYS_MOBILE;
     return DAYS_DEFAULT;
   });
   const {
@@ -146,6 +149,8 @@ export function useTMPlanningState() {
         newDays = DAYS_XLARGE_SCREEN;
       } else if (window.innerWidth > LARGE_SCREEN_BREAKPOINT) {
         newDays = DAYS_LARGE_SCREEN;
+      } else if (window.innerWidth < MOBILE_BREAKPOINT) {
+        newDays = DAYS_MOBILE;
       }
       setDaysToShow((prev) => (prev !== newDays ? newDays : prev));
     };
@@ -222,7 +227,7 @@ export function useTMPlanningState() {
     dateRange,
     getDateInfo,
     isAtToday,
-    DAYS_DEFAULT, DAYS_LARGE_SCREEN, DAYS_XLARGE_SCREEN,
+    DAYS_MOBILE, DAYS_DEFAULT, DAYS_LARGE_SCREEN, DAYS_XLARGE_SCREEN,
   };
 }
 

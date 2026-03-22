@@ -22,6 +22,19 @@ body {
   animation: slideIn 0.3s ease-out;
 }
 
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s ease-out;
+}
+
 @layer components {
   .btn-primary {
     @apply bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors font-medium;

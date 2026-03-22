@@ -128,5 +128,10 @@
   "taskHistoryBudget": "Budget",
   "timeOffEntries": "All Entries",
   "timeOffNoEntries": "No entries found",
-  "last12months": "Last 12 months"
+  "last12months": "Last 12 months",
+  "mobileOtherActivities": "Other activities ({{count}})",
+  "mobileShowLess": "Show less",
+  "previousTask": "Previous task",
+  "nextTask": "Next task",
+  "goToTask": "Go to task"
 }

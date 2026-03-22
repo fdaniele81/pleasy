@@ -31,7 +31,7 @@ const TimeOffModal = ({
       return null;
     },
     onSubmit: async (data) => {
-      onConfirm({
+      await onConfirm({
         hours: parseFloat(data.hours) || 0,
         details: data.details?.trim() || ''
       });

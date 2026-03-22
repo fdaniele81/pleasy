@@ -104,7 +104,7 @@ function ClientsSimple() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 pt-20">
       <ClientModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -120,8 +120,6 @@ function ClientsSimple() {
 
       <div className="p-4">
         <div className="max-w-full mx-auto">
-          <div className="mt-16"></div>
-
           <PageHeader
             icon={Users}
             title={t('clients:title')}

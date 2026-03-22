@@ -84,25 +84,23 @@ export function useTimesheetActions({
       const previousHours = parseFloat(_previousValue) || 0;
       const existingTimesheet = task?.timesheets?.find(ts => ts.work_date.split('T')[0] === dateStr);
       const previousDetails = existingTimesheet?.details || null;
-      try {
-        if (hours === 0 && timesheetId) {
-          await deleteTimesheet(timesheetId).unwrap();
-          pushUndo({
-            type: 'DELETE_TASK', label: `${task?.task_title || taskId} — ${dateStr}`,
-            taskId, workDate: dateStr, previousHours, previousDetails,
-            newHours: 0, newDetails: null, externalKey: projectKey,
-          });
-        } else if (hours > 0) {
-          await saveTimesheet({
-            taskId, workDate: dateStr, hoursWorked: hours, notes: null, externalKey: projectKey,
-          }).unwrap();
-          pushUndo({
-            type: 'SAVE_TASK', label: `${task?.task_title || taskId} — ${dateStr}`,
-            taskId, workDate: dateStr, previousHours, previousTimesheetId: timesheetId,
-            previousDetails, newHours: hours, newDetails: null, externalKey: projectKey,
-          });
-        }
-      } catch (error) {}
+      if (hours === 0 && timesheetId) {
+        await deleteTimesheet(timesheetId).unwrap();
+        pushUndo({
+          type: 'DELETE_TASK', label: `${task?.task_title || taskId} — ${dateStr}`,
+          taskId, workDate: dateStr, previousHours, previousDetails,
+          newHours: 0, newDetails: null, externalKey: projectKey,
+        });
+      } else if (hours > 0) {
+        await saveTimesheet({
+          taskId, workDate: dateStr, hoursWorked: hours, notes: null, externalKey: projectKey,
+        }).unwrap();
+        pushUndo({
+          type: 'SAVE_TASK', label: `${task?.task_title || taskId} — ${dateStr}`,
+          taskId, workDate: dateStr, previousHours, previousTimesheetId: timesheetId,
+          previousDetails, newHours: hours, newDetails: null, externalKey: projectKey,
+        });
+      }
     }, [saveTimesheet, deleteTimesheet, allTasksFlat, pushUndo]),
     getCellKey: (taskId, dateStr) => `${taskId}-${dateStr}`,
     parseValue: (val) => parseFloat(val) || 0,
@@ -111,17 +109,17 @@ export function useTimesheetActions({
   const timeOffEditCell = useInlineEditCell({
     onSave: useCallback(async (timeOffTypeId, dateStr, hours, _previousValue) => {
       const previousHours = parseFloat(_previousValue) || 0;
+      const existingTimeOff = timeOffs.find(to => to.time_off_type_id === timeOffTypeId && to.date === dateStr);
+      const existingDetails = existingTimeOff?.details || '';
       if (hours >= 0) {
-        try {
-          await saveTimeOff({ timeOffTypeId, date: dateStr, hours }).unwrap();
-          pushUndo({
-            type: 'SAVE_TIMEOFF', label: `${timeOffTypeId} — ${dateStr}`,
-            timeOffTypeId, date: dateStr, previousHours, previousDetails: '',
-            newHours: hours, newDetails: '',
-          });
-        } catch (error) {}
+        await saveTimeOff({ timeOffTypeId, date: dateStr, hours, details: existingDetails }).unwrap();
+        pushUndo({
+          type: 'SAVE_TIMEOFF', label: `${timeOffTypeId} — ${dateStr}`,
+          timeOffTypeId, date: dateStr, previousHours, previousDetails: existingDetails,
+          newHours: hours, newDetails: existingDetails,
+        });
       }
-    }, [saveTimeOff, pushUndo]),
+    }, [saveTimeOff, pushUndo, timeOffs]),
     getCellKey: (timeOffTypeId, dateStr) => `timeoff-${timeOffTypeId}-${dateStr}`,
     parseValue: (val) => parseFloat(val) || 0,
   });
@@ -196,7 +194,7 @@ export function useTimesheetActions({
     closeSubmissionPreview();
     if (tooltipTimeoutRef.current) { clearTimeout(tooltipTimeoutRef.current); tooltipTimeoutRef.current = null; }
     setHoveredTaskId(null);
-    try { await submitTimesheets({ timesheetIds }).unwrap(); } catch (error) {}
+    await submitTimesheets({ timesheetIds }).unwrap();
   }, [submitTimesheets, closeSubmissionPreview]);
 
   const handleExport = useCallback(async ({ startDate: exportStartDate, endDate: exportEndDate }) => {
@@ -352,16 +350,13 @@ export function useTimesheetActions({
     const dateStr = formatDateLocal(timeOffModalDate);
     const previousHours = timeOffModalData?.hours || 0;
     const previousDetails = timeOffModalData?.details || '';
-    try {
-      await saveTimeOff({ timeOffTypeId: timeOffModalType, date: dateStr, hours: data.hours, details: data.details }).unwrap();
-      pushUndo({
-        type: 'SAVE_TIMEOFF', label: `${timeOffModalType} — ${dateStr}`,
-        timeOffTypeId: timeOffModalType, date: dateStr, previousHours, previousDetails,
-        newHours: data.hours, newDetails: data.details || '',
-      });
-    } catch (error) {}
-    closeTimeOffModal();
-  }, [saveTimeOff, timeOffModalDate, timeOffModalType, timeOffModalData, closeTimeOffModal, pushUndo]);
+    await saveTimeOff({ timeOffTypeId: timeOffModalType, date: dateStr, hours: data.hours, details: data.details }).unwrap();
+    pushUndo({
+      type: 'SAVE_TIMEOFF', label: `${timeOffModalType} — ${dateStr}`,
+      timeOffTypeId: timeOffModalType, date: dateStr, previousHours, previousDetails,
+      newHours: data.hours, newDetails: data.details || '',
+    });
+  }, [saveTimeOff, timeOffModalDate, timeOffModalType, timeOffModalData, pushUndo]);
 
   const handleTimeOffModalClose = useCallback(() => { closeTimeOffModal(); }, [closeTimeOffModal]);
 
@@ -385,41 +380,41 @@ export function useTimesheetActions({
     setSelectedTaskForHistory(null);
   }, []);
 
-  const handleTimesheetDetailsModalConfirm = useCallback(async (data) => {
-    if (!timesheetDetailsModalDate || !timesheetDetailsModalTask) return;
-    const dateStr = formatDateLocal(timesheetDetailsModalDate);
-    const timesheetData = getTimesheetForDate(timesheetDetailsModalTask, timesheetDetailsModalDate);
-    const projectKey = timesheetDetailsModalTask.project_key || null;
+  const handleTimesheetDetailsModalConfirm = useCallback(async (data, overrideTask, overrideDate, overrideIsSubmitted) => {
+    const task = overrideTask || timesheetDetailsModalTask;
+    const date = overrideDate || timesheetDetailsModalDate;
+    const isSubmitted = overrideIsSubmitted !== undefined ? overrideIsSubmitted : timesheetDetailsModalIsSubmitted;
+    if (!date || !task) return;
+    const dateStr = formatDateLocal(date);
+    const timesheetData = getTimesheetForDate(task, date);
+    const projectKey = task.project_key || null;
     const previousHours = timesheetData.hours || 0;
     const previousDetails = timesheetData.details || null;
 
-    try {
-      if (data.hours === 0 && !timesheetDetailsModalIsSubmitted) {
-        if (timesheetData.timesheetId) {
-          await deleteTimesheet(timesheetData.timesheetId).unwrap();
-          pushUndo({
-            type: 'DELETE_TASK', label: `${timesheetDetailsModalTask.task_title} — ${dateStr}`,
-            taskId: timesheetDetailsModalTask.task_id, workDate: dateStr,
-            previousHours, previousDetails, newHours: 0, newDetails: null, externalKey: projectKey,
-          });
-        }
-      } else {
-        await saveTimesheet({
-          taskId: timesheetDetailsModalTask.task_id, workDate: dateStr, hoursWorked: data.hours,
-          notes: null, details: data.details, externalKey: projectKey,
-        }).unwrap();
-        if (!timesheetDetailsModalIsSubmitted) {
-          pushUndo({
-            type: 'SAVE_TASK', label: `${timesheetDetailsModalTask.task_title} — ${dateStr}`,
-            taskId: timesheetDetailsModalTask.task_id, workDate: dateStr,
-            previousHours, previousTimesheetId: timesheetData.timesheetId,
-            previousDetails, newHours: data.hours, newDetails: data.details || null, externalKey: projectKey,
-          });
-        }
+    if (data.hours === 0 && !isSubmitted) {
+      if (timesheetData.timesheetId) {
+        await deleteTimesheet(timesheetData.timesheetId).unwrap();
+        pushUndo({
+          type: 'DELETE_TASK', label: `${task.task_title} — ${dateStr}`,
+          taskId: task.task_id, workDate: dateStr,
+          previousHours, previousDetails, newHours: 0, newDetails: null, externalKey: projectKey,
+        });
       }
-    } catch (error) {}
-    closeTimesheetDetailsModal();
-  }, [saveTimesheet, deleteTimesheet, timesheetDetailsModalDate, timesheetDetailsModalTask, timesheetDetailsModalIsSubmitted, closeTimesheetDetailsModal, pushUndo]);
+    } else {
+      await saveTimesheet({
+        taskId: task.task_id, workDate: dateStr, hoursWorked: data.hours,
+        notes: null, details: data.details, externalKey: projectKey,
+      }).unwrap();
+      if (!isSubmitted) {
+        pushUndo({
+          type: 'SAVE_TASK', label: `${task.task_title} — ${dateStr}`,
+          taskId: task.task_id, workDate: dateStr,
+          previousHours, previousTimesheetId: timesheetData.timesheetId,
+          previousDetails, newHours: data.hours, newDetails: data.details || null, externalKey: projectKey,
+        });
+      }
+    }
+  }, [saveTimesheet, deleteTimesheet, timesheetDetailsModalDate, timesheetDetailsModalTask, timesheetDetailsModalIsSubmitted, pushUndo]);
 
   const handleTimesheetDetailsModalClose = useCallback(() => { closeTimesheetDetailsModal(); }, [closeTimesheetDetailsModal]);
 
@@ -492,10 +487,8 @@ export function useTimesheetActions({
   const handleCloseTaskModal = useCallback(() => { closeTaskModal(); }, [closeTaskModal]);
 
   const handleUpdateTask = useCallback(async (taskData) => {
-    try {
-      await updateTaskDetails({ taskId: selectedTaskForModal.task_id, taskDetails: taskData.task_details }).unwrap();
-      handleCloseTaskModal();
-    } catch (error) {}
+    await updateTaskDetails({ taskId: selectedTaskForModal.task_id, taskDetails: taskData.task_details }).unwrap();
+    handleCloseTaskModal();
   }, [updateTaskDetails, selectedTaskForModal, handleCloseTaskModal]);
 
   return {

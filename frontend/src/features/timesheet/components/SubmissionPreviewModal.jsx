@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Clock, AlertCircle, X, ChevronLeft, ChevronRight, Calendar, Check, CheckCircle } from 'lucide-react';
+import { FileText, Clock, AlertCircle, X, ChevronLeft, ChevronRight, Calendar, Check, CheckCircle, Filter, ChevronDown } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
 import DateInput from '../../../shared/ui/DateInput';
@@ -28,6 +28,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
   const [onlyCompleted, setOnlyCompleted] = useState(false);
   // Mobile carousel state
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const applyClientFilter = useCallback(() => {
     setFilterClientIds(pendingClientIds);
@@ -119,6 +120,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       setPendingProjectIds([]);
       setOnlyCompleted(false);
       setCurrentTaskIndex(0);
+      setMobileFiltersOpen(false);
     }
   }, [isOpen, fetchPreview]);
 
@@ -287,7 +289,8 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
 
       {!previewLoading && previewTasks.length > 0 && (
         <div className="flex flex-col gap-3 h-full min-h-0">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+          {/* Desktop filters */}
+          <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 p-3">
             <FilterBar layout="wrap" gap="sm" withBackground={false} withPadding={false}>
               <DateInput
                 value={filterStartDate}
@@ -347,17 +350,93 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
             </FilterBar>
           </div>
 
+          {/* Mobile filters - collapsible */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => setMobileFiltersOpen(prev => !prev)}
+              className="flex items-center justify-between w-full px-3 py-2 bg-white rounded-lg border border-gray-200 shadow-sm text-sm text-gray-600"
+            >
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <span className="font-medium">{t('timesheet:filters')}</span>
+                {(filterStartDate || filterClientIds.length > 0 || filterProjectIds.length > 0) && (
+                  <span className="w-5 h-5 rounded-full bg-cyan-600 text-white text-[10px] font-bold flex items-center justify-center">
+                    {(filterStartDate ? 1 : 0) + (filterClientIds.length > 0 ? 1 : 0) + (filterProjectIds.length > 0 ? 1 : 0)}
+                  </span>
+                )}
+              </div>
+              <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${mobileFiltersOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {mobileFiltersOpen && (
+              <div className="mt-2 bg-white rounded-lg border border-gray-200 shadow-sm p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <DateInput
+                    value={filterStartDate}
+                    onChange={setFilterStartDate}
+                    inputClassName="w-full px-2 py-1.5 bg-transparent rounded-lg cursor-pointer focus:outline-none text-xs"
+                  />
+                  <span className="text-gray-400 text-xs shrink-0">—</span>
+                  <DateInput
+                    value={filterEndDate}
+                    onChange={setFilterEndDate}
+                    inputClassName="w-full px-2 py-1.5 bg-transparent rounded-lg cursor-pointer focus:outline-none text-xs"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <FilterDropdown
+                    options={uniqueClients.map(c => ({
+                      value: c.client_id,
+                      label: `${c.client_key} - ${c.client_name}`,
+                      color: c.client_color,
+                    }))}
+                    selectedValues={pendingClientIds}
+                    onChange={setPendingClientIds}
+                    onClose={applyClientFilter}
+                    placeholder={t('timesheet:allClients')}
+                    selectedLabel={(count) => t('timesheet:clientsCount', { count })}
+                    title={t('timesheet:selectClients')}
+                    size="sm"
+                  />
+                  <FilterDropdown
+                    options={uniqueProjects.map(p => ({
+                      value: p.project_id,
+                      label: `${p.client_key}-${p.project_key} - ${p.project_title}`,
+                      color: p.client_color,
+                    }))}
+                    selectedValues={pendingProjectIds}
+                    onChange={setPendingProjectIds}
+                    onClose={applyProjectFilter}
+                    placeholder={t('timesheet:allProjects')}
+                    selectedLabel={(count) => t('timesheet:projectsCount', { count })}
+                    title={t('timesheet:selectProjects')}
+                    size="sm"
+                  />
+                </div>
+                {(filterStartDate || filterEndDate || filterClientIds.length > 0 || filterProjectIds.length > 0) && (
+                  <button
+                    onClick={() => { clearDateFilters(); setFilterClientIds([]); setFilterProjectIds([]); setPendingClientIds([]); setPendingProjectIds([]); }}
+                    className="text-xs text-red-500 font-medium flex items-center gap-1"
+                  >
+                    <X className="h-3 w-3" />
+                    {t('timesheet:clearFilters')}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Summary stats */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1.5">
                 <FileText className="h-4 w-4 text-gray-400" />
-                <span>{t('timesheet:entriesLabel')}</span>
+                <span className="hidden sm:inline">{t('timesheet:entriesLabel')}</span>
                 <span className="font-semibold text-gray-800">{getSelectedCount()}</span>
                 <span className="text-gray-400">/ {filteredTimesheetIds.size}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-gray-400" />
-                <span>{t('timesheet:hoursLabel')}</span>
+                <span className="hidden sm:inline">{t('timesheet:hoursLabel')}</span>
                 <span className="font-semibold text-gray-800">{getSelectedHours().toFixed(1)}h</span>
                 <span className="text-gray-400">/ {getTotalHours().toFixed(1)}h</span>
               </div>
@@ -399,77 +478,60 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
 
               {/* Mobile: Task-by-task carousel with selection */}
               <div className="lg:hidden flex flex-col flex-1 min-h-0">
-                {/* Navigation header */}
-                <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 mb-3">
+                {/* Task navigation card */}
+                <div className="flex items-center gap-2 bg-cyan-700 rounded-xl px-3 py-2.5 mb-2">
                   <button
                     onClick={goToPrev}
                     disabled={currentTaskIndex === 0}
-                    className="p-2 min-h-11 min-w-11 flex items-center justify-center rounded-lg text-cyan-600 hover:bg-cyan-50 disabled:text-gray-300 disabled:hover:bg-transparent transition-colors"
+                    className="p-1 rounded-lg text-white/80 active:bg-white/10 disabled:text-white/30 transition-colors shrink-0"
                     aria-label={t('timesheet:previousTask')}
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
 
-                  <div className="flex flex-col items-center gap-0.5 min-w-0 flex-1 px-2">
+                  <div className="flex-1 min-w-0 text-center">
                     {currentTask && (
-                      <>
-                        <div className="flex items-center gap-1.5 max-w-full">
-                          <div
-                            className="w-5 h-5 min-w-5 min-h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold leading-none"
-                            style={{
-                              backgroundColor: currentTask.symbol_bg_color || currentTask.client_color || '#6366F1',
-                              color: currentTask.symbol_letter_color || '#FFFFFF',
-                            }}
-                          >
-                            {currentTask.symbol_letter || (currentTask.client_name || '?')[0].toUpperCase()}
-                          </div>
-                          <span className="text-xs font-semibold text-gray-800 truncate">
-                            {currentTask.project_title || currentTask.project_key}
-                          </span>
+                      <div className="flex items-center justify-center gap-2">
+                        <div
+                          className="w-6 h-6 min-w-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold"
+                          style={{
+                            backgroundColor: currentTask.symbol_bg_color || currentTask.client_color || '#6366F1',
+                            color: currentTask.symbol_letter_color || '#FFFFFF',
+                          }}
+                        >
+                          {currentTask.symbol_letter || (currentTask.client_name || '?')[0].toUpperCase()}
                         </div>
-                        {currentTask.project_type_id !== 'TM' && currentTask.task_title && (
-                          <span className="text-[11px] text-gray-500 truncate max-w-full">
-                            {currentTask.task_title}
-                          </span>
-                        )}
-                        <span className="text-[10px] text-gray-400">
-                          {currentTaskIndex + 1} / {filteredPreviewTasks.length}
-                        </span>
-                      </>
+                        <div className="min-w-0 text-left">
+                          <div className="text-xs font-semibold text-white truncate">
+                            {currentTask.project_title || currentTask.project_key}
+                          </div>
+                          {currentTask.project_type_id !== 'TM' && currentTask.task_title && (
+                            <div className="text-[11px] text-cyan-200 truncate">
+                              {currentTask.task_title}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
+                  </div>
+
+                  <div className="text-[10px] text-cyan-200 font-medium shrink-0">
+                    {currentTaskIndex + 1}/{filteredPreviewTasks.length}
                   </div>
 
                   <button
                     onClick={goToNext}
                     disabled={currentTaskIndex === filteredPreviewTasks.length - 1}
-                    className="p-2 min-h-11 min-w-11 flex items-center justify-center rounded-lg text-cyan-600 hover:bg-cyan-50 disabled:text-gray-300 disabled:hover:bg-transparent transition-colors"
+                    className="p-1 rounded-lg text-white/80 active:bg-white/10 disabled:text-white/30 transition-colors shrink-0"
                     aria-label={t('timesheet:nextTask')}
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
                 </div>
 
-                {/* Dot indicators */}
-                {filteredPreviewTasks.length > 1 && filteredPreviewTasks.length <= 15 && (
-                  <div className="flex items-center justify-center gap-1.5 mb-3">
-                    {filteredPreviewTasks.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentTaskIndex(idx)}
-                        className={`rounded-full transition-all ${
-                          idx === currentTaskIndex
-                            ? 'w-2.5 h-2.5 bg-cyan-600'
-                            : 'w-1.5 h-1.5 bg-gray-300'
-                        }`}
-                        aria-label={`${t('timesheet:goToTask')} ${idx + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Task hours summary + select all for task */}
+                {/* Task summary + select all */}
                 {currentTask && (
-                  <div className="flex items-center justify-between px-3 py-2 bg-cyan-50 rounded-lg mb-3">
+                  <div className="flex items-center justify-between px-3 py-2 bg-cyan-50 rounded-lg mb-2">
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-gray-600">
                         {t('timesheet:entries')} <span className="font-semibold text-gray-800">{currentTask.timesheets.length}</span>
@@ -482,10 +544,10 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
                       onClick={() => toggleTaskSelection(currentTask)}
                       className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
                         isTaskFullySelected(currentTask)
-                          ? 'bg-cyan-600 border-cyan-600 text-white hover:bg-cyan-700'
+                          ? 'bg-cyan-600 border-cyan-600 text-white active:bg-cyan-700'
                           : isTaskPartiallySelected(currentTask)
-                            ? 'bg-cyan-50 border-cyan-300 text-cyan-700 hover:bg-cyan-100'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            ? 'bg-cyan-50 border-cyan-300 text-cyan-700 active:bg-cyan-100'
+                            : 'bg-white border-gray-300 text-gray-700 active:bg-gray-50'
                       }`}
                     >
                       {isTaskFullySelected(currentTask) ? t('common:deselectAll') : t('common:selectAll')}
@@ -493,8 +555,8 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
                   </div>
                 )}
 
-                {/* Timesheet entries list with selection */}
-                <div className="flex-1 overflow-y-auto min-h-0 -mx-1">
+                {/* Timesheet entries list */}
+                <div className="flex-1 overflow-y-auto min-h-0 rounded-lg border border-gray-100">
                   {sortedTimesheets.map((ts) => {
                     const nonWorking = isNonWorkingDay(ts.timesheet_date);
                     const isSelected = selectedTimesheetIds.has(ts.timesheet_id);
@@ -505,13 +567,13 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
                         onClick={() => toggleTimesheetSelection(ts.timesheet_id)}
                         className={`w-full flex items-center justify-between px-3 py-2.5 border-b border-gray-100 transition-colors text-left ${
                           isSelected
-                            ? 'bg-cyan-100'
+                            ? 'bg-cyan-50'
                             : nonWorking
-                              ? 'bg-gray-50 hover:bg-gray-100'
-                              : 'hover:bg-gray-50'
+                              ? 'bg-gray-50/50'
+                              : ''
                         }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
                           <div className={`w-5 h-5 min-w-5 rounded border-2 flex items-center justify-center transition-colors ${
                             isSelected
                               ? 'bg-cyan-600 border-cyan-600'

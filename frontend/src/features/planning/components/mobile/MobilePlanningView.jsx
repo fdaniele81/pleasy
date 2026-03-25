@@ -83,13 +83,13 @@ export const MobilePlanningView = memo(function MobilePlanningView({
   }, [selectedTasks]);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 pt-20">
+    <div className="min-h-screen bg-gray-50 pb-20 pt-16">
       {/* Header */}
-      <div className="sticky top-20 z-30 bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-4 pt-3 pb-2">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900">
-              {getRouteIcon(ROUTES.PLANNING) && React.createElement(getRouteIcon(ROUTES.PLANNING), { size: 22 })}
+      <div className="sticky top-16 z-30 bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-4 py-2">
+          <div className="flex items-center justify-between">
+            <h1 className="text-base font-bold flex items-center gap-2 text-gray-800">
+              {getRouteIcon(ROUTES.PLANNING) && React.createElement(getRouteIcon(ROUTES.PLANNING), { size: 18 })}
               {t('planning:title')}
             </h1>
             <div className="flex items-center gap-2">
@@ -115,14 +115,14 @@ export const MobilePlanningView = memo(function MobilePlanningView({
           </div>
 
           {/* Search */}
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative mt-1.5">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t('planning:searchPlaceholder')}
-              className="w-full pl-9 pr-8 py-2 bg-gray-100 rounded-lg text-sm border-0 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full pl-9 pr-9 py-2 text-sm bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             />
             {searchTerm && (
               <button
@@ -269,20 +269,20 @@ export const MobilePlanningView = memo(function MobilePlanningView({
             )}
           </div>
         )}
-      </div>
 
-      {/* Summary bar */}
-      <div className="px-4 py-2 bg-white border-b border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
-        <div className="flex items-center gap-3">
-          <span>B: <strong className="text-gray-700">{formatHours(totals.budget, showInDays)}{unit}</strong></span>
-          <span>A: <strong className="text-gray-700">{formatHours(totals.actual, showInDays)}{unit}</strong></span>
-          <span>ETC: <strong className="text-amber-600">{formatHours(totals.etc, showInDays)}{unit}</strong></span>
+        {/* Summary bar */}
+        <div className="px-4 py-2 bg-amber-50 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+          <div className="flex items-center gap-3">
+            <span>B: <strong className="text-gray-700">{formatHours(totals.budget, showInDays)}{unit}</strong></span>
+            <span>A: <strong className="text-gray-700">{formatHours(totals.actual, showInDays)}{unit}</strong></span>
+            <span>ETC: <strong className="text-amber-600">{formatHours(totals.etc, showInDays)}{unit}</strong></span>
+          </div>
+          <span className={`font-semibold ${
+            totals.delta > 0 ? 'text-green-600' : totals.delta < 0 ? 'text-red-600' : 'text-gray-400'
+          }`}>
+            &Delta; {totals.delta > 0 ? '+' : ''}{formatHours(totals.delta, showInDays)}{unit}
+          </span>
         </div>
-        <span className={`font-semibold ${
-          totals.delta > 0 ? 'text-green-600' : totals.delta < 0 ? 'text-red-600' : 'text-gray-400'
-        }`}>
-          &Delta; {totals.delta > 0 ? '+' : ''}{formatHours(totals.delta, showInDays)}{unit}
-        </span>
       </div>
 
       {/* Projects list */}

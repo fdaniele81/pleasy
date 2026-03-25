@@ -151,8 +151,9 @@ const TaskModal = ({
           </>
         ) : (
           <>
-            <div className="grid grid-cols-6 gap-3">
-              <div className="col-span-3">
+            {/* Row 1: Title, External Key, Status */}
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+              <div className="col-span-2 sm:col-span-3">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {t('planning:taskTitleLabel')}
                 </label>
@@ -171,7 +172,7 @@ const TaskModal = ({
                   <p className="mt-0.5 text-xs text-red-600">{errors.title}</p>
                 )}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {t('planning:externalKey')}
                 </label>
@@ -184,7 +185,7 @@ const TaskModal = ({
                   placeholder="JIRA-123"
                 />
               </div>
-              <div>
+              <div className="col-span-1 sm:col-span-1">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {t('planning:statusLabel')}
                 </label>
@@ -208,7 +209,8 @@ const TaskModal = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-6 gap-3">
+            {/* Row 2: Assignee, Budget, Init Actual, ETC */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {t('planning:assignTo')}
@@ -286,6 +288,10 @@ const TaskModal = ({
                   placeholder="0"
                 />
               </div>
+            </div>
+
+            {/* Row 3: Start Date, End Date */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   {t('planning:startDate')}

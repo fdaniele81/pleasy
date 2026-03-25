@@ -82,8 +82,8 @@ function CapacityPlan() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-20">
-      <div className="p-4 xl:px-12">
+    <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
+      <div className="px-4 pt-2 pb-4 sm:p-4 xl:px-12">
         <div className="max-w-full mx-auto">
           <PageHeader
             icon={Layers}

@@ -75,9 +75,9 @@ const DefaultConfig = () => {
 
   if (user?.role_id !== 'PM') {
     return (
-      <div className="pt-24 px-6">
-        <div className="max-w-4xl mx-auto text-center text-gray-500">
-          {t('common:accessRestricted')}
+      <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
+        <div className="flex items-center justify-center p-6">
+          <div className="text-gray-500">{t('common:accessRestricted')}</div>
         </div>
       </div>
     );
@@ -265,8 +265,8 @@ const DefaultConfig = () => {
   ];
 
   return (
-    <div className="pt-24 px-6 pb-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
+      <div className="max-w-6xl mx-auto px-4 pt-2 pb-8 sm:px-6 sm:py-6">
         <PageHeader
           icon={SlidersHorizontal}
           title={t('defaultConfig:title')}
@@ -274,7 +274,7 @@ const DefaultConfig = () => {
           iconColor="text-cyan-600"
         />
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           {(loading || loadingUnit) && (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>

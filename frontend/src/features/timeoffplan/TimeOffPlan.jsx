@@ -176,7 +176,7 @@ function TimeOffPlan() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <div className="flex items-center justify-center p-6 pt-20">
+        <div className="flex items-center justify-center p-6 pt-16 sm:pt-20">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
       </div>
@@ -192,8 +192,8 @@ function TimeOffPlan() {
   // === PAGINA 1: Selezione ===
   if (page === 'selection') {
     return (
-      <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-20">
-        <div className="shrink-0 p-4 pb-0">
+      <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-16 sm:pt-20">
+        <div className="shrink-0 px-4 pt-2 pb-0 sm:p-4 sm:pb-0">
           <div className="max-w-full mx-auto">
             <PageHeader
               icon={getRouteIcon('/timeoff-plan')}
@@ -264,7 +264,7 @@ function TimeOffPlan() {
 
   // === PAGINA 2: Dettaglio ===
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-20">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-16 sm:pt-20">
       <div className="shrink-0 p-4 pb-0">
         <div className="max-w-full mx-auto">
           <PageHeader
@@ -273,12 +273,14 @@ function TimeOffPlan() {
             description={`${t('timeoffplan:usersSelected', { count: filteredUsers.length })}  ·  ${formatDateDisplay(tableStartDate)} — ${formatDateDisplay(tableEndDate)}`}
             actionButton={{
               label: t('common:export'),
+              mobileLabel: t('common:export'),
               onClick: handleExport,
               icon: Download,
               color: 'green',
             }}
             secondaryActionButton={{
               label: t('timeoffplan:backToSelection'),
+              mobileLabel: t('timeoffplan:back'),
               onClick: () => setPage('selection'),
               icon: ArrowLeft,
               color: 'cyan',

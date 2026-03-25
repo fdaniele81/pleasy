@@ -160,7 +160,7 @@ function ProjectsSimple() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-20">
+    <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
       <ProjectModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

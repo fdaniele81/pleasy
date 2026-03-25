@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, ListTodo, Plus, CalendarDays, StickyNote, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, ListTodo, Pencil, Plus, CalendarDays, StickyNote, Trash2 } from 'lucide-react';
 import { getRouteIcon } from '../../constants/routeIcons';
 import EmptyState from '../../shared/ui/EmptyState';
 import Button from '../../shared/ui/Button';
@@ -25,6 +25,7 @@ import {
 import {
   useGetTodoItemsQuery,
   useCreateTodoItemMutation,
+  useUpdateTodoItemMutation,
   useToggleTodoItemMutation,
   useDeleteTodoItemMutation,
 } from './api/todoItemEndpoints';
@@ -50,6 +51,7 @@ function TodoList() {
   const [updateStatus] = useUpdateTimesheetStatusMutation();
   const [saveTimesheet] = useSaveTimesheetMutation();
   const [createTodoItem] = useCreateTodoItemMutation();
+  const [updateTodoItem] = useUpdateTodoItemMutation();
   const [toggleTodoItem] = useToggleTodoItemMutation();
   const [deleteTodoItem] = useDeleteTodoItemMutation();
 
@@ -58,6 +60,8 @@ function TodoList() {
   const [pendingOnly, setPendingOnly] = useState(true);
   const [timesheetModalOpen, setTimesheetModalOpen] = useState(false);
   const [todoModalOpen, setTodoModalOpen] = useState(false);
+  const [editingTimesheetEntry, setEditingTimesheetEntry] = useState(null);
+  const [editingTodoEntry, setEditingTodoEntry] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
 
   const todayRef = useRef(null);
@@ -82,6 +86,7 @@ function TodoList() {
       // keep originals for mutations
       _timesheetId: item.timesheet_id,
       _statusId: item.timesheet_status_id,
+      _taskId: item.task_id,
     }));
 
     const todoNormalized = todoItems.map((item) => ({
@@ -129,8 +134,9 @@ function TodoList() {
   const getScrollOffset = useCallback(() => {
     if (!stickyHeaderRef.current) return 0;
     const headerRect = stickyHeaderRef.current.getBoundingClientRect();
-    // top-20 (5rem = 80px) + actual header height + small gap
-    return headerRect.height + 80 + 8;
+    // sticky top offset + actual header height + small gap
+    const stickyTop = window.innerWidth >= 640 ? 80 : 64;
+    return headerRect.height + stickyTop + 8;
   }, []);
 
   const scrollToElement = useCallback((el) => {
@@ -303,13 +309,26 @@ function TodoList() {
 
   const closeTimesheetModal = useCallback(() => {
     setTimesheetModalOpen(false);
+    setEditingTimesheetEntry(null);
     setSelectedClientId('');
     setTaskSearch('');
   }, []);
 
-  const { formData: tsFormData, errors: tsErrors, isSubmitting: tsIsSubmitting, handleChange: tsHandleChange, handleSubmit: tsHandleSubmit } = useFormModal({
+  const openEditTimesheet = useCallback((entry) => {
+    setEditingTimesheetEntry(entry);
+    setTimesheetModalOpen(true);
+  }, []);
+
+  const { formData: tsFormData, errors: tsErrors, isEditMode: tsIsEditMode, isSubmitting: tsIsSubmitting, handleChange: tsHandleChange, handleSubmit: tsHandleSubmit } = useFormModal({
     initialValues: { task_id: '', work_date: TODAY_ISO, hours: '', details: '' },
+    entity: editingTimesheetEntry,
     isOpen: timesheetModalOpen,
+    transformForEdit: (entry) => ({
+      task_id: entry._taskId,
+      work_date: entry.date,
+      hours: String(entry.hours ?? ''),
+      details: entry.details || '',
+    }),
     validate: (data) => {
       if (!data.task_id) return t('todolist:taskRequired');
       if (!data.work_date) return t('todolist:dateRequired');
@@ -330,21 +349,42 @@ function TodoList() {
   // ── Add todo item modal ──
   const closeTodoModal = useCallback(() => {
     setTodoModalOpen(false);
+    setEditingTodoEntry(null);
   }, []);
 
-  const { formData: todoFormData, errors: todoErrors, isSubmitting: todoIsSubmitting, handleChange: todoHandleChange, handleSubmit: todoHandleSubmit } = useFormModal({
+  const openEditTodo = useCallback((entry) => {
+    setEditingTodoEntry(entry);
+    setTodoModalOpen(true);
+  }, []);
+
+  const { formData: todoFormData, errors: todoErrors, isEditMode: todoIsEditMode, isSubmitting: todoIsSubmitting, handleChange: todoHandleChange, handleSubmit: todoHandleSubmit } = useFormModal({
     initialValues: { title: '', details: '', due_date: '' },
+    entity: editingTodoEntry,
     isOpen: todoModalOpen,
+    transformForEdit: (entry) => ({
+      title: entry.title || '',
+      details: entry.details || '',
+      due_date: entry.date || '',
+    }),
     validate: (data) => {
       if (!data.title?.trim()) return t('todolist:todoTitleRequired');
       return null;
     },
-    onSubmit: async (data) => {
-      await createTodoItem({
-        title: data.title.trim(),
-        details: data.details?.trim() || '',
-        dueDate: data.due_date || null,
-      }).unwrap();
+    onSubmit: async (data, isEditMode) => {
+      if (isEditMode && editingTodoEntry) {
+        await updateTodoItem({
+          todoItemId: editingTodoEntry._todoItemId,
+          title: data.title.trim(),
+          details: data.details?.trim() || '',
+          dueDate: data.due_date || null,
+        }).unwrap();
+      } else {
+        await createTodoItem({
+          title: data.title.trim(),
+          details: data.details?.trim() || '',
+          dueDate: data.due_date || null,
+        }).unwrap();
+      }
       closeTodoModal();
     },
   });
@@ -352,7 +392,7 @@ function TodoList() {
   // ── Loading ──
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-20">
+      <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
         <div className="flex items-center justify-center p-6">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
@@ -361,15 +401,15 @@ function TodoList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-20">
+    <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
       <div className="px-4 pb-4">
         <div className="max-w-7xl mx-auto flex gap-6">
           {/* ── Left column: todo list ── */}
           <div className="flex-1 min-w-0">
-          <div ref={stickyHeaderRef} className="sticky top-20 z-10 bg-gray-100 pb-2 before:content-[''] before:absolute before:left-0 before:right-0 before:-top-20 before:h-20 before:bg-gray-100">
-            <div className="mb-2 sm:mb-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 flex items-center gap-2 sm:gap-3">
-                {TodoIcon && <TodoIcon size={24} className="sm:w-7 sm:h-7 shrink-0" />}
+          <div ref={stickyHeaderRef} className="sticky top-16 sm:top-20 z-30 bg-gray-100 pb-2 before:content-[''] before:absolute before:left-0 before:right-0 before:-top-16 sm:before:-top-20 before:h-16 sm:before:h-20 before:bg-gray-100">
+            <div className="pt-2 mb-1 sm:mb-4">
+              <h1 className="text-base sm:text-2xl font-bold text-gray-800 mb-0 sm:mb-1 flex items-center gap-2 sm:gap-3">
+                {TodoIcon && <TodoIcon size={18} className="sm:w-7 sm:h-7 shrink-0" />}
                 <span>{t('todolist:title')}</span>
               </h1>
               <p className="hidden sm:block text-sm sm:text-base text-gray-600">{t('todolist:description')}</p>
@@ -582,6 +622,21 @@ function TodoList() {
                               </div>
                             )}
 
+                            {/* Edit button */}
+                            <button
+                              type="button"
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (entry.type === 'timesheet') openEditTimesheet(entry);
+                                else openEditTodo(entry);
+                              }}
+                              className="shrink-0 p-1 text-gray-300 hover:text-cyan-500 transition-colors"
+                              aria-label={t('common:edit')}
+                            >
+                              <Pencil size={14} />
+                            </button>
+
                             {/* Delete button for todo items */}
                             {entry.type === 'todo' && (
                               <button
@@ -631,74 +686,90 @@ function TodoList() {
         isOpen={timesheetModalOpen}
         onClose={closeTimesheetModal}
         onConfirm={tsHandleSubmit}
-        title={t('todolist:addEntryTitle')}
-        icon={<Plus className="text-cyan-600" size={24} />}
+        entityName={t('todolist:timesheetEntry')}
+        isEditMode={tsIsEditMode}
+        icon={tsIsEditMode ? <Pencil className="text-cyan-600" size={24} /> : <Plus className="text-cyan-600" size={24} />}
         error={tsErrors.general}
         isSubmitting={tsIsSubmitting}
         confirmButtonColor="cyan"
         size="md"
       >
-        {/* Client selector */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('common:client')}
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {clientsWithTasks.map((client) => (
-              <button
-                key={client.client_id}
-                type="button"
-                onClick={() => {
-                  setSelectedClientId(client.client_id);
-                  tsHandleChange('task_id', '');
-                  setTaskSearch('');
-                }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                  selectedClientId === client.client_id
-                    ? 'bg-cyan-50 border-cyan-300 text-cyan-700'
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {client.client_name}
-              </button>
-            ))}
-            {clientsWithTasks.length === 0 && (
-              <div className="text-xs text-gray-400">{t('todolist:noTasks')}</div>
-            )}
-          </div>
-        </div>
-
-        {/* Task selector (visible after client selection) */}
-        {selectedClientId && (
+        {/* Client / Task selector (hidden in edit mode) */}
+        {tsIsEditMode ? (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               {t('todolist:selectTask')}
             </label>
-            <SearchInput
-              value={taskSearch}
-              onChange={setTaskSearch}
-              placeholder={t('todolist:selectTaskPlaceholder')}
-              size="sm"
-              className="mb-2"
-            />
-            <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
-              {tasksForClient.map((task) => (
-                <button
-                  key={task.task_id}
-                  type="button"
-                  onClick={() => tsHandleChange('task_id', task.task_id)}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                    tsFormData.task_id === task.task_id
-                      ? 'bg-cyan-50 text-cyan-800'
-                      : 'hover:bg-gray-50 text-gray-700'
-                  }`}
-                >
-                  <div className="font-medium truncate">{task.label}</div>
-                  <div className="text-xs text-gray-400">{task.projectLabel}</div>
-                </button>
-              ))}
+            <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
+              {editingTimesheetEntry?.title}
+              <span className="text-xs text-gray-400 ml-2">
+                {editingTimesheetEntry?.client_key} &middot; {editingTimesheetEntry?.project_key}
+              </span>
             </div>
           </div>
+        ) : (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('common:client')}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {clientsWithTasks.map((client) => (
+                  <button
+                    key={client.client_id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedClientId(client.client_id);
+                      tsHandleChange('task_id', '');
+                      setTaskSearch('');
+                    }}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                      selectedClientId === client.client_id
+                        ? 'bg-cyan-50 border-cyan-300 text-cyan-700'
+                        : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {client.client_name}
+                  </button>
+                ))}
+                {clientsWithTasks.length === 0 && (
+                  <div className="text-xs text-gray-400">{t('todolist:noTasks')}</div>
+                )}
+              </div>
+            </div>
+
+            {selectedClientId && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('todolist:selectTask')}
+                </label>
+                <SearchInput
+                  value={taskSearch}
+                  onChange={setTaskSearch}
+                  placeholder={t('todolist:selectTaskPlaceholder')}
+                  size="sm"
+                  className="mb-2"
+                />
+                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
+                  {tasksForClient.map((task) => (
+                    <button
+                      key={task.task_id}
+                      type="button"
+                      onClick={() => tsHandleChange('task_id', task.task_id)}
+                      className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                        tsFormData.task_id === task.task_id
+                          ? 'bg-cyan-50 text-cyan-800'
+                          : 'hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <div className="font-medium truncate">{task.label}</div>
+                      <div className="text-xs text-gray-400">{task.projectLabel}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Date + Hours row */}
@@ -749,8 +820,9 @@ function TodoList() {
         isOpen={todoModalOpen}
         onClose={closeTodoModal}
         onConfirm={todoHandleSubmit}
-        title={t('todolist:addTodoTitle')}
-        icon={<StickyNote className="text-amber-500" size={24} />}
+        entityName={t('todolist:todoItem')}
+        isEditMode={todoIsEditMode}
+        icon={todoIsEditMode ? <Pencil className="text-amber-500" size={24} /> : <StickyNote className="text-amber-500" size={24} />}
         error={todoErrors.general}
         isSubmitting={todoIsSubmitting}
         confirmButtonColor="cyan"

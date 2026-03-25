@@ -22,6 +22,7 @@
   "clearFilters": "Clear filters",
   "viewDetail": "View detail",
   "backToSelection": "Back to selection",
+  "back": "Back",
   "detailTitle": "Time Off Detail",
   "monthsSelected": "{{count}} months selected",
   "usersSelected": "{{count}} users selected",

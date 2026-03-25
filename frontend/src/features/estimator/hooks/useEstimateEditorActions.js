@@ -308,9 +308,9 @@ export function useEstimateEditorActions({
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (newActivityNameInputRef.current) {
-          newActivityNameInputRef.current.focus();
-          newActivityNameInputRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        const savedCard = document.querySelector(`[data-activity-index="${index}"]`);
+        if (savedCard) {
+          savedCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
       });
     });

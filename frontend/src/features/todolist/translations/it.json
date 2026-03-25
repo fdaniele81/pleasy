@@ -43,5 +43,7 @@
   "scratchpad": "Blocco note",
   "scratchpadPlaceholder": "Scrivi appunti, idee, promemoria...",
   "saving": "Salvataggio...",
-  "saved": "Salvato"
+  "saved": "Salvato",
+  "timesheetEntry": "attività",
+  "todoItem": "promemoria"
 }

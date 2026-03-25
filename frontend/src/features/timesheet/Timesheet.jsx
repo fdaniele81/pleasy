@@ -288,7 +288,7 @@ function Timesheet() {
 
   if (loading && !taskEditCell.editingCell && !timeOffEditCell.editingCell) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-20">
+      <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
         <div className="flex items-center justify-center p-6">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
@@ -298,7 +298,7 @@ function Timesheet() {
 
   if (isMobileTimesheet) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-20">
+      <div className="min-h-screen bg-gray-100 pt-16">
         <Suspense fallback={null}><SubmissionPreviewModal isOpen={showSubmissionPreview} onClose={closeSubmissionPreview} onConfirm={handleConfirmSubmission} /></Suspense>
         <Suspense fallback={null}><TimeOffModal isOpen={showTimeOffModal} onClose={handleTimeOffModalClose} onConfirm={handleTimeOffModalConfirm} timeOffData={timeOffModalData} date={timeOffModalDate} /></Suspense>
 
@@ -316,7 +316,8 @@ function Timesheet() {
           onPreviousPeriod={goToPreviousPeriod}
           onNextPeriod={goToNextPeriod}
           periodLabel={getPeriodLabel()}
-          onSubmitTimesheets={() => navigate('/my-submissions')}
+          onSubmitTimesheets={openSubmissionPreview}
+          onViewHistory={() => navigate('/my-submissions')}
           onSaveTimesheetDetails={handleTimesheetDetailsModalConfirm}
         />
       </div>
@@ -324,7 +325,7 @@ function Timesheet() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-20">
+    <div className="h-screen bg-gray-100 pt-20 overflow-hidden flex flex-col">
       {contextMenu && (
         <ContextMenu
           x={contextMenu.x}
@@ -346,8 +347,8 @@ function Timesheet() {
       <Suspense fallback={null}><TimeOffSummaryModal isOpen={showTimeOffSummaryModal} onClose={handleCloseTimeOffSummaryModal} timeOffType={selectedTimeOffTypeForSummary} /></Suspense>
       <Suspense fallback={null}><TaskHistorySummaryModal isOpen={showTaskHistoryModal} onClose={handleCloseTaskHistoryModal} task={selectedTaskForHistory} /></Suspense>
 
-      <div className="p-4">
-        <div className="max-w-full mx-auto">
+      <div className="p-4 flex-1 flex flex-col min-h-0">
+        <div className="max-w-full mx-auto w-full flex flex-col flex-1 min-h-0">
           <TimesheetHeader
             searchTerm={searchTerm} onSearchChange={setSearchTerm}
             selectionFilters={selectionFilters} onSelectionFiltersChange={setSelectionFilters}

@@ -10,7 +10,10 @@ import {
   Clock,
   Hourglass,
   ClipboardList,
+  Send,
+  History,
 } from "lucide-react";
+import { getRouteIcon } from "../../../constants/routeIcons";
 import { formatDateLocal, getTimesheetForDate, getTimeOffForDate } from "../../../utils/table/tableUtils";
 import { isHoliday as checkIsHoliday } from "../../../utils/date/workingDays";
 import { useLocale } from "../../../hooks/useLocale";
@@ -37,6 +40,7 @@ function TimesheetMobile({
   onNextPeriod,
   periodLabel,
   onSubmitTimesheets,
+  onViewHistory,
   onSaveTimesheetDetails,
 }) {
   const { t } = useTranslation(["timesheet", "common"]);
@@ -255,7 +259,7 @@ function TimesheetMobile({
   );
 
   return (
-    <div className="pt-16 pb-6">
+    <div className="pb-6">
       {/* Bottom Sheet */}
       {detailTask && (
         <div className="fixed inset-0 z-50 flex items-end" onClick={() => setDetailTask(null)}>
@@ -480,7 +484,37 @@ function TimesheetMobile({
 
       {/* Sticky Header */}
       <div className="sticky top-16 z-30">
-        <div className="flex items-center justify-between px-4 py-2 bg-cyan-700 text-white">
+        {/* Page Title */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100">
+          <h1 className="text-base font-bold text-gray-800 flex items-center gap-2">
+            {getRouteIcon("/timesheet") &&
+              React.createElement(getRouteIcon("/timesheet"), { size: 18 })}
+            <span>{t("timesheet:title")}</span>
+          </h1>
+          <div className="flex items-center gap-1">
+            {onViewHistory && (
+              <button
+                onClick={onViewHistory}
+                className="p-1.5 rounded-lg text-cyan-600 active:bg-cyan-50 transition-colors"
+                title={t("timesheet:viewHistory")}
+              >
+                <History size={20} />
+              </button>
+            )}
+            {onSubmitTimesheets && (
+              <button
+                onClick={onSubmitTimesheets}
+                className="p-1.5 rounded-lg text-cyan-600 active:bg-cyan-50 transition-colors"
+                title={t("timesheet:submitTimesheets")}
+              >
+                <Send size={20} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Period Navigator */}
+        <div className="flex items-center justify-between px-4 py-1.5 bg-cyan-700 text-white">
           <button onClick={onPreviousPeriod} className="p-2 -ml-2 rounded-full active:bg-cyan-600 transition-colors">
             <ChevronLeft size={22} />
           </button>
@@ -490,7 +524,8 @@ function TimesheetMobile({
           </button>
         </div>
 
-        <div className="flex justify-between px-1.5 py-2 bg-cyan-700 border-t border-cyan-600">
+        {/* Day Selector */}
+        <div className="flex justify-between px-1.5 py-1.5 bg-cyan-700 border-t border-cyan-600">
           {dateRange.map((date, idx) => {
             const isSelected = idx === selectedDayIdx;
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -538,16 +573,14 @@ function TimesheetMobile({
             );
           })}
         </div>
-      </div>
 
-      {/* Day Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
-        <span className="text-sm font-medium text-gray-600 capitalize">
-          {selectedDate && getFullDayLabel(selectedDate)}
-        </span>
-        <div className="flex items-center gap-3">
+        {/* Day Header */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 shadow-sm">
+          <span className="text-sm font-medium text-gray-600 capitalize">
+            {selectedDate && getFullDayLabel(selectedDate)}
+          </span>
           <div
-            className={`text-xl font-extrabold ${
+            className={`text-lg font-extrabold ${
               selectedDayTotal > 8
                 ? "text-red-500"
                 : selectedDayTotal >= 8
@@ -559,22 +592,13 @@ function TimesheetMobile({
           >
             {selectedDayTotal > 0 ? `${selectedDayTotal.toFixed(1)}h` : "-"}
           </div>
-          {onSubmitTimesheets && (
-            <button
-              onClick={onSubmitTimesheets}
-              className="p-2 -mr-1 rounded-lg text-cyan-600 active:bg-cyan-50 transition-colors"
-              title={t("timesheet:submitTimesheets")}
-            >
-              <ClipboardList size={20} />
-            </button>
-          )}
         </div>
       </div>
 
       {/* Search */}
-      <div className="px-3 pt-2">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="px-4 pt-3 pb-1">
+        <div className="relative px-0.5">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={searchTerm}

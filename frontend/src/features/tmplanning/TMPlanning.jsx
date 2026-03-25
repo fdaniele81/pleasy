@@ -149,7 +149,7 @@ function TMPlanning() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-20">
+      <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
         <div className="flex items-center justify-center p-6">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
@@ -160,7 +160,7 @@ function TMPlanning() {
   // ── Mobile view ──
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-20">
+      <div className="min-h-screen bg-gray-100 pt-16">
         <Suspense fallback={null}>
           <TimesheetDetailsModal
             isOpen={showDetailsModal}

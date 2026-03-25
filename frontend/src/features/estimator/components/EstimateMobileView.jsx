@@ -66,13 +66,14 @@ const MobileActivityCard = memo(function MobileActivityCard({
           onHoursBlur(index, field, showInDays ? val * 8 : val);
         }}
         onWheel={(e) => e.target.blur()}
-        className="w-20 px-2 py-1 border border-cyan-300 rounded text-right text-sm bg-cyan-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-20 ml-auto shrink-0 px-2 py-1 border border-cyan-300 rounded text-right text-sm bg-cyan-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
     );
   };
 
   return (
     <div
+      data-activity-index={index}
       className={`rounded-lg border shadow-sm mb-3 ${
         isEditing ? "border-yellow-300 bg-yellow-50" : "border-gray-200 bg-white"
       }`}
@@ -161,21 +162,21 @@ const MobileActivityCard = memo(function MobileActivityCard({
       {/* Expanded phase breakdown */}
       {(expanded || isEditing) && (
         <div className="px-3 pb-3 border-t border-gray-100">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-2">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 pt-2">
             {PHASE_FIELDS.map(({ key, label }) => (
-              <div key={key} className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">{t(`estimator:${label}`)}</span>
+              <div key={key} className="flex items-center gap-1 min-w-0">
+                <span className="text-xs text-gray-500 min-w-0 truncate">{t(`estimator:${label}`)}</span>
                 {isEditing ? (
                   renderPhaseInput(key)
                 ) : (
-                  <span className="text-xs font-medium text-gray-700">
+                  <span className="text-xs font-medium text-gray-700 ml-auto shrink-0">
                     {formatHours(phaseHours[key])}
                   </span>
                 )}
               </div>
             ))}
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500">{t("estimator:phaseContingency")}</span>
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="text-xs text-gray-500 min-w-0 truncate">{t("estimator:phaseContingency")}</span>
               {isEditing ? (
                 <input
                   type="number"
@@ -194,10 +195,10 @@ const MobileActivityCard = memo(function MobileActivityCard({
                     onHoursBlur(index, "hours_contingency", showInDays ? val * 8 : val);
                   }}
                   onWheel={(e) => e.target.blur()}
-                  className="w-20 px-2 py-1 border border-cyan-300 rounded text-right text-sm bg-cyan-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-20 ml-auto shrink-0 px-2 py-1 border border-cyan-300 rounded text-right text-sm bg-cyan-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               ) : (
-                <span className="text-xs font-medium text-gray-700">
+                <span className="text-xs font-medium text-gray-700 ml-auto shrink-0">
                   {formatHours(actualContingency)}
                 </span>
               )}
@@ -245,32 +246,25 @@ const MobileNewActivityCard = memo(function MobileNewActivityCard({
   const totals = computeTotals();
 
   return (
-    <div className="rounded-lg border-2 border-dashed border-cyan-300 bg-cyan-50 p-3 mb-3">
-      <div className="flex items-center gap-2 mb-2">
-        <Plus size={14} className="text-cyan-600" />
-        <span className="text-xs font-semibold text-cyan-700 uppercase tracking-wide">
-          {t("estimator:itemNamePlaceholder")}
-        </span>
-      </div>
-
-      <textarea
+    <div className="rounded-lg border border-cyan-200 bg-cyan-50/60 p-3 mb-3">
+      <input
         ref={nameInputRef}
+        type="text"
         value={newActivity.activity_name}
         onChange={(e) => setNewActivity({ ...newActivity, activity_name: e.target.value })}
-        rows={2}
-        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm resize-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 bg-white mb-2"
+        className="w-full px-2.5 py-2 border border-gray-300 rounded-md text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 bg-white"
         placeholder={t("estimator:itemNamePlaceholder")}
       />
-      <textarea
-        value={newActivity.activity_detail}
+      <input
+        type="text"
+        value={newActivity.activity_detail || ""}
         onChange={(e) => setNewActivity({ ...newActivity, activity_detail: e.target.value })}
-        rows={2}
-        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs resize-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 bg-white mb-3"
+        className="w-full mt-2 px-2.5 py-1.5 border border-gray-200 rounded-md text-xs focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 bg-white text-gray-600"
         placeholder={t("estimator:itemDetailPlaceholder")}
       />
 
-      <div className="flex items-center gap-3 mb-3">
-        <label className="text-xs font-medium text-gray-600">
+      <div className="flex items-center gap-2 mt-3">
+        <label className="text-xs font-medium text-gray-600 shrink-0">
           {t("estimator:phaseDevelopment")}
         </label>
         <input
@@ -299,34 +293,14 @@ const MobileNewActivityCard = memo(function MobileNewActivityCard({
             }
           }}
           onWheel={(e) => e.target.blur()}
-          className="w-24 px-2 py-1.5 border border-cyan-400 rounded text-right text-sm bg-white focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-20 px-2 py-1.5 border border-cyan-400 rounded-md text-right text-sm bg-white focus:ring-2 focus:ring-cyan-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           placeholder="0"
         />
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-gray-400 shrink-0">
           {showInDays ? t("estimator:unitDays") : t("estimator:unitHours")}
         </span>
       </div>
-
-      {newActivity.hours_development_input && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3 text-xs">
-          {PHASE_FIELDS.filter((f) => f.key !== "hours_development").map(({ key, label }) => (
-            <div key={key} className="flex justify-between">
-              <span className="text-gray-500">{t(`estimator:${label}`)}</span>
-              <span className="text-gray-700">{newActivity[key] ? formatHours(newActivity[key]) : "-"}</span>
-            </div>
-          ))}
-          <div className="flex justify-between">
-            <span className="text-gray-500">{t("estimator:phaseContingency")}</span>
-            <span className="text-gray-700">{totals.contingency}</span>
-          </div>
-          <div className="flex justify-between col-span-2 pt-1 border-t border-cyan-200 font-semibold">
-            <span className="text-gray-700">{t("common:total")}</span>
-            <span className="text-cyan-700">{totals.total}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-1.5 mt-3">
         <Button onClick={onCancel} variant="outline" color="gray" size="sm" icon={X} iconSize={14}>
           {t("common:cancel")}
         </Button>
@@ -341,6 +315,25 @@ const MobileNewActivityCard = memo(function MobileNewActivityCard({
           {t("common:save")}
         </Button>
       </div>
+
+      {newActivity.hours_development_input && (
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-3 pt-2 border-t border-cyan-200 text-xs">
+          {PHASE_FIELDS.filter((f) => f.key !== "hours_development").map(({ key, label }) => (
+            <div key={key} className="flex items-center gap-1 min-w-0">
+              <span className="text-gray-500 min-w-0 truncate">{t(`estimator:${label}`)}</span>
+              <span className="text-gray-700 ml-auto shrink-0">{newActivity[key] ? formatHours(newActivity[key]) : "-"}</span>
+            </div>
+          ))}
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="text-gray-500 min-w-0 truncate">{t("estimator:phaseContingency")}</span>
+            <span className="text-gray-700 ml-auto shrink-0">{totals.contingency}</span>
+          </div>
+          <div className="flex justify-between col-span-2 pt-1 border-t border-cyan-200 font-semibold">
+            <span className="text-gray-700">{t("common:total")}</span>
+            <span className="text-cyan-700">{totals.total}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
@@ -384,11 +377,11 @@ const MobileTotalsCard = memo(function MobileTotalsCard({ totals, formatHours })
       </button>
       {expanded && (
         <div className="px-3 pb-3 border-t border-cyan-100">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-2">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 pt-2">
             {phaseItems.map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">{t(`estimator:${label}`)}</span>
-                <span className="text-xs font-medium text-gray-700">{formatHours(value)}</span>
+              <div key={label} className="flex items-center gap-1 min-w-0">
+                <span className="text-xs text-gray-500 min-w-0 truncate">{t(`estimator:${label}`)}</span>
+                <span className="text-xs font-medium text-gray-700 ml-auto shrink-0">{formatHours(value)}</span>
               </div>
             ))}
           </div>

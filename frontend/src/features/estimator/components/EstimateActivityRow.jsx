@@ -162,6 +162,7 @@ const EstimateActivityRow = memo(function EstimateActivityRow({
   return (
     <tr
       key={activity.estimate_task_id || activity.tempId || index}
+      data-activity-index={index}
       className={`relative ${isEditing ? "bg-yellow-50" : "hover:bg-gray-50"}`}
     >
       <td className="px-0.5 lg:px-3 py-1.5 overflow-visible">

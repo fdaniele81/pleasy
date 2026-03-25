@@ -146,8 +146,8 @@ function CapacityPlanView() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="flex items-center justify-center p-6 pt-20">
+      <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+        <div className="flex items-center justify-center p-6 pt-16 sm:pt-20">
           <div className="text-xl">{t('capacityPlan:loadingEstimates')}</div>
         </div>
       </div>
@@ -155,18 +155,18 @@ function CapacityPlanView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-6">
+    <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-12 pt-2 pb-4 sm:py-6">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+        <div className="mb-2 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-0 sm:mb-2">
             <Layers className="text-gray-800 hidden sm:block" size={28} />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{t('capacityPlan:title')}</h1>
+            <h1 className="text-base sm:text-2xl font-bold text-gray-800">{t('capacityPlan:title')}</h1>
             <span className="bg-cyan-100 text-cyan-700 text-xs sm:text-sm font-medium px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
               {estimatesList.length === 1 ? t('capacityPlan:estimatesCountSingle', { count: estimatesList.length }) : t('capacityPlan:estimatesCount', { count: estimatesList.length })}
             </span>
           </div>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="hidden sm:block text-sm sm:text-base text-gray-600">
             {t('capacityPlan:viewEditTimelines')}
           </p>
         </div>

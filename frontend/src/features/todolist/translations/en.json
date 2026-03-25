@@ -43,5 +43,7 @@
   "scratchpad": "Scratchpad",
   "scratchpadPlaceholder": "Write notes, ideas, reminders...",
   "saving": "Saving...",
-  "saved": "Saved"
+  "saved": "Saved",
+  "timesheetEntry": "activity",
+  "todoItem": "reminder"
 }

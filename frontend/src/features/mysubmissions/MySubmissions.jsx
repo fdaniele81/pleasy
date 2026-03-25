@@ -59,7 +59,7 @@ function MySubmissions() {
   if (loading && snapshots.length === 0) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <div className="flex items-center justify-center p-6 pt-20">
+        <div className="flex items-center justify-center p-6 pt-16 sm:pt-20">
           <div className="text-xl">{t('common:loading')}</div>
         </div>
       </div>
@@ -67,7 +67,7 @@ function MySubmissions() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-20">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-16 sm:pt-20">
       <Suspense fallback={null}>
         <SnapshotDetailsModal
           isOpen={selectedSnapshotId !== null}
@@ -75,7 +75,7 @@ function MySubmissions() {
           snapshotId={selectedSnapshotId}
         />
       </Suspense>
-      <div className="shrink-0 p-4 pb-0">
+      <div className="shrink-0 px-4 pt-2 pb-0 sm:p-4 sm:pb-0">
         <div className="max-w-full mx-auto">
           <button
             onClick={() => navigate('/timesheet')}

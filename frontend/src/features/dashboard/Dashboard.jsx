@@ -21,8 +21,8 @@ function Dashboard() {
   } = useDashboard();
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-6 sm:py-6">
         <PageHeader
           title={t('dashboard:title')}
           icon={LayoutDashboard}

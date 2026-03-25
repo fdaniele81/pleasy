@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { formatDateISO } from "../../../utils/date/dateUtils";
 import { isHoliday as checkIsHoliday } from "../../../utils/date/workingDays";
+import { getRouteIcon } from "../../../constants/routeIcons";
+import { ROUTES } from "../../../constants/routes";
 
 function TMPlanningMobile({
   dateRange,
@@ -256,8 +258,10 @@ function TMPlanningMobile({
     [openDetailSheet, groupBy]
   );
 
+  const RouteIcon = getRouteIcon(ROUTES.TM_PLANNING);
+
   return (
-    <div className="pt-16 pb-6">
+    <div className="pb-6">
       {/* Bottom Sheet */}
       {detailTask && (
         <div className="fixed inset-0 z-50 flex items-end" onClick={() => setDetailTask(null)}>
@@ -363,9 +367,18 @@ function TMPlanningMobile({
         </div>
       )}
 
-      {/* Sticky Header - Period navigation */}
+      {/* Sticky Header */}
       <div className="sticky top-16 z-30">
-        <div className="flex items-center justify-between px-4 py-2 bg-cyan-700 text-white">
+        {/* Page title */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100">
+          <h1 className="text-base font-bold text-gray-800 flex items-center gap-2">
+            {RouteIcon && <RouteIcon size={18} />}
+            <span>{t("tmplanning:title")}</span>
+          </h1>
+        </div>
+
+        {/* Period navigation */}
+        <div className="flex items-center justify-between px-4 py-1.5 bg-cyan-700 text-white">
           <button onClick={onPreviousPeriod} className="p-2 -ml-2 rounded-full active:bg-cyan-600 transition-colors">
             <ChevronLeft size={22} />
           </button>
@@ -386,7 +399,7 @@ function TMPlanningMobile({
         </div>
 
         {/* Week day selector */}
-        <div className="flex justify-between px-1.5 py-2 bg-cyan-700 border-t border-cyan-600">
+        <div className="flex justify-between px-1.5 py-1.5 bg-cyan-700 border-t border-cyan-600">
           {dateRange.map((date, idx) => {
             const isSelected = idx === selectedDayIdx;
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -433,28 +446,28 @@ function TMPlanningMobile({
             );
           })}
         </div>
-      </div>
 
-      {/* Day Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
-        <span className="text-sm font-medium text-gray-600 capitalize">
-          {selectedDate && getFullDayLabel(selectedDate)}
-        </span>
-        <div className="flex items-center gap-3">
-          <div
-            className={`text-xl font-extrabold ${
-              selectedDayTotal > 0 ? "text-cyan-700" : "text-gray-300"
-            }`}
-          >
-            {selectedDayTotal > 0 ? `${selectedDayTotal.toFixed(1)}h` : "-"}
+        {/* Day Header */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 shadow-sm">
+          <span className="text-sm font-medium text-gray-600 capitalize">
+            {selectedDate && getFullDayLabel(selectedDate)}
+          </span>
+          <div className="flex items-center gap-3">
+            <div
+              className={`text-lg font-extrabold ${
+                selectedDayTotal > 0 ? "text-cyan-700" : "text-gray-300"
+              }`}
+            >
+              {selectedDayTotal > 0 ? `${selectedDayTotal.toFixed(1)}h` : "-"}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Search */}
-      <div className="px-3 pt-2">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="px-4 pt-3 pb-1">
+        <div className="relative px-0.5">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={searchTerm}

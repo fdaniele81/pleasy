@@ -184,7 +184,7 @@ function TimesheetTable({
   }, [hoveredTaskId, filteredTasks]);
 
   return (
-    <TableContainer maxHeight="calc(100vh - 280px)" className="rounded-lg">
+    <TableContainer maxHeight="none" className="rounded-lg flex-1">
       <table ref={tableRef} className="w-full border-separate border-spacing-0">
         <thead>
           <tr ref={headerRowRef} className="bg-cyan-700 text-white sticky top-0 z-40">

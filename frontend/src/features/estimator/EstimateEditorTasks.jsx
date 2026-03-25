@@ -117,8 +117,8 @@ function EstimateEditorTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-full mx-auto px-3 sm:px-6 lg:px-2 xl:px-12 py-4 sm:py-6">
+    <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-2 xl:px-12 pt-2 pb-4 sm:py-6">
         <EstimateInfoBar
           clients={clients}
           formData={formData}
@@ -131,9 +131,6 @@ function EstimateEditorTasks() {
               <h2 className="text-lg font-semibold text-gray-800">
                 {t('estimator:estimateItems')}
               </h2>
-              <span className="text-xs text-gray-500">
-                {showInDays ? t('estimator:valuesInDays') : t('estimator:valuesInHours')}
-              </span>
               <div className="relative">
                 <button
                   onClick={() => toggleDropdown('unit-dropdown')}
@@ -282,7 +279,7 @@ function EstimateEditorTasks() {
           </div>
 
           {/* Mobile card view (< lg) */}
-          <div className="lg:hidden p-3">
+          <div className="lg:hidden p-1.5 sm:p-3">
             <EstimateMobileView
               activities={activities}
               editingActivityIndex={editingActivityIndex}

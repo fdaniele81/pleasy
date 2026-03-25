@@ -481,7 +481,7 @@ function Pianificazione() {
 
   if (loading && projects.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-100 pt-20">
+      <div className="min-h-screen bg-gray-100 pt-16 sm:pt-20">
         <div className="flex items-center justify-center p-6">
           <div className="text-xl">{t('planning:loadingPlanning')}</div>
         </div>
@@ -669,7 +669,7 @@ function Pianificazione() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 overflow-x-hidden overscroll-y-none pt-20">
+    <div className="min-h-screen bg-gray-100 overflow-x-hidden overscroll-y-none pt-16 sm:pt-20">
       <Suspense fallback={null}>
         <GanttModal
           isOpen={showGanttModal}

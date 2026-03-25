@@ -6,9 +6,11 @@ const PageHeader = ({
   icon: Icon,
   title,
   description,
-  actionButton
+  actionButton,
+  secondaryActionButton,
 }) => {
   const ActionIcon = actionButton?.icon || Plus;
+  const SecondaryIcon = secondaryActionButton?.icon;
 
   return (
     <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
@@ -22,18 +24,32 @@ const PageHeader = ({
         )}
       </div>
 
-      {actionButton && (
-        <Button
-          onClick={actionButton.onClick}
-          color={actionButton.color || "cyan"}
-          icon={ActionIcon}
-          disabled={actionButton.disabled}
-          fullWidth={false}
-          className="w-full sm:w-auto"
-        >
-          {actionButton.label}
-        </Button>
-      )}
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        {actionButton && (
+          <Button
+            onClick={actionButton.onClick}
+            color={actionButton.color || "cyan"}
+            icon={ActionIcon}
+            disabled={actionButton.disabled}
+            fullWidth={false}
+            className="w-full sm:w-auto"
+          >
+            {actionButton.label}
+          </Button>
+        )}
+        {secondaryActionButton && (
+          <Button
+            onClick={secondaryActionButton.onClick}
+            color={secondaryActionButton.color || "cyan"}
+            icon={SecondaryIcon}
+            disabled={secondaryActionButton.disabled}
+            fullWidth={false}
+            className="w-full sm:w-auto"
+          >
+            {secondaryActionButton.label}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
@@ -43,6 +59,13 @@ PageHeader.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string,
   actionButton: PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    onClick: PropTypes.func.isRequired,
+    icon: PropTypes.elementType,
+    color: PropTypes.string,
+    disabled: PropTypes.bool,
+  }),
+  secondaryActionButton: PropTypes.shape({
     label: PropTypes.string.isRequired,
     onClick: PropTypes.func.isRequired,
     icon: PropTypes.elementType,

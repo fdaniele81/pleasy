@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { formatDateISO } from '../../../utils/date/dateUtils';
 
-export const useTimeOffPlanCalculations = (users) => {
+export const useTimeOffPlanCalculations = (users, startDate, endDate) => {
 
   const getTimeOffForDate = (user, timeOffTypeId, date) => {
     const dateStr = typeof date === 'string' ? date : formatDateISO(date);
@@ -27,12 +27,16 @@ export const useTimeOffPlanCalculations = (users) => {
   };
 
   const getMonthlyBreakdown = useMemo(() => {
-    const today = new Date();
     const months = [];
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      months.push(key);
+    if (startDate && endDate) {
+      const [sy, sm] = startDate.split('-').map(Number);
+      const [ey, em] = endDate.split('-').map(Number);
+      let y = sy, m = sm;
+      while (y < ey || (y === ey && m <= em)) {
+        months.push(`${y}-${String(m).padStart(2, '0')}`);
+        m++;
+        if (m > 12) { m = 1; y++; }
+      }
     }
 
     const userMonthTotals = new Map();
@@ -53,7 +57,7 @@ export const useTimeOffPlanCalculations = (users) => {
     }
 
     return { months, userMonthTotals };
-  }, [users]);
+  }, [users, startDate, endDate]);
 
   return {
     getTimeOffForDate,

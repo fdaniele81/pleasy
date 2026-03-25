@@ -31,6 +31,7 @@ const TMPlanning = lazy(() => import("./features/tmplanning/TMPlanning"));
 const CapacityPlan = lazy(() => import("./features/capacity-plan/CapacityPlan"));
 const CapacityPlanView = lazy(() => import("./features/capacity-plan/CapacityPlanView"));
 const DefaultConfig = lazy(() => import("./features/default-config/DefaultConfig"));
+const TodoList = lazy(() => import("./features/todolist/TodoList"));
 
 const PageLoader = () => {
   const { t } = useTranslation('common');
@@ -225,6 +226,17 @@ function App() {
               <ProtectedRoute allowedRoles={ROLE_GROUPS.PM_AND_USER}>
                 <FeatureErrorBoundary featureName="Consuntivo">
                   <Timesheet />
+                </FeatureErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.TODO_LIST}
+            element={
+              <ProtectedRoute allowedRoles={ROLE_GROUPS.PM_AND_USER}>
+                <FeatureErrorBoundary featureName="To Do List">
+                  <TodoList />
                 </FeatureErrorBoundary>
               </ProtectedRoute>
             }

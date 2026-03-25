@@ -19,6 +19,7 @@ export const TAG_TYPES = {
   HOLIDAY: 'Holiday',
   RECONCILIATION: 'Reconciliation',
   SAVED_FILTER: 'SavedFilter',
+  TODO_ITEM: 'TodoItem',
 
   LIST: 'LIST',
 };

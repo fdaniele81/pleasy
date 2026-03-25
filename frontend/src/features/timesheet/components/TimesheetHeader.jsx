@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { Download, X, ClipboardList } from "lucide-react";
+import { Download, X, Send, History } from "lucide-react";
 import { getRouteIcon } from "../../../constants/routeIcons";
 import Button from "../../../shared/ui/Button";
 import {
@@ -30,7 +30,7 @@ function TimesheetHeader({
   onApplySavedFilter,
   onExport,
   onSubmit,
-  loading,
+  onViewHistory,
   startDate,
   onStartDateChange,
   onClearDates,
@@ -63,12 +63,20 @@ function TimesheetHeader({
               <span>Export</span>
             </button>
             <Button
+              onClick={onViewHistory}
+              color="cyan"
+              variant="outline"
+              size="md"
+              icon={History}
+            >
+              {t('timesheet:viewHistory')}
+            </Button>
+            <Button
               onClick={onSubmit}
-              disabled={loading}
               color="cyan"
               variant="solid"
               size="md"
-              icon={ClipboardList}
+              icon={Send}
             >
               {t('timesheet:submitTimesheets')}
             </Button>

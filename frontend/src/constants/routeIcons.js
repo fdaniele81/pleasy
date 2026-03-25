@@ -16,7 +16,8 @@ import {
   Timer,
   Layers,
   Send,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ListTodo
 } from "lucide-react";
 import { ROUTES } from './routes';
 
@@ -37,6 +38,7 @@ export const routeIcons = {
   [ROUTES.TIMESHEET_SNAPSHOTS]: ClipboardCheck,
   [ROUTES.RECONCILIATION]: FileSpreadsheet,
   [ROUTES.TM_PLANNING]: Timer,
+  [ROUTES.TODO_LIST]: ListTodo,
   [ROUTES.MY_SUBMISSIONS]: Send,
   [ROUTES.DEFAULT_CONFIG]: SlidersHorizontal,
 };

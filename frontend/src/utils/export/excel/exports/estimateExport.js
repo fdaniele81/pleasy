@@ -75,24 +75,24 @@ export const exportEstimateToExcel = async (estimate, clientName, projectKey) =>
     };
 
     const total = Object.values(phaseHours).reduce((sum, val) => sum + val, 0);
-    const contingency = task.hours_contingency !== undefined
+    const contingency = task.hours_contingency != null
       ? parseFloat(task.hours_contingency) || 0
-      : Math.round((total * (estimate.contingency_percentage || 0)) / 100);
+      : (total * (estimate.contingency_percentage || 0)) / 100;
     const totalWithContingency = total + contingency;
 
     const rowData = [
       task.activity_name || '',
       task.activity_detail || '',
-      Math.round(phaseHours.hours_analysis),
-      Math.round(phaseHours.hours_development),
-      Math.round(phaseHours.hours_internal_test),
-      Math.round(phaseHours.hours_uat),
-      Math.round(phaseHours.hours_release),
-      Math.round(phaseHours.hours_pm),
-      Math.round(phaseHours.hours_startup),
-      Math.round(phaseHours.hours_documentation),
-      Math.round(contingency),
-      Math.round(totalWithContingency)
+      phaseHours.hours_analysis,
+      phaseHours.hours_development,
+      phaseHours.hours_internal_test,
+      phaseHours.hours_uat,
+      phaseHours.hours_release,
+      phaseHours.hours_pm,
+      phaseHours.hours_startup,
+      phaseHours.hours_documentation,
+      contingency,
+      totalWithContingency
     ];
 
     const row = worksheet.addRow(rowData);
@@ -109,10 +109,10 @@ export const exportEstimateToExcel = async (estimate, clientName, projectKey) =>
       } else if (colNumber === 12) {
         cell.alignment = ALIGNMENTS.rightMiddle;
         cell.font = { ...FONTS.bold, color: { argb: EXCEL_COLORS.cyanDark } };
-        cell.numFmt = NUMBER_FORMATS.integer;
+        cell.numFmt = NUMBER_FORMATS.oneDecimal;
       } else {
         cell.alignment = ALIGNMENTS.rightMiddle;
-        cell.numFmt = NUMBER_FORMATS.integer;
+        cell.numFmt = NUMBER_FORMATS.oneDecimal;
       }
     });
   });
@@ -148,9 +148,9 @@ export const exportEstimateToExcel = async (estimate, clientName, projectKey) =>
         (parseFloat(task.hours_startup) || 0) +
         (parseFloat(task.hours_documentation) || 0);
 
-      const contingency = task.hours_contingency !== undefined
+      const contingency = task.hours_contingency != null
         ? parseFloat(task.hours_contingency) || 0
-        : Math.round((phaseTotal * (estimate.contingency_percentage || 0)) / 100);
+        : (phaseTotal * (estimate.contingency_percentage || 0)) / 100;
 
       totalContingency += contingency;
     });
@@ -169,16 +169,16 @@ export const exportEstimateToExcel = async (estimate, clientName, projectKey) =>
     const totalRowData = [
       'TOTALE',
       '',
-      Math.round(totalAnalysis),
-      Math.round(totalDevelopment),
-      Math.round(totalInternalTest),
-      Math.round(totalUat),
-      Math.round(totalRelease),
-      Math.round(totalPm),
-      Math.round(totalStartup),
-      Math.round(totalDocumentation),
-      Math.round(totalContingency),
-      Math.round(grandTotal)
+      totalAnalysis,
+      totalDevelopment,
+      totalInternalTest,
+      totalUat,
+      totalRelease,
+      totalPm,
+      totalStartup,
+      totalDocumentation,
+      totalContingency,
+      grandTotal
     ];
 
     const totalRow = worksheet.addRow(totalRowData);
@@ -192,7 +192,7 @@ export const exportEstimateToExcel = async (estimate, clientName, projectKey) =>
         cell.alignment = ALIGNMENTS.leftMiddle;
       } else {
         cell.alignment = ALIGNMENTS.rightMiddle;
-        cell.numFmt = NUMBER_FORMATS.integer;
+        cell.numFmt = NUMBER_FORMATS.oneDecimal;
       }
     });
 
@@ -201,7 +201,7 @@ export const exportEstimateToExcel = async (estimate, clientName, projectKey) =>
       'TOTALE GIORNI UOMO',
       '',
       '', '', '', '', '', '', '', '', '',
-      manDays.toFixed(1)
+      manDays
     ]);
 
     manDaysRow.eachCell((cell) => {

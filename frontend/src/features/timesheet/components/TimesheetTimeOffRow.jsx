@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { useTranslation } from 'react-i18next';
-import { Pencil, ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText } from "lucide-react";
 import { SelectionCheckbox } from "../../../shared/ui/table";
 import { getTotalHoursForTimeOffType } from "../../../utils/budget/budgetUtils";
 import { getTimeOffForDate, formatDateLocal } from "../../../utils/table/tableUtils";
@@ -188,9 +188,6 @@ const TimesheetTimeOffRow = memo(function TimesheetTimeOffRow({
                   {hours > 0 ? hours.toFixed(1) : "-"}
                 </span>
 
-                {hours > 0 && !isDisabled && (
-                  <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 absolute right-0 top-1/2 -translate-y-1/2" />
-                )}
               </div>
             )}
           </td>

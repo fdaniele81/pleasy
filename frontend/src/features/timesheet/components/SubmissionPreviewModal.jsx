@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Clock, AlertCircle, X, ChevronLeft, ChevronRight, Calendar, Check } from 'lucide-react';
+import { FileText, Clock, AlertCircle, X, ChevronLeft, ChevronRight, Calendar, Check, CheckCircle } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
 import Button from '../../../shared/ui/Button';
 import DateInput from '../../../shared/ui/DateInput';
@@ -25,6 +25,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
   // Pending state for dropdowns — applied only when dropdown closes
   const [pendingClientIds, setPendingClientIds] = useState([]);
   const [pendingProjectIds, setPendingProjectIds] = useState([]);
+  const [onlyCompleted, setOnlyCompleted] = useState(false);
   // Mobile carousel state
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
@@ -77,10 +78,13 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
         return true;
       })
       .map(task => {
-        if (!filterStartDate && !filterEndDate) return task;
+        const needsDateFilter = filterStartDate || filterEndDate;
+        const needsStatusFilter = onlyCompleted;
+        if (!needsDateFilter && !needsStatusFilter) return task;
         const filteredTimesheets = task.timesheets.filter(ts => {
           if (filterStartDate && ts.timesheet_date < filterStartDate) return false;
           if (filterEndDate && ts.timesheet_date > filterEndDate) return false;
+          if (onlyCompleted && ts.timesheet_status_id !== 'COMPLETED') return false;
           return true;
         });
         if (filteredTimesheets.length === 0) return null;
@@ -91,7 +95,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
         };
       })
       .filter(Boolean);
-  }, [previewTasks, filterStartDate, filterEndDate, filterClientIds, filterProjectIds]);
+  }, [previewTasks, filterStartDate, filterEndDate, filterClientIds, filterProjectIds, onlyCompleted]);
 
   const filteredTimesheetIds = useMemo(() => {
     const ids = new Set();
@@ -113,6 +117,7 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
       setFilterProjectIds([]);
       setPendingClientIds([]);
       setPendingProjectIds([]);
+      setOnlyCompleted(false);
       setCurrentTaskIndex(0);
     }
   }, [isOpen, fetchPreview]);
@@ -326,9 +331,21 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
                 size="sm"
               />
 
-              {(filterStartDate || filterEndDate || filterClientIds.length > 0 || filterProjectIds.length > 0) && (
+              <button
+                onClick={() => setOnlyCompleted(prev => !prev)}
+                className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                  onlyCompleted
+                    ? 'bg-green-600 border-green-600 text-white hover:bg-green-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                {onlyCompleted ? t('timesheet:showAll') : t('timesheet:onlyCompleted')}
+              </button>
+
+              {(filterStartDate || filterEndDate || filterClientIds.length > 0 || filterProjectIds.length > 0 || onlyCompleted) && (
                 <Button
-                  onClick={() => { clearDateFilters(); setFilterClientIds([]); setFilterProjectIds([]); setPendingClientIds([]); setPendingProjectIds([]); }}
+                  onClick={() => { clearDateFilters(); setFilterClientIds([]); setFilterProjectIds([]); setPendingClientIds([]); setPendingProjectIds([]); setOnlyCompleted(false); }}
                   variant="outline"
                   color="red"
                   size="sm"
@@ -507,6 +524,9 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
                           </span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          {ts.timesheet_status_id === 'COMPLETED' && ts.hours > 0 && (
+                            <Check className="h-3 w-3 text-green-600" strokeWidth={3} />
+                          )}
                           {ts.details && (
                             <div className="w-2 h-2 rounded-full bg-blue-400 shrink-0" title={ts.details} />
                           )}

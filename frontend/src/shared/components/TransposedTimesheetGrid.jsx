@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { EyeOff, Eye, Briefcase, FolderKanban, ListTodo } from 'lucide-react';
+import { EyeOff, Eye, Briefcase, FolderKanban, ListTodo, Check } from 'lucide-react';
 import { isWeekend, isHoliday } from '../../utils/date/workingDays';
 import { useLocale } from '../../hooks/useLocale';
 
@@ -529,6 +529,9 @@ const TransposedTimesheetGrid = ({
                         onMouseLeave={ts.details ? hideTooltip : undefined}
                       >
                         <SmallNoteTriangle note={ts.details} />
+                        {ts.timesheet_status_id === 'COMPLETED' && ts.hours > 0 && (
+                          <Check className="w-3 h-3 text-green-600 absolute right-0 bottom-0" strokeWidth={3} />
+                        )}
                         <div className="flex items-center justify-center py-0.5">
                           <span className={`text-xs font-semibold ${isSelected ? 'text-cyan-700' : 'text-gray-700'}`}>
                             {fmtNum(ts.hours)}

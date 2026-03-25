@@ -31,6 +31,7 @@ import timeoffplanIt from '@/features/timeoffplan/translations/it.json';
 import mysubmissionsIt from '@/features/mysubmissions/translations/it.json';
 import estimateConversionIt from '@/features/estimate-conversion/translations/it.json';
 import defaultConfigIt from '@/features/default-config/translations/it.json';
+import todolistIt from '@/features/todolist/translations/it.json';
 
 // Feature translations - EN
 import holidaysEn from '@/features/holidays/translations/en.json';
@@ -51,6 +52,7 @@ import timeoffplanEn from '@/features/timeoffplan/translations/en.json';
 import mysubmissionsEn from '@/features/mysubmissions/translations/en.json';
 import estimateConversionEn from '@/features/estimate-conversion/translations/en.json';
 import defaultConfigEn from '@/features/default-config/translations/en.json';
+import todolistEn from '@/features/todolist/translations/en.json';
 
 const urlLng = new URLSearchParams(window.location.search).get('lng');
 const savedLanguage = urlLng || localStorage.getItem('i18nextLng') || 'it';
@@ -80,6 +82,7 @@ i18n.use(initReactI18next).init({
       mysubmissions: mysubmissionsIt,
       estimateConversion: estimateConversionIt,
       defaultConfig: defaultConfigIt,
+      todolist: todolistIt,
     },
     en: {
       common: commonEn,
@@ -104,6 +107,7 @@ i18n.use(initReactI18next).init({
       mysubmissions: mysubmissionsEn,
       estimateConversion: estimateConversionEn,
       defaultConfig: defaultConfigEn,
+      todolist: todolistEn,
     },
   },
   lng: savedLanguage,

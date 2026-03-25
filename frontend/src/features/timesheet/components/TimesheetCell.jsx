@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Pencil, FileText } from "lucide-react";
+import { FileText, Check } from "lucide-react";
 import { formatDateLocal } from "../../../utils/table/tableUtils";
 
 const TimesheetCell = memo(function TimesheetCell({
@@ -10,6 +10,7 @@ const TimesheetCell = memo(function TimesheetCell({
   isSubmitted,
   timesheetId,
   details,
+  timesheetStatusId,
   isWeekend,
   isHoliday,
   isToday,
@@ -30,6 +31,7 @@ const TimesheetCell = memo(function TimesheetCell({
   const isEditing = editingCell === cellKey;
 
   const isCellLocked = isSubmitted && hours > 0;
+  const isCompleted = timesheetStatusId === 'COMPLETED' && hours > 0;
 
   return (
     <td
@@ -125,8 +127,8 @@ const TimesheetCell = memo(function TimesheetCell({
           >
             {hours > 0 ? hours.toFixed(1) : "-"}
           </span>
-          {hours > 0 && (
-            <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 absolute right-0 top-1/2 -translate-y-1/2" />
+          {isCompleted && (
+            <Check className="w-3 h-3 text-green-600 absolute right-0 bottom-0" strokeWidth={3} />
           )}
         </div>
       )}

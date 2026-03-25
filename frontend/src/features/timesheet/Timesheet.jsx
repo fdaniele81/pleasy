@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ContextMenu from "../../shared/ui/ContextMenu";
 import { useTimesheetData } from "./hooks/useTimesheetData";
@@ -25,6 +26,7 @@ const TaskHistorySummaryModal = lazy(() => import("./components/TaskHistorySumma
 
 function Timesheet() {
   const { t } = useTranslation(['timesheet', 'common']);
+  const navigate = useNavigate();
   const locale = useLocale();
   const { isBelow } = useBreakpoint();
   const isMobileTimesheet = isBelow(800);
@@ -244,7 +246,7 @@ function Timesheet() {
     showTimeOffSummaryModal, selectedTimeOffTypeForSummary,
     toggleTaskSelection, handleTooltipHover, handleTooltipLeave,
     handleNoteTooltipHover, handleNoteTooltipLeave,
-    handleSubmitTimesheets, handleConfirmSubmission, handleExport,
+    handleConfirmSubmission, handleExport,
     handleCellClick, handleCellContextMenu, handleContextMenuInsertNotes, handleCellNoteClick,
     handleTimeOffCellClick, handleTimeOffCellContextMenu, handleTimeOffCellNoteClick, handleTimeOffContextMenuInsertNotes,
     handleTimeOffCellBlur, handleTimeOffKeyDown,
@@ -314,7 +316,7 @@ function Timesheet() {
           onPreviousPeriod={goToPreviousPeriod}
           onNextPeriod={goToNextPeriod}
           periodLabel={getPeriodLabel()}
-          onSubmitTimesheets={handleSubmitTimesheets}
+          onSubmitTimesheets={() => navigate('/my-submissions')}
           onSaveTimesheetDetails={handleTimesheetDetailsModalConfirm}
         />
       </div>
@@ -354,7 +356,8 @@ function Timesheet() {
             filterProjectType={filterProjectType} onFilterProjectTypeChange={setFilterProjectType}
             uniqueClients={uniqueClients} uniqueProjects={uniqueProjects}
             onClearAllFilters={clearAllFilters} onApplySavedFilter={applySavedFilter} onExport={openExportModal}
-            onSubmit={handleSubmitTimesheets} loading={loading}
+            onSubmit={openSubmissionPreview}
+            onViewHistory={() => navigate('/my-submissions')}
             startDate={startDate}
             onStartDateChange={setStartDate}
             onClearDates={resetToDefaultDates} isDefaultDateRange={isDefaultDateRange}

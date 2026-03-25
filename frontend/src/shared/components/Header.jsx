@@ -3,12 +3,13 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { Menu, X, Settings, FileBarChart, LogOut, KeyRound, ChevronRight } from 'lucide-react';
 import { routeIcons } from "../../constants/routeIcons";
-import { ROLES, ROUTES, CONFIG_MENU_ROUTES, PM_FEATURES_MENU_ROUTES, REPORT_MENU_ROUTES } from "../../constants";
+import { ROLES, ROUTES, CONFIG_MENU_ROUTES, PM_FEATURES_MENU_ROUTES, REPORT_MENU_ROUTES, TIMESHEET_MENU_ROUTES } from "../../constants";
 import { useAuth } from "../../hooks";
 import {
   ConfigMenuDropdown,
   PMFeaturesMenuDropdown,
   ReportMenuDropdown,
+  TimesheetMenuDropdown,
   UserMenuDropdown,
   getMenuLinkClasses,
 } from "./header/index";
@@ -74,12 +75,14 @@ const Header = memo(function Header() {
   const [isConfigMenuOpen, setIsConfigMenuOpen] = useState(false);
   const [isPmFeaturesMenuOpen, setIsPmFeaturesMenuOpen] = useState(false);
   const [isReportMenuOpen, setIsReportMenuOpen] = useState(false);
+  const [isTimesheetMenuOpen, setIsTimesheetMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileOpenGroup, setMobileOpenGroup] = useState(null);
   const menuRef = useRef(null);
   const configMenuRef = useRef(null);
   const pmFeaturesMenuRef = useRef(null);
   const reportMenuRef = useRef(null);
+  const timesheetMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,16 +98,19 @@ const Header = memo(function Header() {
       if (reportMenuRef.current && !reportMenuRef.current.contains(event.target)) {
         setIsReportMenuOpen(false);
       }
+      if (timesheetMenuRef.current && !timesheetMenuRef.current.contains(event.target)) {
+        setIsTimesheetMenuOpen(false);
+      }
     };
 
-    if (isUserMenuOpen || isConfigMenuOpen || isPmFeaturesMenuOpen || isReportMenuOpen) {
+    if (isUserMenuOpen || isConfigMenuOpen || isPmFeaturesMenuOpen || isReportMenuOpen || isTimesheetMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isUserMenuOpen, isConfigMenuOpen, isPmFeaturesMenuOpen, isReportMenuOpen]);
+  }, [isUserMenuOpen, isConfigMenuOpen, isPmFeaturesMenuOpen, isReportMenuOpen, isTimesheetMenuOpen]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -149,6 +155,10 @@ const Header = memo(function Header() {
     setIsReportMenuOpen(prev => !prev);
   }, []);
 
+  const toggleTimesheetMenu = useCallback(() => {
+    setIsTimesheetMenuOpen(prev => !prev);
+  }, []);
+
   const toggleUserMenu = useCallback(() => {
     setIsUserMenuOpen(prev => !prev);
   }, []);
@@ -166,6 +176,7 @@ const Header = memo(function Header() {
   const isConfigMenuActive = CONFIG_MENU_ROUTES.includes(location.pathname);
   const isPmFeaturesMenuActive = PM_FEATURES_MENU_ROUTES.includes(location.pathname);
   const isReportMenuActive = REPORT_MENU_ROUTES.includes(location.pathname);
+  const isTimesheetMenuActive = TIMESHEET_MENU_ROUTES.includes(location.pathname);
 
   return (
     <header className={`fixed top-0 left-0 right-0 shadow-sm border-b z-50 ${IS_NON_PROD ? 'bg-amber-50 border-amber-300' : 'bg-white border-gray-200'}`}>
@@ -245,18 +256,24 @@ const Header = memo(function Header() {
 
                     <div className="h-8 w-px bg-gray-300 self-center" />
 
-                    <Link
-                      to={ROUTES.TIMESHEET}
-                      className={getMenuLinkClasses(isActive(ROUTES.TIMESHEET))}
-                    >
-                      {routeIcons[ROUTES.TIMESHEET] && React.createElement(routeIcons[ROUTES.TIMESHEET], { size: 16 })}
-                      <span>{t('navigation:timesheet')}</span>
-                    </Link>
+                    <TimesheetMenuDropdown
+                      isOpen={isTimesheetMenuOpen}
+                      isActive={isTimesheetMenuActive}
+                      onToggle={toggleTimesheetMenu}
+                      menuRef={timesheetMenuRef}
+                    />
                   </>
                 )}
 
                 {user?.role_id === ROLES.USER && (
                   <>
+                    <Link
+                      to={ROUTES.TODO_LIST}
+                      className={getMenuLinkClasses(isActive(ROUTES.TODO_LIST))}
+                    >
+                      {routeIcons[ROUTES.TODO_LIST] && React.createElement(routeIcons[ROUTES.TODO_LIST], { size: 16 })}
+                      <span>{t('navigation:todoList')}</span>
+                    </Link>
                     <Link
                       to={ROUTES.TIMESHEET}
                       className={getMenuLinkClasses(isActive(ROUTES.TIMESHEET))}
@@ -379,12 +396,18 @@ const Header = memo(function Header() {
 
                   {/* Timesheet separator */}
                   <div className="my-2 border-t border-gray-100" />
-                  <MobileNavLink to={ROUTES.TIMESHEET} icon={routeIcons[ROUTES.TIMESHEET]} label={t('navigation:timesheet')} isActive={isActive(ROUTES.TIMESHEET)} onClick={closeMobileMenu} />
+                  <MobileNavGroup icon={React.createElement(routeIcons[ROUTES.TIMESHEET], { size: 16 })} label={t('navigation:timesheet')} isOpen={mobileOpenGroup === 'timesheet'} onToggle={() => toggleMobileGroup('timesheet')} isActive={isTimesheetMenuActive}>
+                    <MobileNavLink to={ROUTES.TODO_LIST} icon={routeIcons[ROUTES.TODO_LIST]} label={t('navigation:todoList')} isActive={isActive(ROUTES.TODO_LIST)} onClick={closeMobileMenu} />
+                    <MobileNavLink to={ROUTES.TIMESHEET} icon={routeIcons[ROUTES.TIMESHEET]} label={t('navigation:timesheet')} isActive={isActive(ROUTES.TIMESHEET)} onClick={closeMobileMenu} />
+                  </MobileNavGroup>
                 </>
               )}
 
               {user?.role_id === ROLES.USER && (
-                <MobileNavLink to={ROUTES.TIMESHEET} icon={routeIcons[ROUTES.TIMESHEET]} label={t('navigation:timesheet')} isActive={isActive(ROUTES.TIMESHEET)} onClick={closeMobileMenu} />
+                <div className="space-y-0.5">
+                  <MobileNavLink to={ROUTES.TODO_LIST} icon={routeIcons[ROUTES.TODO_LIST]} label={t('navigation:todoList')} isActive={isActive(ROUTES.TODO_LIST)} onClick={closeMobileMenu} />
+                  <MobileNavLink to={ROUTES.TIMESHEET} icon={routeIcons[ROUTES.TIMESHEET]} label={t('navigation:timesheet')} isActive={isActive(ROUTES.TIMESHEET)} onClick={closeMobileMenu} />
+                </div>
               )}
             </nav>
 

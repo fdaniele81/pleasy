@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Building, Edit2, KeyRound, Mail, Shield, Users as UsersIcon } from 'lucide-react';
+
+import { ROLES } from '../../constants';
+import { useAuth } from '../../hooks';
+import SearchFilter from '../../shared/components/SearchFilter';
+import Button from '../../shared/ui/Button';
+import EmptyState from '../../shared/ui/EmptyState';
+import PageHeader from '../../shared/ui/PageHeader';
+import logger from '../../utils/logger';
+import { getStatusBadgeColor } from '../../utils/ui/statusUtils';
 import { useGetCompaniesWithUsersQuery } from '../companies/api/companyEndpoints';
 import {
   useCreateUserMutation,
-  useUpdateUserMutation,
   useDeleteUserMutation,
-  useResetUserPasswordMutation
+  useResetUserPasswordMutation,
+  useUpdateUserMutation
 } from './api/userEndpoints';
-import { Users as UsersIcon, Edit2, Shield, Mail, KeyRound, Building } from 'lucide-react';
-import UserModal from './components/UserModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
-import SearchFilter from '../../shared/components/SearchFilter';
-import { getStatusBadgeColor } from '../../utils/ui/statusUtils';
-import { useAuth } from '../../hooks';
-import { ROLES } from '../../constants';
-import PageHeader from '../../shared/ui/PageHeader';
-import EmptyState from '../../shared/ui/EmptyState';
-import Button from '../../shared/ui/Button';
-import logger from '../../utils/logger';
+import UserModal from './components/UserModal';
 function Users() {
   const { t } = useTranslation(['users', 'common']);
   const { data: companies = [], isLoading: loading } = useGetCompaniesWithUsersQuery();
@@ -62,7 +63,7 @@ function Users() {
       user.company_name?.toLowerCase().includes(term) ||
       user.company_key?.toLowerCase().includes(term)
     );
-  });
+  }).sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
 
   const handleCreateUser = async (userData) => {
     const targetCompanyId = isAdmin ? userData.company_id : companies[0]?.company_id;

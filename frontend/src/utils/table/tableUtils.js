@@ -38,6 +38,7 @@ export const getTimesheetForDate = (task, date) => {
     isSubmitted: timesheet ? timesheet.is_submitted : false,
     timesheetId: timesheet ? timesheet.timesheet_id : null,
     details: timesheet ? timesheet.details : null,
+    timesheetStatusId: timesheet ? timesheet.timesheet_status_id : null,
   };
 };
 

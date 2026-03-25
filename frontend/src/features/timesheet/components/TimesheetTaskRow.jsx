@@ -191,7 +191,7 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
       </td>
 
       {dateRange.map((date, dateIdx) => {
-        const { hours, isSubmitted, timesheetId, details } =
+        const { hours, isSubmitted, timesheetId, details, timesheetStatusId } =
           getTimesheetForDate(task, date);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         const isHolidayDay = isHoliday(date, holidays);
@@ -211,6 +211,7 @@ const TimesheetTaskRow = memo(function TimesheetTaskRow({
             isSubmitted={isSubmitted}
             timesheetId={timesheetId}
             details={details}
+            timesheetStatusId={timesheetStatusId}
             isWeekend={isWeekend}
             isHoliday={isHolidayDay}
             isToday={isToday}

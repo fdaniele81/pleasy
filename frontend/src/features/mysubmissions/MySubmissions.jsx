@@ -2,7 +2,6 @@ import React, { useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetSnapshotsQuery } from '../timesheetsnapshots/api/snapshotEndpoints';
-import { useSubmitTimesheetsMutation } from '../timesheet/api/timesheetEndpoints';
 import { FileText, Calendar, Clock, Eye, Send, ArrowLeft } from 'lucide-react';
 import PageHeader from '../../shared/ui/PageHeader';
 import DateInput from '../../shared/ui/DateInput';
@@ -10,7 +9,6 @@ import { useAuth } from '../../hooks';
 import { useLocale } from '../../hooks/useLocale';
 
 const SnapshotDetailsModal = lazy(() => import('../timesheetsnapshots/components/SnapshotDetailsModal'));
-const SubmissionPreviewModal = lazy(() => import('../timesheet/components/SubmissionPreviewModal'));
 
 function MySubmissions() {
   const { t } = useTranslation(['mysubmissions', 'timesheetsnapshots', 'timesheet', 'common']);
@@ -21,13 +19,11 @@ function MySubmissions() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedSnapshotId, setSelectedSnapshotId] = useState(null);
-  const [showSubmissionPreview, setShowSubmissionPreview] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
 
   const { data: allSnapshots = [], isLoading: loading } = useGetSnapshotsQuery(
     { startDate, endDate }
   );
-  const [submitTimesheets] = useSubmitTimesheetsMutation();
 
   // For PM users, the API returns all company snapshots — filter to own only
   const snapshots = allSnapshots.filter(s => s.user_id === user?.user_id);
@@ -37,15 +33,6 @@ function MySubmissions() {
 
   const totalEntries = snapshots.reduce((sum, s) => sum + s.timesheet_count, 0);
   const totalHours = snapshots.reduce((sum, s) => sum + s.total_hours, 0);
-
-  const handleConfirmSubmission = async (timesheetIds) => {
-    setShowSubmissionPreview(false);
-    try {
-      await submitTimesheets({ timesheetIds }).unwrap();
-    } catch (error) {
-      // handled by RTK Query
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -88,14 +75,6 @@ function MySubmissions() {
           snapshotId={selectedSnapshotId}
         />
       </Suspense>
-      <Suspense fallback={null}>
-        <SubmissionPreviewModal
-          isOpen={showSubmissionPreview}
-          onClose={() => setShowSubmissionPreview(false)}
-          onConfirm={handleConfirmSubmission}
-        />
-      </Suspense>
-
       <div className="shrink-0 p-4 pb-0">
         <div className="max-w-full mx-auto">
           <button
@@ -110,11 +89,6 @@ function MySubmissions() {
             icon={Send}
             title={t('mysubmissions:title')}
             description={t('mysubmissions:description')}
-            actionButton={{
-              label: t('mysubmissions:submitNew'),
-              onClick: () => setShowSubmissionPreview(true),
-              icon: Send,
-            }}
           />
 
           <div className="mb-4 flex flex-wrap items-center gap-2">

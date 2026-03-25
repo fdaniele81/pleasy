@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { Download, ArrowLeft, ArrowRight, X, CheckSquare, EyeOff } from 'lucide-react';
@@ -25,17 +25,27 @@ function TimeOffPlan() {
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [hideEmptyDates, setHideEmptyDates] = useState(false);
+  const [periodMode, setPeriodMode] = useState('next12'); // 'next12' | 'calendarYear'
 
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-
-  useEffect(() => {
+  const { startDate, endDate } = useMemo(() => {
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 12, 0);
-    setStartDate(formatDateISO(firstDay));
-    setEndDate(formatDateISO(lastDay));
-  }, []);
+    if (periodMode === 'calendarYear') {
+      return {
+        startDate: formatDateISO(new Date(today.getFullYear(), 0, 1)),
+        endDate: formatDateISO(new Date(today.getFullYear(), 11, 31)),
+      };
+    }
+    return {
+      startDate: formatDateISO(new Date(today.getFullYear(), today.getMonth(), 1)),
+      endDate: formatDateISO(new Date(today.getFullYear(), today.getMonth() + 12, 0)),
+    };
+  }, [periodMode]);
+
+  const handlePeriodChange = (mode) => {
+    setPeriodMode(mode);
+    setSelectedMonths([]);
+    setSelectedUserIds([]);
+  };
 
   const handleMonthToggle = (monthKey) => {
     setSelectedMonths(prev => {
@@ -109,7 +119,7 @@ function TimeOffPlan() {
   const { data: holidays = [] } = useGetHolidaysQuery();
   const [getCompanyTimeOffPlanForExport] = useLazyGetCompanyTimeOffPlanQuery();
 
-  const calculations = useTimeOffPlanCalculations(users);
+  const calculations = useTimeOffPlanCalculations(users, startDate, endDate);
   const {
     getTimeOffForDate,
     getTotalHoursForUserAndType,
@@ -188,7 +198,7 @@ function TimeOffPlan() {
             <PageHeader
               icon={getRouteIcon('/timeoff-plan')}
               title={t('timeoffplan:title')}
-              description={t('timeoffplan:next12Months')}
+              description={periodMode === 'calendarYear' ? t('timeoffplan:calendarYear') : t('timeoffplan:next12Months')}
               actionButton={{
                 label: t('timeoffplan:viewDetail'),
                 onClick: () => setPage('detail'),
@@ -198,6 +208,28 @@ function TimeOffPlan() {
             />
 
             <div className="flex items-center gap-2 mb-3">
+              <div className="inline-flex rounded-md border border-gray-300 overflow-hidden mr-2">
+                <button
+                  onClick={() => handlePeriodChange('next12')}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    periodMode === 'next12'
+                      ? 'bg-cyan-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {t('timeoffplan:next12Months')}
+                </button>
+                <button
+                  onClick={() => handlePeriodChange('calendarYear')}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 ${
+                    periodMode === 'calendarYear'
+                      ? 'bg-cyan-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {t('timeoffplan:calendarYear')}
+                </button>
+              </div>
               <Button
                 onClick={handleSelectAll}
                 variant="ghost"
@@ -235,16 +267,6 @@ function TimeOffPlan() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-100 pt-20">
       <div className="shrink-0 p-4 pb-0">
         <div className="max-w-full mx-auto">
-          <div className="mb-2">
-            <button
-              onClick={() => setPage('selection')}
-              className="inline-flex items-center gap-1 text-sm text-cyan-600 hover:text-cyan-800 font-medium transition-colors"
-            >
-              <ArrowLeft size={16} />
-              {t('timeoffplan:backToSelection')}
-            </button>
-          </div>
-
           <PageHeader
             icon={getRouteIcon('/timeoff-plan')}
             title={t('timeoffplan:detailTitle')}
@@ -255,9 +277,20 @@ function TimeOffPlan() {
               icon: Download,
               color: 'green',
             }}
+            secondaryActionButton={{
+              label: t('timeoffplan:backToSelection'),
+              onClick: () => setPage('selection'),
+              icon: ArrowLeft,
+              color: 'cyan',
+            }}
           />
 
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 mb-3 justify-end">
+            {hideEmptyDates && visibleDateRange.length < dateRange.length && (
+              <span className="text-xs text-gray-500">
+                {t('timeoffplan:datesVisible', { count: visibleDateRange.length })}
+              </span>
+            )}
             <Button
               onClick={() => setHideEmptyDates(prev => !prev)}
               variant={hideEmptyDates ? 'solid' : 'ghost'}
@@ -268,11 +301,6 @@ function TimeOffPlan() {
             >
               {t('timeoffplan:hideEmptyDates')}
             </Button>
-            {hideEmptyDates && visibleDateRange.length < dateRange.length && (
-              <span className="text-xs text-gray-500">
-                {t('timeoffplan:datesVisible', { count: visibleDateRange.length })}
-              </span>
-            )}
           </div>
         </div>
       </div>

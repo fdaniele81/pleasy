@@ -1,6 +1,5 @@
 {
   "title": "My Submitted Timesheets",
-  "description": "View your submitted timesheets and submit new ones",
-  "submitNew": "Submit Timesheets",
+  "description": "View the history of your submitted timesheets",
   "backToTimesheet": "Back to Timesheet"
 }

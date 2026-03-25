@@ -25,6 +25,7 @@ export const ROUTES = {
   CAPACITY_PLAN_VIEW: '/capacity-plan/view',
 
   TIMESHEET: '/timesheet',
+  TODO_LIST: '/todo-list',
   MY_SUBMISSIONS: '/my-submissions',
 
   TIMEOFF_PLAN: '/timeoff-plan',
@@ -52,6 +53,11 @@ export const PM_FEATURES_MENU_ROUTES = [
   ROUTES.CONVERT_ESTIMATE_TO_PROJECT,
   ROUTES.PLANNING,
   ROUTES.TM_PLANNING,
+];
+
+export const TIMESHEET_MENU_ROUTES = [
+  ROUTES.TIMESHEET,
+  ROUTES.TODO_LIST,
 ];
 
 export const REPORT_MENU_ROUTES = [

@@ -38,6 +38,7 @@ export const timesheetEndpoints = apiSlice.injectEndpoints({
       },
       invalidatesTags: (result, error, { workDate, taskId }) => [
         { type: TAG_TYPES.TIMESHEET, id: 'LIST' },
+        { type: TAG_TYPES.TIMESHEET, id: 'TODO_LIST' },
         { type: TAG_TYPES.TASK, id: taskId },
         { type: TAG_TYPES.DASHBOARD, id: 'LIST' },
       ],
@@ -164,6 +165,25 @@ export const timesheetEndpoints = apiSlice.injectEndpoints({
       keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
     }),
 
+    getTodoList: builder.query({
+      query: () => '/timesheet/todo-list',
+      transformResponse: (response) => response.items || [],
+      providesTags: [{ type: TAG_TYPES.TIMESHEET, id: 'TODO_LIST' }],
+      keepUnusedDataFor: CACHE_STRATEGIES.SHORT,
+    }),
+
+    updateTimesheetStatus: builder.mutation({
+      query: ({ timesheetId, statusId }) => ({
+        url: `/timesheet/status/${timesheetId}`,
+        method: 'PUT',
+        body: { status_id: statusId },
+      }),
+      invalidatesTags: [
+        { type: TAG_TYPES.TIMESHEET, id: 'TODO_LIST' },
+        { type: TAG_TYPES.TIMESHEET, id: 'LIST' },
+      ],
+    }),
+
     getCompanyTimeOffPlan: builder.query({
       query: ({ startDate, endDate }) => ({
         url: '/timeoff/company-plan',
@@ -196,4 +216,6 @@ export const {
   useGetCompanyTimeOffPlanQuery,
   useLazyGetCompanyTimeOffPlanQuery,
   useLazyGetTaskHistoryQuery,
+  useGetTodoListQuery,
+  useUpdateTimesheetStatusMutation,
 } = timesheetEndpoints;

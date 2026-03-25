@@ -197,6 +197,26 @@ async function getTaskHistory(req, res) {
   }
 }
 
+async function getTodoList(req, res) {
+  try {
+    const items = await timesheetService.getTodoList(req.user);
+    res.status(200).json({ message: "Todo list retrieved successfully", items });
+  } catch (err) {
+    handleError(res, err, "GET TODO LIST ERR");
+  }
+}
+
+async function updateTimesheetStatus(req, res) {
+  try {
+    const { timesheet_id } = req.params;
+    const { status_id } = req.body;
+    const result = await timesheetService.updateTimesheetStatus(timesheet_id, status_id, req.user);
+    res.status(200).json({ message: "Status updated successfully", ...result });
+  } catch (err) {
+    handleError(res, err, "UPDATE TIMESHEET STATUS ERR");
+  }
+}
+
 export {
   getTimesheets,
   saveTimesheet,
@@ -210,7 +230,9 @@ export {
   reopenSnapshot,
   getTMPlanning,
   saveTimesheetForPM,
-  getTaskHistory
+  getTaskHistory,
+  getTodoList,
+  updateTimesheetStatus
 };
 
 export default {
@@ -226,5 +248,7 @@ export default {
   reopenSnapshot,
   getTMPlanning,
   saveTimesheetForPM,
-  getTaskHistory
+  getTaskHistory,
+  getTodoList,
+  updateTimesheetStatus
 };

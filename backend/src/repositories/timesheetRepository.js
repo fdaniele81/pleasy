@@ -45,6 +45,7 @@ async function getTimesheets(userId, startDate, endDate) {
       ts.total_hours,
       ts.details,
       ts.snapshot_id,
+      ts.timesheet_status_id,
       tts.is_submitted
     FROM task t
     JOIN project p ON t.project_id = p.project_id
@@ -90,6 +91,7 @@ async function getClosedActivitiesTimesheets(userId, startDate, endDate) {
       TO_CHAR(tt.timesheet_date, 'YYYY-MM-DD') as timesheet_date,
       tt.total_hours,
       tt.snapshot_id,
+      tt.timesheet_status_id,
       tts.is_submitted,
       t.task_id,
       t.task_number,
@@ -141,15 +143,15 @@ async function findTaskCompany(taskId) {
 
 async function upsertTimesheet(data) {
   const result = await db.query(
-    `INSERT INTO task_timesheet (task_id, company_id, user_id, timesheet_date, total_hours, details, external_key, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+    `INSERT INTO task_timesheet (task_id, company_id, user_id, timesheet_date, total_hours, details, external_key, timesheet_status_id, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'INSERTED', NOW(), NOW())
      ON CONFLICT (task_id, user_id, timesheet_date)
      DO UPDATE SET
        total_hours = $5,
        details = COALESCE($6, task_timesheet.details),
        external_key = $7,
        updated_at = NOW()
-     RETURNING timesheet_id, task_id, user_id, TO_CHAR(timesheet_date, 'YYYY-MM-DD') as timesheet_date, total_hours, details, external_key, snapshot_id,
+     RETURNING timesheet_id, task_id, user_id, TO_CHAR(timesheet_date, 'YYYY-MM-DD') as timesheet_date, total_hours, details, external_key, snapshot_id, timesheet_status_id,
      CASE WHEN snapshot_id IS NOT NULL THEN true ELSE false END as is_submitted`,
     [data.task_id, data.company_id, data.user_id, data.work_date, data.hours_worked, data.details, data.external_key]
   );
@@ -190,7 +192,7 @@ async function createSnapshot(userId, companyId, client) {
 async function updateTimesheetsWithSnapshot(snapshotId, userId, client) {
   const result = await client.query(
     `UPDATE task_timesheet
-     SET snapshot_id = $1, updated_at = NOW()
+     SET snapshot_id = $1, timesheet_status_id = 'SUBMITTED', updated_at = NOW()
      WHERE user_id = $2
        AND snapshot_id IS NULL
      RETURNING timesheet_id, task_id, total_hours`,
@@ -214,7 +216,7 @@ async function validateTimesheetsForSubmission(timesheetIds, userId, client) {
 async function updateTimesheetsWithSnapshotByIds(snapshotId, timesheetIds, userId, client) {
   const result = await client.query(
     `UPDATE task_timesheet
-     SET snapshot_id = $1, updated_at = NOW()
+     SET snapshot_id = $1, timesheet_status_id = 'SUBMITTED', updated_at = NOW()
      WHERE timesheet_id = ANY($2)
        AND user_id = $3
        AND snapshot_id IS NULL
@@ -409,7 +411,7 @@ async function getPreviewSubmission(userId) {
     SELECT
       tt.timesheet_id, tt.task_id,
       TO_CHAR(tt.timesheet_date, 'YYYY-MM-DD') as timesheet_date,
-      tt.total_hours, tt.details,
+      tt.total_hours, tt.details, tt.timesheet_status_id,
       t.task_number, t.title as task_title, t.description as task_description,
       p.project_id, p.project_key, p.title as project_title, p.project_type_id,
       c.client_id, c.client_key, c.client_name, c.color as client_color,
@@ -440,7 +442,7 @@ async function getTimesheetsToReopen(snapshotId, client) {
 async function reopenTimesheets(snapshotId, client) {
   const result = await client.query(
     `UPDATE task_timesheet
-     SET snapshot_id = NULL, updated_at = NOW()
+     SET snapshot_id = NULL, timesheet_status_id = 'INSERTED', updated_at = NOW()
      WHERE snapshot_id = $1
      RETURNING timesheet_id`,
     [snapshotId]
@@ -485,6 +487,7 @@ async function getTMPlanningData(companyId, startDate, endDate, pmUserId) {
       ts.total_hours,
       ts.details,
       ts.external_key,
+      ts.timesheet_status_id,
       CASE WHEN ts.snapshot_id IS NOT NULL THEN true ELSE false END as is_submitted,
       COALESCE(task_totals.total_hours_all, 0) as total_hours_all
     FROM task t
@@ -518,6 +521,7 @@ async function getTaskHistory(taskId, userId, allUsers = false) {
       TO_CHAR(tt.timesheet_date, 'YYYY-MM-DD') as timesheet_date,
       tt.total_hours,
       tt.details,
+      tt.timesheet_status_id,
       CASE WHEN tt.snapshot_id IS NOT NULL THEN true ELSE false END as is_submitted,
       tt.user_id as logged_by_user_id,
       u.full_name as logged_by_user_name,
@@ -597,8 +601,55 @@ export {
   getPool,
   getTMPlanningData,
   getTMTasksHoursTotals,
-  getTaskHistory
+  getTaskHistory,
+  getTodoList,
+  updateTimesheetStatus
 };
+
+async function getTodoList(userId) {
+  const query = `
+    SELECT
+      tt.timesheet_id,
+      TO_CHAR(tt.timesheet_date, 'YYYY-MM-DD') as work_date,
+      tt.total_hours as hours_worked,
+      tt.details,
+      tt.timesheet_status_id,
+      t.task_id,
+      t.title as task_title,
+      t.budget,
+      p.project_id,
+      p.project_key,
+      p.title as project_title,
+      c.client_id,
+      c.client_key,
+      c.client_name,
+      c.color as client_color,
+      c.symbol_letter,
+      c.symbol_bg_color,
+      c.symbol_letter_color
+    FROM task_timesheet tt
+    JOIN task t ON tt.task_id = t.task_id
+    JOIN project p ON t.project_id = p.project_id
+    JOIN client c ON p.client_id = c.client_id
+    WHERE tt.user_id = $1
+      AND tt.timesheet_status_id IN ('INSERTED', 'COMPLETED')
+      AND tt.snapshot_id IS NULL
+    ORDER BY tt.timesheet_date DESC, c.client_name, p.project_key, t.title`;
+
+  const result = await db.query(query, [userId]);
+  return result.rows;
+}
+
+async function updateTimesheetStatus(timesheetId, userId, statusId) {
+  const result = await db.query(
+    `UPDATE task_timesheet
+     SET timesheet_status_id = $1, updated_at = NOW()
+     WHERE timesheet_id = $2 AND user_id = $3 AND snapshot_id IS NULL
+     RETURNING timesheet_id, timesheet_status_id`,
+    [statusId, timesheetId, userId]
+  );
+  return result.rows[0] || null;
+}
 
 export default {
   getTimesheets,
@@ -628,5 +679,7 @@ export default {
   getPool,
   getTMPlanningData,
   getTMTasksHoursTotals,
-  getTaskHistory
+  getTaskHistory,
+  getTodoList,
+  updateTimesheetStatus
 };

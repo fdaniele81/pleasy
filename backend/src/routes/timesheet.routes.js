@@ -71,6 +71,18 @@ router.put("/snapshots/:snapshot_id/reopen",
   timesheetController.reopenSnapshot
 );
 
+router.get("/todo-list",
+  verifyToken,
+  checkRole(["PM", "USER"]),
+  timesheetController.getTodoList
+);
+
+router.put("/status/:timesheet_id",
+  verifyToken,
+  checkRole(["PM", "USER"]),
+  timesheetController.updateTimesheetStatus
+);
+
 router.get("/tm-planning",
   verifyToken,
   checkRole(["PM"]),

@@ -91,6 +91,11 @@ CREATE TABLE public.estimate_status (
     description character varying(255)
 );
 
+CREATE TABLE public.timesheet_status (
+    timesheet_status_id character varying(50) NOT NULL,
+    description character varying(255)
+);
+
 CREATE TABLE public.project_type (
     project_type_id character varying(50) NOT NULL,
     description character varying(255),
@@ -274,7 +279,8 @@ CREATE TABLE public.task_timesheet (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     snapshot_id uuid,
     details text,
-    external_key character varying(255)
+    external_key character varying(255),
+    timesheet_status_id character varying(50) NOT NULL DEFAULT 'INSERTED'
 );
 
 COMMENT ON TABLE public.task_timesheet IS 'Time entries for tasks';
@@ -483,6 +489,7 @@ ALTER TABLE ONLY public.status ADD CONSTRAINT status_pkey PRIMARY KEY (status_id
 ALTER TABLE ONLY public.task_status ADD CONSTRAINT task_status_pkey PRIMARY KEY (task_status_id);
 ALTER TABLE ONLY public.time_off_type ADD CONSTRAINT time_off_type_pkey PRIMARY KEY (time_off_type_id);
 ALTER TABLE ONLY public.estimate_status ADD CONSTRAINT estimate_status_pkey PRIMARY KEY (estimate_status_id);
+ALTER TABLE ONLY public.timesheet_status ADD CONSTRAINT timesheet_status_pkey PRIMARY KEY (timesheet_status_id);
 ALTER TABLE ONLY public.project_type ADD CONSTRAINT project_type_pkey PRIMARY KEY (project_type_id);
 ALTER TABLE ONLY public.company ADD CONSTRAINT company_pkey PRIMARY KEY (company_id);
 ALTER TABLE ONLY public.users ADD CONSTRAINT user_pkey PRIMARY KEY (user_id);
@@ -627,6 +634,7 @@ ALTER TABLE ONLY public.task_timesheet ADD CONSTRAINT fk_timesheet_task FOREIGN 
 ALTER TABLE ONLY public.task_timesheet ADD CONSTRAINT fk_timesheet_company FOREIGN KEY (company_id) REFERENCES public.company(company_id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.task_timesheet ADD CONSTRAINT fk_timesheet_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.task_timesheet ADD CONSTRAINT fk_timesheet_snapshot FOREIGN KEY (snapshot_id) REFERENCES public.timesheet_snapshot(snapshot_id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.task_timesheet ADD CONSTRAINT fk_timesheet_status FOREIGN KEY (timesheet_status_id) REFERENCES public.timesheet_status(timesheet_status_id) ON DELETE RESTRICT;
 
 -- Holiday Calendar
 ALTER TABLE ONLY public.holiday_calendar ADD CONSTRAINT fk_holiday_company FOREIGN KEY (company_id) REFERENCES public.company(company_id) ON DELETE CASCADE;
@@ -694,6 +702,12 @@ INSERT INTO public.estimate_status (estimate_status_id, description) VALUES
   ('CONVERTED', 'Convertita in progetto'),
   ('DELETED', 'Stima cancellata')
 ON CONFLICT (estimate_status_id) DO NOTHING;
+
+INSERT INTO public.timesheet_status (timesheet_status_id, description) VALUES
+  ('INSERTED', 'Inserito'),
+  ('COMPLETED', 'Completato'),
+  ('SUBMITTED', 'Sottomesso')
+ON CONFLICT (timesheet_status_id) DO NOTHING;
 
 INSERT INTO public.project_type (project_type_id, description) VALUES
   ('PROJECT', 'Progetto a corpo'),

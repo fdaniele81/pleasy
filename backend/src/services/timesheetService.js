@@ -77,7 +77,8 @@ async function getTimesheets(startDate, endDate, user) {
         work_date: row.timesheet_date,
         hours_worked: hours,
         details: row.details,
-        is_submitted: row.is_submitted
+        is_submitted: row.is_submitted,
+        timesheet_status_id: row.timesheet_status_id
       });
     }
   });
@@ -195,7 +196,8 @@ async function saveTimesheet(data, user) {
     hours_worked: parseFloat(result.total_hours),
     details: result.details,
     external_key: result.external_key,
-    is_submitted: result.is_submitted
+    is_submitted: result.is_submitted,
+    timesheet_status_id: result.timesheet_status_id
   };
 }
 
@@ -308,7 +310,8 @@ async function getPreviewSubmission(user) {
       timesheet_id: row.timesheet_id,
       timesheet_date: row.timesheet_date,
       hours: parseFloat(row.total_hours),
-      details: row.details
+      details: row.details,
+      timesheet_status_id: row.timesheet_status_id
     });
     task.total_hours += parseFloat(row.total_hours);
   });
@@ -381,7 +384,8 @@ async function getTMPlanning(startDate, endDate, user) {
         hours_worked: hours,
         details: row.details,
         external_key: row.external_key,
-        is_submitted: row.is_submitted
+        is_submitted: row.is_submitted,
+        timesheet_status_id: row.timesheet_status_id
       });
       client.total_hours_period += hours;
       tmUser.total_hours_all_clients += hours;
@@ -443,7 +447,8 @@ async function saveTimesheetForPM(data, user) {
     hours_worked: parseFloat(result.total_hours),
     details: result.details,
     external_key: result.external_key,
-    is_submitted: result.is_submitted
+    is_submitted: result.is_submitted,
+    timesheet_status_id: result.timesheet_status_id
   };
 }
 
@@ -479,6 +484,7 @@ async function getTaskHistory(taskId, user, allUsers = false) {
     hours: parseFloat(row.total_hours),
     details: row.details,
     is_submitted: row.is_submitted,
+    timesheet_status_id: row.timesheet_status_id,
     user_id: row.logged_by_user_id,
     user_name: row.logged_by_user_name,
   }));
@@ -486,6 +492,22 @@ async function getTaskHistory(taskId, user, allUsers = false) {
   const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
 
   return { task, entries, totalHours };
+}
+
+async function getTodoList(user) {
+  const rows = await timesheetRepository.getTodoList(user.user_id);
+  return rows;
+}
+
+async function updateTimesheetStatus(timesheetId, statusId, user) {
+  if (!['INSERTED', 'COMPLETED'].includes(statusId)) {
+    throw serviceError('Invalid status. Must be INSERTED or COMPLETED', 400);
+  }
+  const result = await timesheetRepository.updateTimesheetStatus(timesheetId, user.user_id, statusId);
+  if (!result) {
+    throw serviceError('Timesheet not found or not updatable', 404);
+  }
+  return result;
 }
 
 export {
@@ -501,7 +523,9 @@ export {
   reopenSnapshot,
   getTMPlanning,
   saveTimesheetForPM,
-  getTaskHistory
+  getTaskHistory,
+  getTodoList,
+  updateTimesheetStatus
 };
 
 export default {
@@ -517,5 +541,7 @@ export default {
   reopenSnapshot,
   getTMPlanning,
   saveTimesheetForPM,
-  getTaskHistory
+  getTaskHistory,
+  getTodoList,
+  updateTimesheetStatus
 };

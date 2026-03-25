@@ -30,6 +30,8 @@ import estimateRoutes from "./routes/estimate.routes.js";
 import projectDraftRoutes from "./routes/projectDraft.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import savedFiltersRoutes from "./routes/savedFilters.routes.js";
+import todoItemRoutes from "./routes/todoItem.routes.js";
+import scratchpadRoutes from "./routes/scratchpad.routes.js";
 
 const requiredEnvVars = ["PORT", "PGHOST", "PGDATABASE", "PGUSER", "PGPASSWORD", "JWT_SECRET"];
 const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
@@ -124,6 +126,8 @@ app.use("/api/estimate", estimateRoutes);
 app.use("/api/project-draft", projectDraftRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/saved-filters", savedFiltersRoutes);
+app.use("/api/todo-items", todoItemRoutes);
+app.use("/api/scratchpad", scratchpadRoutes);
 
 app.listen(port, () => {
   logger.info("Server started", { port, env: process.env.NODE_ENV || "development" });

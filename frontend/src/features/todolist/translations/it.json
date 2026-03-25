@@ -38,6 +38,8 @@
   "todoLinkTask": "Collega ad attività (opzionale)",
   "noDueDate": "Senza scadenza",
   "deleteTodo": "Elimina promemoria",
+  "showDetails": "Mostra dettagli",
+  "hideDetails": "Nascondi dettagli",
   "scratchpad": "Blocco note",
   "scratchpadPlaceholder": "Scrivi appunti, idee, promemoria...",
   "saving": "Salvataggio...",

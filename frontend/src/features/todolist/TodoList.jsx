@@ -2,9 +2,8 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { ArrowLeft, CheckCircle2, Circle, Clock, Eye, EyeOff, ListTodo, Plus, CalendarDays, StickyNote, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, ListTodo, Plus, CalendarDays, StickyNote, Trash2 } from 'lucide-react';
 import { getRouteIcon } from '../../constants/routeIcons';
-import PageHeader from '../../shared/ui/PageHeader';
 import EmptyState from '../../shared/ui/EmptyState';
 import Button from '../../shared/ui/Button';
 import FilterBar from '../../shared/ui/filters/FilterBar';
@@ -34,6 +33,8 @@ const TODAY_ISO = toISODate(new Date());
 const NO_DATE_KEY = '__no_date__';
 
 const HOLD_MS = 1000;
+const HOLD_DELAY_MS = 150;
+const HOLD_MOVE_TOLERANCE = 10;
 const RING_R = 9;
 const RING_C = 2 * Math.PI * RING_R;
 
@@ -41,6 +42,7 @@ function TodoList() {
   const { t } = useTranslation(['todolist', 'common']);
   const navigate = useNavigate();
   const locale = useLocale();
+  const TodoIcon = getRouteIcon('/todo-list');
 
   const currentUser = useSelector(selectCurrentUser);
   const { data: timesheetItems = [], isLoading: isLoadingTs } = useGetTodoListQuery();
@@ -56,8 +58,10 @@ function TodoList() {
   const [pendingOnly, setPendingOnly] = useState(true);
   const [timesheetModalOpen, setTimesheetModalOpen] = useState(false);
   const [todoModalOpen, setTodoModalOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
   const todayRef = useRef(null);
+  const stickyHeaderRef = useRef(null);
 
   // ── Normalize both sources into a unified shape ──
   const allItems = useMemo(() => {
@@ -121,22 +125,39 @@ function TodoList() {
     });
   }, [filteredItems]);
 
+  // ── Compute scroll offset from sticky header ──
+  const getScrollOffset = useCallback(() => {
+    if (!stickyHeaderRef.current) return 0;
+    const headerRect = stickyHeaderRef.current.getBoundingClientRect();
+    // top-20 (5rem = 80px) + actual header height + small gap
+    return headerRect.height + 80 + 8;
+  }, []);
+
+  const scrollToElement = useCallback((el) => {
+    if (!el) return;
+    const offset = getScrollOffset();
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [getScrollOffset]);
+
   // ── Auto-scroll to today on first render ──
   const didScroll = useRef(false);
   useEffect(() => {
     if (!isLoading && !didScroll.current && todayRef.current) {
-      todayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToElement(todayRef.current);
       didScroll.current = true;
     }
-  }, [isLoading, groupedByDate]);
+  }, [isLoading, groupedByDate, scrollToElement]);
 
   const scrollToToday = useCallback(() => {
-    todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
+    scrollToElement(todayRef.current);
+  }, [scrollToElement]);
 
   // ── Hold-to-toggle ──
   const [holdingId, setHoldingId] = useState(null);
   const holdTimerRef = useRef(null);
+  const delayTimerRef = useRef(null);
+  const holdOriginRef = useRef(null);
 
   const handleToggle = useCallback(async (entry) => {
     if (entry.type === 'timesheet') {
@@ -147,23 +168,42 @@ function TodoList() {
     }
   }, [updateStatus, toggleTodoItem]);
 
-  const startHold = useCallback((e, entry) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setHoldingId(entry.id);
-    holdTimerRef.current = setTimeout(() => {
-      setHoldingId(null);
-      handleToggle(entry);
-    }, HOLD_MS);
-  }, [handleToggle]);
-
   const cancelHold = useCallback(() => {
+    if (delayTimerRef.current) {
+      clearTimeout(delayTimerRef.current);
+      delayTimerRef.current = null;
+    }
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
     }
+    holdOriginRef.current = null;
     setHoldingId(null);
   }, []);
+
+  const startHold = useCallback((e, entry) => {
+    e.preventDefault();
+    e.stopPropagation();
+    holdOriginRef.current = { x: e.clientX, y: e.clientY };
+    // Small delay before starting the ring animation so scrolling isn't blocked
+    delayTimerRef.current = setTimeout(() => {
+      setHoldingId(entry.id);
+      holdTimerRef.current = setTimeout(() => {
+        setHoldingId(null);
+        holdOriginRef.current = null;
+        handleToggle(entry);
+      }, HOLD_MS);
+    }, HOLD_DELAY_MS);
+  }, [handleToggle]);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!holdOriginRef.current) return;
+    const dx = e.clientX - holdOriginRef.current.x;
+    const dy = e.clientY - holdOriginRef.current.y;
+    if (dx * dx + dy * dy > HOLD_MOVE_TOLERANCE * HOLD_MOVE_TOLERANCE) {
+      cancelHold();
+    }
+  }, [cancelHold]);
 
   // ── Delete todo ──
   const handleDeleteTodo = useCallback(async (e, todoItemId) => {
@@ -214,10 +254,8 @@ function TodoList() {
   const dateRefsMap = useRef({});
   const scrollToDate = useCallback((iso) => {
     const el = dateRefsMap.current[iso];
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, []);
+    if (el) scrollToElement(el);
+  }, [scrollToElement]);
 
   // ── Add timesheet entry modal ──
   const { data: projects = [] } = useGetProjectsWithTasksQuery(undefined, { skip: !timesheetModalOpen });
@@ -329,14 +367,16 @@ function TodoList() {
         <div className="max-w-7xl mx-auto flex gap-6">
           {/* ── Left column: todo list ── */}
           <div className="flex-1 min-w-0">
-          <div className="sticky top-20 z-10 bg-gray-100 pb-2 before:content-[''] before:absolute before:left-0 before:right-0 before:-top-20 before:h-20 before:bg-gray-100">
-            <PageHeader
-              icon={getRouteIcon('/todo-list')}
-              title={t('todolist:title')}
-              description={t('todolist:description')}
-            />
+          <div ref={stickyHeaderRef} className="sticky top-20 z-10 bg-gray-100 pb-2 before:content-[''] before:absolute before:left-0 before:right-0 before:-top-20 before:h-20 before:bg-gray-100">
+            <div className="mb-2 sm:mb-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 flex items-center gap-2 sm:gap-3">
+                {TodoIcon && <TodoIcon size={24} className="sm:w-7 sm:h-7 shrink-0" />}
+                <span>{t('todolist:title')}</span>
+              </h1>
+              <p className="hidden sm:block text-sm sm:text-base text-gray-600">{t('todolist:description')}</p>
+            </div>
 
-            <FilterBar>
+            <FilterBar gap="sm">
             <Button
               onClick={() => setPendingOnly((v) => !v)}
               color={pendingOnly ? "cyan" : "gray"}
@@ -344,8 +384,9 @@ function TodoList() {
               size="sm"
               icon={pendingOnly ? EyeOff : Eye}
               fullWidth={false}
+              title={pendingOnly ? t('todolist:hideCompleted') : t('todolist:showCompleted')}
             >
-              {pendingOnly ? t('todolist:hideCompleted') : t('todolist:showCompleted')}
+              <span className="hidden sm:inline">{pendingOnly ? t('todolist:hideCompleted') : t('todolist:showCompleted')}</span>
             </Button>
 
             <Button
@@ -355,8 +396,9 @@ function TodoList() {
               size="sm"
               icon={CalendarDays}
               fullWidth={false}
+              title={t('todolist:goToToday')}
             >
-              {t('todolist:goToToday')}
+              <span className="hidden sm:inline">{t('todolist:goToToday')}</span>
             </Button>
 
             <Button
@@ -366,8 +408,9 @@ function TodoList() {
               size="sm"
               icon={Clock}
               fullWidth={false}
+              title={t('todolist:addEntry')}
             >
-              {t('todolist:addEntry')}
+              <span className="hidden sm:inline">{t('todolist:addEntry')}</span>
             </Button>
 
             <Button
@@ -377,19 +420,20 @@ function TodoList() {
               size="sm"
               icon={StickyNote}
               fullWidth={false}
+              title={t('todolist:addTodo')}
             >
-              {t('todolist:addTodo')}
+              <span className="hidden sm:inline">{t('todolist:addTodo')}</span>
             </Button>
 
             {filteredItems.length > 0 && (
-              <div className="flex items-center gap-3 ml-auto">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
                   <Clock size={14} className="text-gray-400" />
-                  <span>{stats.pending} {t('todolist:pending')}</span>
+                  <span>{stats.pending} <span className="hidden sm:inline">{t('todolist:pending')}</span></span>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
                   <CheckCircle2 size={14} className="text-green-500" />
-                  <span>{stats.completed} {t('todolist:completed')}</span>
+                  <span>{stats.completed} <span className="hidden sm:inline">{t('todolist:completed')}</span></span>
                 </div>
               </div>
             )}
@@ -418,7 +462,6 @@ function TodoList() {
                       if (isToday) todayRef.current = el;
                       if (el) dateRefsMap.current[date] = el;
                     }}
-                    style={{ scrollMarginTop: '13rem' }}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <h2 className={`text-sm font-semibold uppercase tracking-wide ${isToday ? 'text-cyan-600' : isNoDate ? 'text-amber-500' : 'text-gray-500'}`}>
@@ -430,110 +473,139 @@ function TodoList() {
                     </div>
 
                     <div className={`bg-white rounded-xl shadow-sm border divide-y divide-gray-100 ${isToday ? 'border-cyan-300 ring-2 ring-cyan-100' : isNoDate ? 'border-amber-200' : 'border-gray-200'}`}>
-                      {entries.map((entry) => (
-                        <div
-                          key={entry.id}
-                          className={`flex items-center gap-3 px-4 py-3 transition-colors select-none cursor-pointer touch-none ${entry.isCompleted ? 'bg-gray-50/50' : ''}`}
-                          role="button"
-                          aria-label={entry.isCompleted ? t('todolist:markInserted') : t('todolist:markCompleted')}
-                          onPointerDown={(e) => startHold(e, entry)}
-                          onPointerUp={cancelHold}
-                          onPointerLeave={cancelHold}
-                          onPointerCancel={cancelHold}
-                          onContextMenu={(e) => e.preventDefault()}
-                        >
-                          {/* Hold-to-toggle circle */}
-                          <div className="shrink-0 relative">
-                            {entry.isCompleted ? (
-                              <CheckCircle2 size={22} className="text-green-500" />
-                            ) : (
-                              <Circle size={22} className="text-gray-300" />
-                            )}
-                            <svg
-                              className="absolute inset-0 -rotate-90 pointer-events-none"
-                              width={22}
-                              height={22}
-                              viewBox="0 0 22 22"
-                            >
-                              <circle
-                                cx={11}
-                                cy={11}
-                                r={RING_R}
-                                fill="none"
-                                stroke={entry.isCompleted ? '#f87171' : '#06b6d4'}
-                                strokeWidth={2.5}
-                                strokeLinecap="round"
-                                strokeDasharray={RING_C}
-                                strokeDashoffset={holdingId === entry.id ? 0 : RING_C}
-                                style={{
-                                  transition: holdingId === entry.id
-                                    ? `stroke-dashoffset ${HOLD_MS}ms linear`
-                                    : 'none',
-                                }}
-                              />
-                            </svg>
-                          </div>
+                      {entries.map((entry) => {
+                        const isExpanded = expandedId === entry.id;
+                        return (
+                        <div key={entry.id}>
+                          <div
+                            className={`flex items-center gap-3 px-4 py-3 transition-colors select-none cursor-pointer touch-none ${entry.isCompleted ? 'bg-gray-50/50' : ''}`}
+                            role="button"
+                            aria-label={entry.isCompleted ? t('todolist:markInserted') : t('todolist:markCompleted')}
+                            onPointerDown={(e) => startHold(e, entry)}
+                            onPointerMove={handlePointerMove}
+                            onPointerUp={cancelHold}
+                            onPointerLeave={cancelHold}
+                            onPointerCancel={cancelHold}
+                            onContextMenu={(e) => e.preventDefault()}
+                          >
+                            {/* Hold-to-toggle circle */}
+                            <div className="shrink-0 relative">
+                              {entry.isCompleted ? (
+                                <CheckCircle2 size={22} className="text-green-500" />
+                              ) : (
+                                <Circle size={22} className="text-gray-300" />
+                              )}
+                              <svg
+                                className="absolute inset-0 -rotate-90 pointer-events-none"
+                                width={22}
+                                height={22}
+                                viewBox="0 0 22 22"
+                              >
+                                <circle
+                                  cx={11}
+                                  cy={11}
+                                  r={RING_R}
+                                  fill="none"
+                                  stroke={entry.isCompleted ? '#f87171' : '#06b6d4'}
+                                  strokeWidth={2.5}
+                                  strokeLinecap="round"
+                                  strokeDasharray={RING_C}
+                                  strokeDashoffset={holdingId === entry.id ? 0 : RING_C}
+                                  style={{
+                                    transition: holdingId === entry.id
+                                      ? `stroke-dashoffset ${HOLD_MS}ms linear`
+                                      : 'none',
+                                  }}
+                                />
+                              </svg>
+                            </div>
 
-                          {/* Icon / avatar */}
-                          {entry.type === 'timesheet' ? (
-                            <div
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                              style={{
-                                backgroundColor: entry.symbol_bg_color || entry.client_color || '#6b7280',
-                                color: entry.symbol_letter_color || '#ffffff',
-                              }}
-                            >
-                              {entry.symbol_letter || entry.client_key?.charAt(0) || '?'}
-                            </div>
-                          ) : (
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-amber-100">
-                              <StickyNote size={14} className="text-amber-600" />
-                            </div>
-                          )}
-
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-sm font-medium truncate ${entry.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                              {entry.title}
-                            </div>
+                            {/* Icon / avatar */}
                             {entry.type === 'timesheet' ? (
-                              <div className="text-xs text-gray-400 truncate">
-                                {entry.client_key} &middot; {entry.project_key}
+                              <div
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                                style={{
+                                  backgroundColor: entry.symbol_bg_color || entry.client_color || '#6b7280',
+                                  color: entry.symbol_letter_color || '#ffffff',
+                                }}
+                              >
+                                {entry.symbol_letter || entry.client_key?.charAt(0) || '?'}
                               </div>
-                            ) : entry.client_key ? (
-                              <div className="text-xs text-gray-400 truncate">
-                                {entry.client_key} &middot; {entry.project_key}
+                            ) : (
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-amber-100">
+                                <StickyNote size={14} className="text-amber-600" />
                               </div>
-                            ) : null}
+                            )}
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-sm font-medium truncate ${entry.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                {entry.title}
+                              </div>
+                              {entry.type === 'timesheet' ? (
+                                <div className="text-xs text-gray-400 truncate">
+                                  {entry.client_key} &middot; {entry.project_key}
+                                </div>
+                              ) : entry.client_key ? (
+                                <div className="text-xs text-gray-400 truncate">
+                                  {entry.client_key} &middot; {entry.project_key}
+                                </div>
+                              ) : null}
+                            </div>
+
+                            {/* Inline details preview (lg+ only) */}
+                            {entry.details && (
+                              <div className={`hidden lg:block flex-1 min-w-0 text-xs italic whitespace-pre-line line-clamp-3 ${entry.isCompleted ? 'text-gray-300' : 'text-gray-400'}`}>
+                                {entry.details}
+                              </div>
+                            )}
+
+                            {/* Toggle details button (below lg only) */}
+                            {entry.details && (
+                              <button
+                                type="button"
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedId(isExpanded ? null : entry.id);
+                                }}
+                                className="shrink-0 p-1 text-gray-300 hover:text-gray-500 transition-colors lg:hidden"
+                                aria-label={isExpanded ? t('todolist:hideDetails') : t('todolist:showDetails')}
+                              >
+                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                              </button>
+                            )}
+
+                            {/* Hours (only for timesheets) */}
+                            {entry.hours != null && (
+                              <div className={`shrink-0 text-sm font-semibold tabular-nums ${entry.isCompleted ? 'text-gray-400' : 'text-gray-700'}`}>
+                                {entry.hours}h
+                              </div>
+                            )}
+
+                            {/* Delete button for todo items */}
+                            {entry.type === 'todo' && (
+                              <button
+                                type="button"
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={(e) => handleDeleteTodo(e, entry._todoItemId)}
+                                className="shrink-0 p-1 text-gray-300 hover:text-red-400 transition-colors"
+                                aria-label={t('todolist:deleteTodo')}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
 
-                          {entry.details && (
-                            <div className={`hidden lg:block flex-1 min-w-0 text-xs italic whitespace-pre-line line-clamp-3 ${entry.isCompleted ? 'text-gray-300' : 'text-gray-400'}`}>
+                          {/* Expandable details panel (below lg only) */}
+                          {entry.details && isExpanded && (
+                            <div className={`px-4 pb-3 pt-0 pl-17 text-xs italic whitespace-pre-line lg:hidden ${entry.isCompleted ? 'text-gray-300' : 'text-gray-400'}`}>
                               {entry.details}
                             </div>
                           )}
-
-                          {/* Hours (only for timesheets) */}
-                          {entry.hours != null && (
-                            <div className={`shrink-0 text-sm font-semibold tabular-nums ${entry.isCompleted ? 'text-gray-400' : 'text-gray-700'}`}>
-                              {entry.hours}h
-                            </div>
-                          )}
-
-                          {/* Delete button for todo items */}
-                          {entry.type === 'todo' && (
-                            <button
-                              type="button"
-                              onPointerDown={(e) => e.stopPropagation()}
-                              onClick={(e) => handleDeleteTodo(e, entry._todoItemId)}
-                              className="shrink-0 p-1 text-gray-300 hover:text-red-400 transition-colors"
-                              aria-label={t('todolist:deleteTodo')}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 );

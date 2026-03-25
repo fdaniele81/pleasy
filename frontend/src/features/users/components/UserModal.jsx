@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
-import { isRequired, isValidEmail } from '../../../utils/validation/validationUtils';
+import { isRequired, isValidEmail, validatePassword } from '../../../utils/validation/validationUtils';
 import { useFormModal } from '../../../hooks/useFormModal';
 import BaseModal from '../../../shared/components/BaseModal';
 import { ROLES } from '../../../constants';
@@ -103,8 +103,16 @@ const UserModal = ({
       if (!isEditing && !isRequired(data.password)) {
         return t('users:passwordRequired');
       }
-      if (!isEditing && data.password && data.password.length < 6) {
-        return t('users:passwordMinLength');
+      if (!isEditing && data.password) {
+        const { isValid, errors: pwErrors } = validatePassword(data.password, {
+          minLength: 8,
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNumber: true
+        });
+        if (!isValid) {
+          return pwErrors[0];
+        }
       }
       return null;
     },
@@ -223,6 +231,7 @@ const UserModal = ({
               placeholder={t('users:passwordPlaceholder')}
               className={inputBase}
             />
+            <p className="text-[10px] text-gray-400 mt-0.5">{t('users:passwordMinLengthHint')}</p>
           </div>
         )}
 

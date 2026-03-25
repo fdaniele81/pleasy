@@ -38,6 +38,8 @@
   "todoLinkTask": "Link to task (optional)",
   "noDueDate": "No due date",
   "deleteTodo": "Delete reminder",
+  "showDetails": "Show details",
+  "hideDetails": "Hide details",
   "scratchpad": "Scratchpad",
   "scratchpadPlaceholder": "Write notes, ideas, reminders...",
   "saving": "Saving...",

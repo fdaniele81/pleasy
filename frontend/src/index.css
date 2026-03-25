@@ -7,6 +7,13 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Prevent mobile browser zoom on input focus (iOS requires >= 16px) */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(100%);

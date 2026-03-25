@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyRound, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, Eye, EyeOff, Check, X } from 'lucide-react';
 import BaseModal from '../../../shared/components/BaseModal';
+import { validatePassword } from '../../../utils/validation/validationUtils';
 
 const ResetPasswordModal = ({ isOpen, onClose, onConfirm, userName }) => {
-  const { t } = useTranslation(['users', 'common']);
+  const { t } = useTranslation(['users', 'common', 'validation']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -30,8 +31,14 @@ const ResetPasswordModal = ({ isOpen, onClose, onConfirm, userName }) => {
       return;
     }
 
-    if (newPassword.length < 4) {
-      setError(t('users:passwordMinLength4'));
+    const { isValid, errors: pwErrors } = validatePassword(newPassword, {
+      minLength: 8,
+      requireUppercase: true,
+      requireLowercase: true,
+      requireNumber: true
+    });
+    if (!isValid) {
+      setError(pwErrors[0]);
       return;
     }
 
@@ -122,11 +129,30 @@ const ResetPasswordModal = ({ isOpen, onClose, onConfirm, userName }) => {
           </div>
         </div>
 
-        <div className="p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-600">
-            {t('users:passwordMinLengthHint')}
-          </p>
-        </div>
+        {newPassword && (
+          <div className="p-3 bg-gray-50 rounded-lg space-y-1">
+            {[
+              { ok: newPassword.length >= 8, label: t('users:passwordMinLength') },
+              { ok: /[A-Z]/.test(newPassword), label: t('validation:passwordUppercase') },
+              { ok: /[a-z]/.test(newPassword), label: t('validation:passwordLowercase') },
+              { ok: /[0-9]/.test(newPassword), label: t('validation:passwordNumber') }
+            ].map(({ ok, label }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                {ok
+                  ? <Check size={12} className="text-green-500 shrink-0" />
+                  : <X size={12} className="text-red-400 shrink-0" />}
+                <span className={`text-xs ${ok ? 'text-green-600' : 'text-gray-500'}`}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {!newPassword && (
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <p className="text-xs text-gray-600">
+              {t('users:passwordMinLengthHint')}
+            </p>
+          </div>
+        )}
       </div>
       </form>
     </BaseModal>

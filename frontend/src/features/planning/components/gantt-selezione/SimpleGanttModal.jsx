@@ -140,7 +140,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
         showFooter={false}
       >
         <div className="text-center py-12 px-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 from-amber-100 to-orange-100 rounded-full mb-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 rounded-full mb-6">
             <AlertCircle size={40} className="text-amber-600" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -154,7 +154,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
           </p>
           <button
             onClick={onClose}
-            className="px-6 py-2.5 text-sm font-medium text-white from-cyan-700 to-cyan-800 rounded-lg hover:from-cyan-800 hover:to-cyan-900 shadow-md hover:shadow-lg transition-all duration-200"
+            className="px-6 py-2.5 text-sm font-medium text-white bg-cyan-600 rounded-lg hover:bg-cyan-700 shadow-md hover:shadow-lg transition-all duration-200"
           >
             {t('ganttClose')}
           </button>
@@ -200,7 +200,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
               <button
                 onClick={handleExportPng}
                 disabled={isExporting}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-cyan-700 rounded-lg hover:bg-cyan-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-200"
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <Download size={18} />
                 {isExporting ? t('printGanttExporting') : t('printGanttExportPng')}
@@ -211,7 +211,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-2 px-4 py-3 from-gray-50 to-gray-100 rounded-lg border border-gray-200 flex-wrap">
+        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 flex-wrap">
           <select
             value={projectHeaderMode}
             onChange={(e) => setProjectHeaderMode(e.target.value)}
@@ -226,7 +226,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
             onClick={() => setColorByStatus(!colorByStatus)}
             className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
               !colorByStatus
-                ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
+                ? 'bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700'
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
             title={!colorByStatus ? t('printGanttShowStatusColors') : t('printGanttHideStatusColors')}
@@ -248,7 +248,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
               anonymizeMode
                 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                 : !showMilestones
-                  ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
+                  ? 'bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
             title={anonymizeMode ? t('printGanttHideDates') : !showMilestones ? t('printGanttShowMilestones') : t('printGanttHideMilestones')}
@@ -267,7 +267,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
             onClick={() => setShowGridLines(!showGridLines)}
             className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
               !showGridLines
-                ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
+                ? 'bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700'
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
             title={!showGridLines ? t('printGanttShowGridLines') : t('printGanttHideGridLines')}
@@ -289,7 +289,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
               anonymizeMode
                 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                 : !showTodayLine
-                  ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
+                  ? 'bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
             title={anonymizeMode ? t('printGanttHideDates') : !showTodayLine ? t('printGanttShowTodayLine') : t('printGanttHideTodayLine')}
@@ -308,7 +308,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
             onClick={() => setAnonymizeMode(!anonymizeMode)}
             className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
               anonymizeMode
-                ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
+                ? 'bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700'
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
             title={anonymizeMode ? t('printGanttShowRealDates') : t('printGanttAnonymizePeriods')}
@@ -327,7 +327,7 @@ const SimpleGanttModal = ({ isOpen, onClose, selectedTasks, projects }) => {
             onClick={handleToggleSuspendedArea}
             className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded transition-colors border justify-center ${
               showSuspendedArea
-                ? 'bg-cyan-700 text-white border-cyan-700 hover:bg-cyan-800'
+                ? 'bg-cyan-600 text-white border-cyan-600 hover:bg-cyan-700'
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
             title={showSuspendedArea ? t('printGanttHideSuspendedArea') : t('printGanttShowSuspendedArea')}

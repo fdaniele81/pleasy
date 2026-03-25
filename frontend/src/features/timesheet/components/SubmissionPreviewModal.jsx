@@ -331,18 +331,6 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
                 size="sm"
               />
 
-              <button
-                onClick={() => setOnlyCompleted(prev => !prev)}
-                className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                  onlyCompleted
-                    ? 'bg-green-600 border-green-600 text-white hover:bg-green-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <CheckCircle className="h-3.5 w-3.5" />
-                {onlyCompleted ? t('timesheet:showAll') : t('timesheet:onlyCompleted')}
-              </button>
-
               {(filterStartDate || filterEndDate || filterClientIds.length > 0 || filterProjectIds.length > 0 || onlyCompleted) && (
                 <Button
                   onClick={() => { clearDateFilters(); setFilterClientIds([]); setFilterProjectIds([]); setPendingClientIds([]); setPendingProjectIds([]); setOnlyCompleted(false); }}
@@ -393,6 +381,19 @@ const SubmissionPreviewModal = ({ isOpen, onClose, onConfirm }) => {
                   onSelectionChange={setSelectedTimesheetIds}
                   filterStartDate={filterStartDate}
                   filterEndDate={filterEndDate}
+                  extraToolbarButtons={
+                    <button
+                      onClick={() => setOnlyCompleted(prev => !prev)}
+                      className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                        onlyCompleted
+                          ? 'bg-green-600 border-green-600 text-white hover:bg-green-700'
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      {onlyCompleted ? t('timesheet:showAll') : t('timesheet:onlyCompleted')}
+                    </button>
+                  }
                 />
               </div>
 

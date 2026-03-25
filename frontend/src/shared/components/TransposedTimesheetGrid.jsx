@@ -30,6 +30,7 @@ const TransposedTimesheetGrid = ({
   onSelectionChange,
   filterStartDate,
   filterEndDate,
+  extraToolbarButtons,
 }) => {
   const { t } = useTranslation(['timesheet', 'common']);
   const locale = useLocale();
@@ -314,8 +315,8 @@ const TransposedTimesheetGrid = ({
 
   return (
     <div className="flex flex-col gap-2 h-full min-h-0">
-      {/* Toolbar — only when selectable or has empty days */}
-      {(selectable || emptyDaysCount > 0) && (
+      {/* Toolbar — only when selectable or has empty days or extra buttons */}
+      {(selectable || emptyDaysCount > 0 || extraToolbarButtons) && (
         <div className="flex items-center justify-between shrink-0">
           {selectable ? (
             <button
@@ -332,19 +333,22 @@ const TransposedTimesheetGrid = ({
             </button>
           ) : <div />}
 
-          {emptyDaysCount > 0 && (
-            <button
-              onClick={() => setHideEmptyDays(prev => !prev)}
-              className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                hideEmptyDays
-                  ? 'bg-cyan-600 border-cyan-600 text-white hover:bg-cyan-700'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {hideEmptyDays ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-              {hideEmptyDays ? t('timesheet:showEmptyDays') : t('timesheet:hideEmptyDays')}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {extraToolbarButtons}
+            {emptyDaysCount > 0 && (
+              <button
+                onClick={() => setHideEmptyDays(prev => !prev)}
+                className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                  hideEmptyDays
+                    ? 'bg-cyan-600 border-cyan-600 text-white hover:bg-cyan-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {hideEmptyDays ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                {hideEmptyDays ? t('timesheet:showEmptyDays') : t('timesheet:hideEmptyDays')}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

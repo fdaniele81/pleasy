@@ -182,7 +182,6 @@ function TodoList() {
   }, []);
 
   const startHold = useCallback((e, entry) => {
-    e.preventDefault();
     e.stopPropagation();
     holdOriginRef.current = { x: e.clientX, y: e.clientY };
     // Small delay before starting the ring animation so scrolling isn't blocked
@@ -478,7 +477,7 @@ function TodoList() {
                         return (
                         <div key={entry.id}>
                           <div
-                            className={`flex items-center gap-3 px-4 py-3 transition-colors select-none cursor-pointer touch-none ${entry.isCompleted ? 'bg-gray-50/50' : ''}`}
+                            className={`flex items-center gap-3 px-4 py-3 transition-colors select-none cursor-pointer touch-pan-y ${entry.isCompleted ? 'bg-gray-50/50' : ''}`}
                             role="button"
                             aria-label={entry.isCompleted ? t('todolist:markInserted') : t('todolist:markCompleted')}
                             onPointerDown={(e) => startHold(e, entry)}

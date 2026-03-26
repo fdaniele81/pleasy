@@ -2,10 +2,11 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, ListTodo, Pencil, Plus, CalendarDays, StickyNote, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, ListTodo, Pencil, Plus, CalendarDays, StickyNote } from 'lucide-react';
 import { getRouteIcon } from '../../constants/routeIcons';
 import EmptyState from '../../shared/ui/EmptyState';
 import Button from '../../shared/ui/Button';
+import ConfirmButton from '../../shared/ui/ConfirmButton';
 import FilterBar from '../../shared/ui/filters/FilterBar';
 import SearchInput from '../../shared/ui/filters/SearchInput';
 import BaseModal from '../../shared/components/BaseModal';
@@ -210,11 +211,6 @@ function TodoList() {
     }
   }, [cancelHold]);
 
-  // ── Delete todo ──
-  const handleDeleteTodo = useCallback(async (e, todoItemId) => {
-    e.stopPropagation();
-    await deleteTodoItem(todoItemId);
-  }, [deleteTodoItem]);
 
   // ── Date label ──
   const formatDateLabel = useCallback((dateStr) => {
@@ -440,6 +436,7 @@ function TodoList() {
               <span className="hidden sm:inline">{t('todolist:goToToday')}</span>
             </Button>
 
+            <div className="flex items-center gap-1 sm:gap-2 ml-auto sm:ml-0">
             <Button
               onClick={() => setTimesheetModalOpen(true)}
               variant="outline"
@@ -463,6 +460,7 @@ function TodoList() {
             >
               <span className="hidden sm:inline">{t('todolist:addTodo')}</span>
             </Button>
+            </div>
 
             {filteredItems.length > 0 && (
               <div className="flex items-center gap-2 sm:gap-3 ml-auto">
@@ -639,15 +637,13 @@ function TodoList() {
 
                             {/* Delete button for todo items */}
                             {entry.type === 'todo' && (
-                              <button
-                                type="button"
+                              <ConfirmButton
+                                onConfirm={() => deleteTodoItem(entry._todoItemId)}
+                                itemName={t('todolist:deleteTodo')}
+                                size={14}
+                                className="shrink-0 text-gray-300 hover:text-red-400"
                                 onPointerDown={(e) => e.stopPropagation()}
-                                onClick={(e) => handleDeleteTodo(e, entry._todoItemId)}
-                                className="shrink-0 p-1 text-gray-300 hover:text-red-400 transition-colors"
-                                aria-label={t('todolist:deleteTodo')}
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                              />
                             )}
                           </div>
 

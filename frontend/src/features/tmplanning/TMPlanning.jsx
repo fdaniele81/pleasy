@@ -181,6 +181,7 @@ function TMPlanning() {
           filteredUsers={filteredUsers}
           filteredClients={filteredClients}
           groupBy={groupBy}
+          setGroupBy={setGroupBy}
           getDateInfo={getDateInfo}
           getUserTotal={getUserTotal}
           getUserDayTotal={getUserDayTotal}
@@ -202,6 +203,12 @@ function TMPlanning() {
           locale={locale}
           saveTMTimesheet={state.saveTMTimesheet}
           refetch={state.refetch}
+          userOptions={userOptions}
+          clientOptions={clientOptions}
+          selectedUserIds={selectedUserIds}
+          setSelectedUserIds={setSelectedUserIds}
+          selectedClientIds={selectedClientIds}
+          setSelectedClientIds={setSelectedClientIds}
         />
       </div>
     );

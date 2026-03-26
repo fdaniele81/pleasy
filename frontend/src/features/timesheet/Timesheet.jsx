@@ -319,6 +319,12 @@ function Timesheet() {
           onSubmitTimesheets={openSubmissionPreview}
           onViewHistory={() => navigate('/my-submissions')}
           onSaveTimesheetDetails={handleTimesheetDetailsModalConfirm}
+          uniqueClients={uniqueClients}
+          uniqueProjects={uniqueProjects}
+          filterClientIds={filterClientIds}
+          setFilterClientIds={setFilterClientIds}
+          filterProjectIds={filterProjectIds}
+          setFilterProjectIds={setFilterProjectIds}
         />
       </div>
     );

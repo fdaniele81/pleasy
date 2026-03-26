@@ -4,7 +4,10 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Filter,
   Search,
+  User,
+  Building2,
   X,
 } from "lucide-react";
 import { formatDateISO } from "../../../utils/date/dateUtils";
@@ -18,6 +21,7 @@ function TMPlanningMobile({
   filteredUsers,
   filteredClients,
   groupBy,
+  setGroupBy,
   getDateInfo,
   getUserDayTotal,
   getClientDayTotal,
@@ -36,8 +40,15 @@ function TMPlanningMobile({
   locale,
   saveTMTimesheet,
   refetch,
+  userOptions,
+  clientOptions,
+  selectedUserIds,
+  setSelectedUserIds,
+  selectedClientIds,
+  setSelectedClientIds,
 }) {
   const { t } = useTranslation(["tmplanning", "common"]);
+  const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [detailTask, setDetailTask] = useState(null);
   const [sheetHours, setSheetHours] = useState("");
@@ -177,6 +188,14 @@ function TMPlanningMobile({
   }, [dateRange, tmUsers]);
 
   const selectedDayTotal = dayTotals[selectedDayIdx] || 0;
+
+  const hasActiveFilters = selectedUserIds.length > 0 || selectedClientIds.length > 0;
+
+  const clearAllFilters = useCallback(() => {
+    setSelectedUserIds([]);
+    setSelectedClientIds([]);
+    setSearchTerm("");
+  }, [setSelectedUserIds, setSelectedClientIds]);
 
   // Open bottom sheet
   const openDetailSheet = useCallback((card) => {
@@ -448,7 +467,7 @@ function TMPlanningMobile({
         </div>
 
         {/* Day Header */}
-        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
           <span className="text-sm font-medium text-gray-600 capitalize">
             {selectedDate && getFullDayLabel(selectedDate)}
           </span>
@@ -462,6 +481,124 @@ function TMPlanningMobile({
             </div>
           </div>
         </div>
+
+        {/* Filter toggle */}
+        <div className="flex items-center justify-between px-4 py-1.5 bg-white border-b border-gray-200 shadow-sm">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+              hasActiveFilters
+                ? "bg-cyan-50 text-cyan-700 border border-cyan-200"
+                : "text-gray-500 active:bg-gray-100"
+            }`}
+          >
+            <Filter size={13} />
+            {t("common:filter")}
+            {hasActiveFilters && (
+              <span className="bg-cyan-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                {selectedUserIds.length + selectedClientIds.length}
+              </span>
+            )}
+          </button>
+          <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+            <button
+              onClick={() => setGroupBy("user")}
+              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
+                groupBy === "user" ? "bg-cyan-600 text-white" : "bg-white text-gray-600 active:bg-gray-100"
+              }`}
+            >
+              <User size={12} />
+              {t("common:user")}
+            </button>
+            <button
+              onClick={() => setGroupBy("client")}
+              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors border-l border-gray-300 ${
+                groupBy === "client" ? "bg-cyan-600 text-white" : "bg-white text-gray-600 active:bg-gray-100"
+              }`}
+            >
+              <Building2 size={12} />
+              {t("common:client")}
+            </button>
+          </div>
+        </div>
+
+        {/* Expandable filters panel */}
+        {showFilters && (
+          <div className="px-4 pb-3 border-b border-gray-200 bg-gray-50 space-y-2 pt-2 shadow-sm">
+            {/* User filter */}
+            {userOptions.length > 0 && (
+              <div>
+                <label className="text-[11px] font-medium text-gray-500 mb-1 block">{t("common:user")}</label>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                  {userOptions.map((user) => {
+                    const isActive = selectedUserIds.includes(user.value);
+                    return (
+                      <button
+                        key={user.value}
+                        onClick={() => {
+                          if (isActive) {
+                            setSelectedUserIds(selectedUserIds.filter((id) => id !== user.value));
+                          } else {
+                            setSelectedUserIds([...selectedUserIds, user.value]);
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                          isActive
+                            ? "bg-cyan-600 text-white border-cyan-600"
+                            : "bg-white text-gray-600 border-gray-200 active:bg-gray-100"
+                        }`}
+                      >
+                        {user.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Client filter */}
+            {clientOptions.length > 0 && (
+              <div>
+                <label className="text-[11px] font-medium text-gray-500 mb-1 block">{t("common:client")}</label>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                  {clientOptions.map((client) => {
+                    const isActive = selectedClientIds.includes(client.value);
+                    return (
+                      <button
+                        key={client.value}
+                        onClick={() => {
+                          if (isActive) {
+                            setSelectedClientIds(selectedClientIds.filter((id) => id !== client.value));
+                          } else {
+                            setSelectedClientIds([...selectedClientIds, client.value]);
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                          isActive
+                            ? "bg-cyan-600 text-white border-cyan-600"
+                            : "bg-white text-gray-600 border-gray-200 active:bg-gray-100"
+                        }`}
+                      >
+                        {client.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Clear filters */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-1 text-xs text-red-500 font-medium active:opacity-70"
+              >
+                <X size={12} />
+                {t("common:clearFilters")}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Search */}

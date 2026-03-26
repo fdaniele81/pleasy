@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Filter,
   Search,
   X,
   AlertTriangle,
@@ -42,9 +43,16 @@ function TimesheetMobile({
   onSubmitTimesheets,
   onViewHistory,
   onSaveTimesheetDetails,
+  uniqueClients,
+  uniqueProjects,
+  filterClientIds,
+  setFilterClientIds,
+  filterProjectIds,
+  setFilterProjectIds,
 }) {
   const { t } = useTranslation(["timesheet", "common"]);
   const locale = useLocale();
+  const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [detailTask, setDetailTask] = useState(null);
   const [sheetHours, setSheetHours] = useState("");
@@ -98,14 +106,18 @@ function TimesheetMobile({
         return { ...task, dayHours: hours, isSubmitted, timesheetId, details };
       })
       .filter((task) => {
-        if (!term) return true;
-        return (
-          task.client_key?.toLowerCase().includes(term) ||
-          task.client_name?.toLowerCase().includes(term) ||
-          task.project_key?.toLowerCase().includes(term) ||
-          task.project_title?.toLowerCase().includes(term) ||
-          task.task_title?.toLowerCase().includes(term)
-        );
+        if (filterClientIds.length > 0 && !filterClientIds.includes(task.client_id)) return false;
+        if (filterProjectIds.length > 0 && !filterProjectIds.includes(task.project_id)) return false;
+        if (term) {
+          if (!(
+            task.client_key?.toLowerCase().includes(term) ||
+            task.client_name?.toLowerCase().includes(term) ||
+            task.project_key?.toLowerCase().includes(term) ||
+            task.project_title?.toLowerCase().includes(term) ||
+            task.task_title?.toLowerCase().includes(term)
+          )) return false;
+        }
+        return true;
       })
       .sort((a, b) => {
         if (a.dayHours > 0 && b.dayHours === 0) return -1;
@@ -116,7 +128,7 @@ function TimesheetMobile({
         if (projectCompare !== 0) return projectCompare;
         return (a._taskOrderIndex || 0) - (b._taskOrderIndex || 0);
       });
-  }, [allTasksFlat, selectedDate, searchTerm]);
+  }, [allTasksFlat, selectedDate, searchTerm, filterClientIds, filterProjectIds]);
 
   const isNonWorking = useMemo(() => {
     if (!selectedDate) return false;
@@ -190,6 +202,14 @@ function TimesheetMobile({
 
     return { isTM: false, actual, budget, remaining, percentage, colorStatus, deadline };
   }, [detailTask]);
+
+  const hasActiveFilters = filterClientIds.length > 0 || filterProjectIds.length > 0;
+
+  const clearAllFilters = useCallback(() => {
+    setFilterClientIds([]);
+    setFilterProjectIds([]);
+    setSearchTerm("");
+  }, [setFilterClientIds, setFilterProjectIds]);
 
   const renderTaskCard = useCallback(
     (task) => {
@@ -593,6 +613,103 @@ function TimesheetMobile({
             {selectedDayTotal > 0 ? `${selectedDayTotal.toFixed(1)}h` : "-"}
           </div>
         </div>
+        {/* Filter toggle */}
+        <div className="flex items-center justify-between px-4 py-1.5 bg-white border-b border-gray-200 shadow-sm">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+              hasActiveFilters
+                ? "bg-cyan-50 text-cyan-700 border border-cyan-200"
+                : "text-gray-500 active:bg-gray-100"
+            }`}
+          >
+            <Filter size={13} />
+            {t("common:filter")}
+            {hasActiveFilters && (
+              <span className="bg-cyan-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                {filterClientIds.length + filterProjectIds.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Expandable filters panel */}
+        {showFilters && (
+          <div className="px-4 pb-3 border-b border-gray-200 bg-gray-50 space-y-2 pt-2 shadow-sm">
+            {/* Client filter */}
+            {uniqueClients.length > 0 && (
+              <div>
+                <label className="text-[11px] font-medium text-gray-500 mb-1 block">{t("common:client")}</label>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                  {uniqueClients.map((client) => {
+                    const isActive = filterClientIds.includes(client.client_id);
+                    return (
+                      <button
+                        key={client.client_id}
+                        onClick={() => {
+                          if (isActive) {
+                            setFilterClientIds(filterClientIds.filter((id) => id !== client.client_id));
+                          } else {
+                            setFilterClientIds([...filterClientIds, client.client_id]);
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                          isActive
+                            ? "bg-cyan-600 text-white border-cyan-600"
+                            : "bg-white text-gray-600 border-gray-200 active:bg-gray-100"
+                        }`}
+                      >
+                        <span className="truncate max-w-[150px]">{client.client_name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Project filter */}
+            {uniqueProjects.length > 0 && (
+              <div>
+                <label className="text-[11px] font-medium text-gray-500 mb-1 block">{t("common:project")}</label>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                  {uniqueProjects.map((project) => {
+                    const isActive = filterProjectIds.includes(project.project_id);
+                    return (
+                      <button
+                        key={project.project_id}
+                        onClick={() => {
+                          if (isActive) {
+                            setFilterProjectIds(filterProjectIds.filter((id) => id !== project.project_id));
+                          } else {
+                            setFilterProjectIds([...filterProjectIds, project.project_id]);
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                          isActive
+                            ? "bg-cyan-600 text-white border-cyan-600"
+                            : "bg-white text-gray-600 border-gray-200 active:bg-gray-100"
+                        }`}
+                      >
+                        <span className="truncate max-w-[150px]">{project.project_title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Clear filters */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-1 text-xs text-red-500 font-medium active:opacity-70"
+              >
+                <X size={12} />
+                {t("common:clearFilters")}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Search */}

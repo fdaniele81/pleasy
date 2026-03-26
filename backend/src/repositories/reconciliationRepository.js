@@ -283,9 +283,13 @@ async function getSyncStatus(companyId, pmId) {
       GROUP BY ts.external_key, ts.user_id, u.full_name
     ),
     timesheet_data AS (
-      SELECT external_key, user_id, user_name, timesheet_hours FROM timesheet_data_project
-      UNION ALL
-      SELECT external_key, user_id, user_name, timesheet_hours FROM timesheet_data_tm
+      SELECT external_key, user_id, user_name, SUM(timesheet_hours) as timesheet_hours
+      FROM (
+        SELECT external_key, user_id, user_name, timesheet_hours FROM timesheet_data_project
+        UNION ALL
+        SELECT external_key, user_id, user_name, timesheet_hours FROM timesheet_data_tm
+      ) ts_combined
+      GROUP BY external_key, user_id, user_name
     ),
     combined_actual_data AS (
       SELECT

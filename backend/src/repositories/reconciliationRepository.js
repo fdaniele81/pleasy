@@ -202,7 +202,7 @@ async function getSyncStatus(companyId, pmId) {
       WHERE t.external_key IS NOT NULL
         AND t.external_key != ''
         AND c.company_id = $1
-        AND p.status_id != 'DELETED'
+        AND p.status_id = 'ACTIVE'
         AND p.project_type_id = 'PROJECT'
         AND t.task_status_id != 'DELETED'
       UNION
@@ -215,7 +215,7 @@ async function getSyncStatus(companyId, pmId) {
       WHERE ts.external_key IS NOT NULL
         AND ts.external_key != ''
         AND c.company_id = $1
-        AND p.status_id != 'DELETED'
+        AND p.status_id = 'ACTIVE'
         AND p.project_type_id = 'TM'
         AND p.reconciliation_required = true
         AND t.task_status_id != 'DELETED'
@@ -243,7 +243,7 @@ async function getSyncStatus(companyId, pmId) {
         AND t.owner_id IS NOT NULL AND c.company_id = $1
         AND COALESCE(t.initial_actual, 0) > 0
         AND t.task_status_id != 'DELETED'
-        AND p.status_id != 'DELETED'
+        AND p.status_id = 'ACTIVE'
         AND p.project_type_id = 'PROJECT'
       GROUP BY t.external_key, t.owner_id, u.full_name
     ),
@@ -259,7 +259,7 @@ async function getSyncStatus(companyId, pmId) {
       INNER JOIN timesheet_snapshot snap ON ts.snapshot_id = snap.snapshot_id AND snap.is_submitted = true
       LEFT JOIN users u ON ts.user_id = u.user_id
       WHERE t.external_key IS NOT NULL AND t.external_key != ''
-        AND p.status_id != 'DELETED' AND c.company_id = $1
+        AND p.status_id = 'ACTIVE' AND c.company_id = $1
         AND t.task_status_id != 'DELETED'
         AND p.project_type_id = 'PROJECT'
       GROUP BY t.external_key, ts.user_id, u.full_name
@@ -276,7 +276,7 @@ async function getSyncStatus(companyId, pmId) {
       INNER JOIN timesheet_snapshot snap ON ts.snapshot_id = snap.snapshot_id AND snap.is_submitted = true
       LEFT JOIN users u ON ts.user_id = u.user_id
       WHERE ts.external_key IS NOT NULL AND ts.external_key != ''
-        AND p.status_id != 'DELETED' AND c.company_id = $1
+        AND p.status_id = 'ACTIVE' AND c.company_id = $1
         AND t.task_status_id != 'DELETED'
         AND p.project_type_id = 'TM'
         AND p.reconciliation_required = true

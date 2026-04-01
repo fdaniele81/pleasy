@@ -183,7 +183,7 @@ export function useTaskMergeSplit({ projects, selectedTasks, refetchPlanning, fe
             owner_id: null,
             start_date: task.start_date ? formatDateISO(task.start_date) : null,
             end_date: task.end_date ? formatDateISO(task.end_date) : null,
-            external_key: null,
+            external_key: task.external_key || null,
             initial_actual: 0,
             etc: 0,
           },

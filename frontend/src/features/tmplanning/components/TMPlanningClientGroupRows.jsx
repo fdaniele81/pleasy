@@ -107,27 +107,30 @@ const TMPlanningClientGroupRows = memo(function TMPlanningClientGroupRows({
                 </span>
               </td>
               <td className="px-1 py-1 text-center border-b border-r border-gray-200 bg-cyan-50">
-                <div className="relative flex items-center justify-center">
-                  <span className="text-[10px] font-medium text-cyan-700">
-                    {user.total_hours_all > 0 ? user.total_hours_all.toFixed(1) : "-"}
-                  </span>
-                  {user.total_hours_all > 0 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onTaskHistoryClick && onTaskHistoryClick({
-                          ...user,
-                          client_name: client.client_name,
-                          client_color: client.client_color,
-                        });
-                      }}
-                      className="absolute right-0 p-0.5 rounded hover:bg-gray-200 transition-colors text-gray-400 hover:text-cyan-600"
-                      title={t('timesheet:taskHistory')}
-                    >
-                      <ExternalLink size={10} />
-                    </button>
-                  )}
-                </div>
+                {(() => {
+                  const totalWithInitial = (user.initial_actual || 0) + (user.total_hours_all || 0);
+                  return (
+                    <div className="relative flex items-center justify-center">
+                      <span className={`text-[10px] font-medium ${user.initial_actual > 0 ? 'text-amber-700' : 'text-cyan-700'}`} title={user.initial_actual > 0 ? t('tmplanning:includesInitialActual', { hours: user.initial_actual.toFixed(1) }) : undefined}>
+                        {totalWithInitial > 0 ? totalWithInitial.toFixed(1) : "-"}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTaskHistoryClick && onTaskHistoryClick({
+                            ...user,
+                            client_name: client.client_name,
+                            client_color: client.client_color,
+                          });
+                        }}
+                        className="absolute right-0 p-0.5 rounded hover:bg-gray-200 transition-colors text-gray-400 hover:text-cyan-600"
+                        title={t('timesheet:taskHistory')}
+                      >
+                        <ExternalLink size={10} />
+                      </button>
+                    </div>
+                  );
+                })()}
               </td>
               {dateRange.map((date, idx) => (
                 <TMPlanningCell

@@ -217,6 +217,16 @@ async function updateTimesheetStatus(req, res) {
   }
 }
 
+async function toggleTimesheetInProgress(req, res) {
+  try {
+    const { timesheet_id } = req.params;
+    const result = await timesheetService.toggleTimesheetInProgress(timesheet_id, req.user);
+    res.status(200).json({ message: "Timesheet in-progress toggled", ...result });
+  } catch (err) {
+    handleError(res, err, "TOGGLE TIMESHEET IN-PROGRESS ERR");
+  }
+}
+
 export {
   getTimesheets,
   saveTimesheet,
@@ -232,7 +242,8 @@ export {
   saveTimesheetForPM,
   getTaskHistory,
   getTodoList,
-  updateTimesheetStatus
+  updateTimesheetStatus,
+  toggleTimesheetInProgress
 };
 
 export default {
@@ -250,5 +261,6 @@ export default {
   saveTimesheetForPM,
   getTaskHistory,
   getTodoList,
-  updateTimesheetStatus
+  updateTimesheetStatus,
+  toggleTimesheetInProgress
 };

@@ -44,6 +44,13 @@
   "scratchpadPlaceholder": "Write notes, ideas, reminders...",
   "saving": "Saving...",
   "saved": "Saved",
+  "inProgress": "in progress",
+  "inProgressFilter": "In progress",
+  "inProgressOnly": "In progress",
+  "start": "Start",
+  "stop": "Stop",
+  "startProgress": "Mark as in progress",
+  "stopProgress": "Remove from in progress",
   "timesheetEntry": "activity",
   "todoItem": "reminder"
 }

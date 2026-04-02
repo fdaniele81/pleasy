@@ -8,7 +8,7 @@ import {
   useAddProjectManagerMutation
 } from './api/projectEndpoints';
 import { useAuth } from '../../hooks/useAuth';
-import { FolderKanban, Edit2, Users, ChevronRight, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { FolderKanban, Edit2, Users, ChevronRight, ChevronDown, ChevronsUpDown, ClipboardCheck } from 'lucide-react';
 import ProjectModal from './components/ProjectModal';
 import FilterDropdown from '../../shared/ui/filters/FilterDropdown';
 import { getStatusBadgeColor } from '../../utils/ui/statusUtils';
@@ -293,6 +293,9 @@ function ProjectsSimple() {
                               <th scope="col" className="hidden xl:table-cell px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 {t('projects:pm')}
                               </th>
+                              <th scope="col" className="hidden sm:table-cell px-3 xl:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap" title={t('projects:reconciliation')}>
+                                <ClipboardCheck size={14} className="inline" />
+                              </th>
                               <th scope="col" className="hidden md:table-cell px-3 xl:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 {t('common:status')}
                               </th>
@@ -354,6 +357,17 @@ function ProjectsSimple() {
                                         </div>
                                       )}
                                     </div>
+                                  </td>
+                                  <td className="hidden sm:table-cell px-3 xl:px-4 py-2 whitespace-nowrap text-center">
+                                    {project.reconciliation_required ? (
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600" title={t('projects:reconciliationYes')}>
+                                        <ClipboardCheck size={14} />
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-400" title={t('projects:reconciliationNo')}>
+                                        <ClipboardCheck size={14} />
+                                      </span>
+                                    )}
                                   </td>
                                   <td className="hidden md:table-cell px-3 xl:px-4 py-2 whitespace-nowrap">
                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(project.status_id)}`}>

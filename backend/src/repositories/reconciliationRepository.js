@@ -204,6 +204,7 @@ async function getSyncStatus(companyId, pmId) {
         AND c.company_id = $1
         AND p.status_id != 'DELETED'
         AND p.project_type_id = 'PROJECT'
+        AND p.reconciliation_required = true
         AND t.task_status_id != 'DELETED'
       UNION
       SELECT DISTINCT ts.external_key
@@ -244,7 +245,8 @@ async function getSyncStatus(companyId, pmId) {
         AND COALESCE(t.initial_actual, 0) > 0
         AND t.task_status_id != 'DELETED'
         AND p.status_id != 'DELETED'
-        AND p.project_type_id = 'PROJECT'
+        AND p.project_type_id IN ('PROJECT', 'TM')
+        AND p.reconciliation_required = true
       GROUP BY t.external_key, t.owner_id, u.full_name
     ),
     timesheet_data_project AS (
@@ -262,6 +264,7 @@ async function getSyncStatus(companyId, pmId) {
         AND p.status_id != 'DELETED' AND c.company_id = $1
         AND t.task_status_id != 'DELETED'
         AND p.project_type_id = 'PROJECT'
+        AND p.reconciliation_required = true
       GROUP BY t.external_key, ts.user_id, u.full_name
     ),
     timesheet_data_tm AS (

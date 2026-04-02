@@ -45,5 +45,10 @@
   "unlockCode": "Sblocca per inserire un codice personalizzato",
   "lockCode": "Blocca e genera automaticamente",
   "validateCode": "Verifica disponibilità codice",
-  "projectCodeValidated": "Codice personalizzato confermato"
+  "projectCodeValidated": "Codice personalizzato confermato",
+  "reconciliation": "Quadratura",
+  "reconciliationRequired": "Soggetto a quadratura",
+  "reconciliationRequiredHint": "Indica se il progetto deve essere incluso nel processo di quadratura",
+  "reconciliationYes": "Soggetto a quadratura",
+  "reconciliationNo": "Non soggetto a quadratura"
 }

@@ -489,6 +489,7 @@ async function getTMPlanningData(companyId, startDate, endDate, pmUserId) {
       ts.external_key,
       ts.timesheet_status_id,
       CASE WHEN ts.snapshot_id IS NOT NULL THEN true ELSE false END as is_submitted,
+      COALESCE(t.initial_actual, 0) as initial_actual,
       COALESCE(task_totals.total_hours_all, 0) as total_hours_all
     FROM task t
     JOIN project p ON t.project_id = p.project_id
@@ -603,7 +604,8 @@ export {
   getTMTasksHoursTotals,
   getTaskHistory,
   getTodoList,
-  updateTimesheetStatus
+  updateTimesheetStatus,
+  toggleTimesheetInProgress
 };
 
 async function getTodoList(userId) {
@@ -614,6 +616,7 @@ async function getTodoList(userId) {
       tt.total_hours as hours_worked,
       tt.details,
       tt.timesheet_status_id,
+      tt.is_in_progress,
       t.task_id,
       t.title as task_title,
       t.budget,
@@ -641,12 +644,26 @@ async function getTodoList(userId) {
 }
 
 async function updateTimesheetStatus(timesheetId, userId, statusId) {
+  const clearInProgress = statusId === 'COMPLETED';
   const result = await db.query(
     `UPDATE task_timesheet
-     SET timesheet_status_id = $1, updated_at = NOW()
+     SET timesheet_status_id = $1,
+         is_in_progress = CASE WHEN $4 THEN FALSE ELSE is_in_progress END,
+         updated_at = NOW()
      WHERE timesheet_id = $2 AND user_id = $3 AND snapshot_id IS NULL
-     RETURNING timesheet_id, timesheet_status_id`,
-    [statusId, timesheetId, userId]
+     RETURNING timesheet_id, timesheet_status_id, is_in_progress`,
+    [statusId, timesheetId, userId, clearInProgress]
+  );
+  return result.rows[0] || null;
+}
+
+async function toggleTimesheetInProgress(timesheetId, userId) {
+  const result = await db.query(
+    `UPDATE task_timesheet
+     SET is_in_progress = NOT is_in_progress, updated_at = NOW()
+     WHERE timesheet_id = $1 AND user_id = $2 AND snapshot_id IS NULL
+     RETURNING timesheet_id, is_in_progress`,
+    [timesheetId, userId]
   );
   return result.rows[0] || null;
 }
@@ -681,5 +698,6 @@ export default {
   getTMTasksHoursTotals,
   getTaskHistory,
   getTodoList,
-  updateTimesheetStatus
+  updateTimesheetStatus,
+  toggleTimesheetInProgress
 };

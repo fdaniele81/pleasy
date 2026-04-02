@@ -45,5 +45,10 @@
   "unlockCode": "Unlock to enter a custom code",
   "lockCode": "Lock and auto-generate",
   "validateCode": "Check code availability",
-  "projectCodeValidated": "Custom code confirmed"
+  "projectCodeValidated": "Custom code confirmed",
+  "reconciliation": "Reconciliation",
+  "reconciliationRequired": "Subject to reconciliation",
+  "reconciliationRequiredHint": "Indicates whether this project should be included in the reconciliation process",
+  "reconciliationYes": "Subject to reconciliation",
+  "reconciliationNo": "Not subject to reconciliation"
 }

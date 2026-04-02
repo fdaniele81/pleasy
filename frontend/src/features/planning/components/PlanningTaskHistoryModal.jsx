@@ -139,8 +139,11 @@ function PlanningTaskHistoryModal({ isOpen, onClose, task, onConfirmInitialActua
   if (!isOpen) return null;
 
   const taskInfo = historyData?.task || task;
-  const headerLabel = `${taskInfo?.client_key || task?.client_key || ""}.${taskInfo?.project_key || task?.project_key || ""}.${taskInfo?.task_number || task?.task_number || ""}`;
-  const headerTitle = taskInfo?.task_title || task?.title || "";
+  const isTM = taskInfo?.project_type_id === "TM";
+  const headerLabel = isTM
+    ? (taskInfo?.client_name || task?.client_name || "")
+    : `${taskInfo?.client_key || task?.client_key || ""}.${taskInfo?.project_key || task?.project_key || ""}.${taskInfo?.task_number || task?.task_number || ""}`;
+  const headerTitle = isTM ? "" : (taskInfo?.task_title || task?.title || "");
   const hasFilter = filterStart || filterEnd || filterStatus !== "all" || filterUserIds.length > 0;
 
   const initialActualNum = parseFloat(initialActualValue) || 0;

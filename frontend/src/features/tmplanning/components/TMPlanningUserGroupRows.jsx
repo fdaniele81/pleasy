@@ -109,23 +109,26 @@ const TMPlanningUserGroupRows = memo(function TMPlanningUserGroupRows({
                 </div>
               </td>
               <td className="px-1 py-1 text-center border-b border-r border-gray-200 bg-cyan-50">
-                <div className="relative flex items-center justify-center">
-                  <span className="text-[10px] font-medium text-cyan-700">
-                    {client.total_hours_all > 0 ? client.total_hours_all.toFixed(1) : "-"}
-                  </span>
-                  {client.total_hours_all > 0 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onTaskHistoryClick && onTaskHistoryClick(client);
-                      }}
-                      className="absolute right-0 p-0.5 rounded hover:bg-gray-200 transition-colors text-gray-400 hover:text-cyan-600"
-                      title={t('timesheet:taskHistory')}
-                    >
-                      <ExternalLink size={10} />
-                    </button>
-                  )}
-                </div>
+                {(() => {
+                  const totalWithInitial = (client.initial_actual || 0) + (client.total_hours_all || 0);
+                  return (
+                    <div className="relative flex items-center justify-center">
+                      <span className={`text-[10px] font-medium ${client.initial_actual > 0 ? 'text-amber-700' : 'text-cyan-700'}`} title={client.initial_actual > 0 ? t('tmplanning:includesInitialActual', { hours: client.initial_actual.toFixed(1) }) : undefined}>
+                        {totalWithInitial > 0 ? totalWithInitial.toFixed(1) : "-"}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTaskHistoryClick && onTaskHistoryClick(client);
+                        }}
+                        className="absolute right-0 p-0.5 rounded hover:bg-gray-200 transition-colors text-gray-400 hover:text-cyan-600"
+                        title={t('timesheet:taskHistory')}
+                      >
+                        <ExternalLink size={10} />
+                      </button>
+                    </div>
+                  );
+                })()}
               </td>
               {dateRange.map((date, idx) => (
                 <TMPlanningCell

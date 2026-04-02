@@ -33,8 +33,8 @@ const TimesheetDetailsModal = lazy(() =>
 const ExportModal = lazy(() =>
   import("../../shared/components/modals/ExportModal")
 );
-const TaskHistorySummaryModal = lazy(() =>
-  import("../timesheet/components/TaskHistorySummaryModal")
+const PlanningTaskHistoryModal = lazy(() =>
+  import("../planning/components/PlanningTaskHistoryModal")
 );
 
 function TMPlanning() {
@@ -132,6 +132,7 @@ function TMPlanning() {
     handleNoteTooltipHover, handleNoteTooltipLeave,
     handleDetailsModalConfirm, handleDetailsModalClose,
     handleTaskHistoryClick, handleCloseTaskHistoryModal,
+    handleInitialActualConfirm,
     handleExport,
   } = actions;
 
@@ -433,10 +434,11 @@ function TMPlanning() {
       </Suspense>
 
       <Suspense fallback={null}>
-        <TaskHistorySummaryModal
+        <PlanningTaskHistoryModal
           isOpen={showTaskHistoryModal}
           onClose={handleCloseTaskHistoryModal}
           task={selectedTaskForHistory}
+          onConfirmInitialActual={handleInitialActualConfirm}
         />
       </Suspense>
 

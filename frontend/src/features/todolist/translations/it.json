@@ -44,6 +44,13 @@
   "scratchpadPlaceholder": "Scrivi appunti, idee, promemoria...",
   "saving": "Salvataggio...",
   "saved": "Salvato",
+  "inProgress": "in lavorazione",
+  "inProgressFilter": "In lavorazione",
+  "inProgressOnly": "In lavorazione",
+  "start": "Lavora",
+  "stop": "Ferma",
+  "startProgress": "Segna come in lavorazione",
+  "stopProgress": "Rimuovi da in lavorazione",
   "timesheetEntry": "attività",
   "todoItem": "promemoria"
 }

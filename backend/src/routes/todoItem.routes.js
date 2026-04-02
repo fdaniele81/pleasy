@@ -29,6 +29,12 @@ router.put("/:todo_item_id/toggle",
   todoItemController.toggleTodoItem
 );
 
+router.put("/:todo_item_id/in-progress",
+  verifyToken,
+  checkRole(["PM", "USER"]),
+  todoItemController.toggleInProgress
+);
+
 router.delete("/:todo_item_id",
   verifyToken,
   checkRole(["PM", "USER"]),

@@ -96,9 +96,13 @@ const SimpleGanttChart = ({
 
     const minDate = new Date(originalMinDate);
     minDate.setDate(minDate.getDate() - paddingDays);
+    // Round to 1st of month so timeline blocks always cover complete months
+    minDate.setDate(1);
 
     const maxDate = new Date(originalMaxDate);
     maxDate.setDate(maxDate.getDate() + paddingDays);
+    // Round to end of month so the last timeline block is also complete
+    maxDate.setMonth(maxDate.getMonth() + 1, 0);
 
     const totalDays = differenceInDays(maxDate, minDate) + 1;
 

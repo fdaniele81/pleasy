@@ -177,6 +177,7 @@ async function getClientsWithProjects(user) {
           status_id: row.project_status_id,
           project_details: row.project_details,
           project_type_id: row.project_type_id,
+          reconciliation_required: row.reconciliation_required,
           project_managers: []
         };
         client.projects.push(project);

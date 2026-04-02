@@ -32,6 +32,14 @@ async function toggleTodoItem(todoItemId, user) {
   return result;
 }
 
+async function toggleInProgress(todoItemId, user) {
+  const result = await todoItemRepository.toggleInProgress(todoItemId, user.user_id);
+  if (!result) {
+    throw serviceError("TODO_NOT_FOUND", "Todo item not found", 404);
+  }
+  return result;
+}
+
 async function deleteTodoItem(todoItemId, user) {
   const result = await todoItemRepository.deleteTodoItem(todoItemId, user.user_id);
   if (!result) {
@@ -45,6 +53,7 @@ export {
   createTodoItem,
   updateTodoItem,
   toggleTodoItem,
+  toggleInProgress,
   deleteTodoItem,
 };
 
@@ -53,5 +62,6 @@ export default {
   createTodoItem,
   updateTodoItem,
   toggleTodoItem,
+  toggleInProgress,
   deleteTodoItem,
 };

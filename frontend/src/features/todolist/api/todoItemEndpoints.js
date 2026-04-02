@@ -47,6 +47,14 @@ export const todoItemEndpoints = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: TAG_TYPES.TODO_ITEM, id: 'LIST' }],
     }),
 
+    toggleInProgress: builder.mutation({
+      query: (todoItemId) => ({
+        url: `/todo-items/${todoItemId}/in-progress`,
+        method: 'PUT',
+      }),
+      invalidatesTags: [{ type: TAG_TYPES.TODO_ITEM, id: 'LIST' }],
+    }),
+
     deleteTodoItem: builder.mutation({
       query: (todoItemId) => ({
         url: `/todo-items/${todoItemId}`,
@@ -62,5 +70,6 @@ export const {
   useCreateTodoItemMutation,
   useUpdateTodoItemMutation,
   useToggleTodoItemMutation,
+  useToggleInProgressMutation,
   useDeleteTodoItemMutation,
 } = todoItemEndpoints;

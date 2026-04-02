@@ -1,22 +1,24 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { addDays, formatDateISO } from '../../../utils/date/dateUtils';
 
-export function useTimelineDrag({ columnWidth, onDateChange, taskStartDate, taskEndDate }) {
+export function useTimelineDrag({ columnWidth, getColumnLeft, onDateChange, taskStartDate, taskEndDate }) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState(null); // 'move' | 'resize-left' | 'resize-right'
   const [dragDeltaDays, setDragDeltaDays] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pendingDates, setPendingDates] = useState(null);
   const dragStartX = useRef(0);
+  const anchorDayIdx = useRef(0);
   const initialDates = useRef(null);
 
-  const handleCellMouseDown = useCallback((e, mode, startDate, endDate) => {
+  const handleCellMouseDown = useCallback((e, mode, startDate, endDate, anchorDay) => {
     e.stopPropagation();
     e.preventDefault();
     setIsDragging(true);
     setDragMode(mode);
     setDragDeltaDays(0);
     dragStartX.current = e.clientX;
+    anchorDayIdx.current = anchorDay ?? 0;
     initialDates.current = { startDate, endDate };
   }, []);
 
@@ -24,10 +26,30 @@ export function useTimelineDrag({ columnWidth, onDateChange, taskStartDate, task
     if (!isDragging) return;
     e.preventDefault();
     const dx = e.clientX - dragStartX.current;
-    const deltaDays = Math.round(dx / columnWidth);
+
+    let deltaDays;
+    if (getColumnLeft) {
+      // Use getColumnLeft for accurate pixel-to-day conversion
+      const anchorPx = getColumnLeft(anchorDayIdx.current);
+      const targetPx = anchorPx + dx;
+      const approx = Math.round(dx / (columnWidth || 1));
+      let best = approx;
+      let bestErr = Math.abs(getColumnLeft(anchorDayIdx.current + approx) - targetPx);
+      for (const candidate of [approx - 1, approx + 1]) {
+        const err = Math.abs(getColumnLeft(anchorDayIdx.current + candidate) - targetPx);
+        if (err < bestErr) {
+          best = candidate;
+          bestErr = err;
+        }
+      }
+      deltaDays = best;
+    } else {
+      deltaDays = Math.round(dx / columnWidth);
+    }
+
     setDragDeltaDays(deltaDays);
     setMousePos({ x: e.clientX, y: e.clientY });
-  }, [isDragging, columnWidth]);
+  }, [isDragging, columnWidth, getColumnLeft]);
 
   const handleMouseUp = useCallback(() => {
     if (!initialDates.current || dragDeltaDays === 0) {

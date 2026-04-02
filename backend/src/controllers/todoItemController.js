@@ -42,6 +42,16 @@ async function toggleTodoItem(req, res) {
   }
 }
 
+async function toggleInProgress(req, res) {
+  try {
+    const todoItemId = todoItemValidator.validateTodoItemId(req.params.todo_item_id);
+    const result = await todoItemService.toggleInProgress(todoItemId, req.user);
+    res.status(200).json({ message: "Todo item in-progress toggled", ...result });
+  } catch (err) {
+    handleError(res, err, "TOGGLE IN-PROGRESS ERR");
+  }
+}
+
 async function deleteTodoItem(req, res) {
   try {
     const todoItemId = todoItemValidator.validateTodoItemId(req.params.todo_item_id);
@@ -57,6 +67,7 @@ export {
   createTodoItem,
   updateTodoItem,
   toggleTodoItem,
+  toggleInProgress,
   deleteTodoItem,
 };
 
@@ -65,5 +76,6 @@ export default {
   createTodoItem,
   updateTodoItem,
   toggleTodoItem,
+  toggleInProgress,
   deleteTodoItem,
 };

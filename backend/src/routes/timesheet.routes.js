@@ -83,6 +83,12 @@ router.put("/status/:timesheet_id",
   timesheetController.updateTimesheetStatus
 );
 
+router.put("/in-progress/:timesheet_id",
+  verifyToken,
+  checkRole(["PM", "USER"]),
+  timesheetController.toggleTimesheetInProgress
+);
+
 router.get("/tm-planning",
   verifyToken,
   checkRole(["PM"]),

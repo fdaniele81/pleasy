@@ -34,5 +34,6 @@
   "excelUserTotal": "TOTALE UTENTE",
   "excelClientTotal": "TOTALE CLIENTE",
   "excelNoUserName": "Utente senza nome",
-  "excelNoClientName": "Cliente senza nome"
+  "excelNoClientName": "Cliente senza nome",
+  "includesInitialActual": "Include {{hours}}h di consuntivo iniziale"
 }

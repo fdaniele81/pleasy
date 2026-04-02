@@ -10,7 +10,7 @@ import {
 } from "../utils/dbValidations.js";
 
 async function create(data, user) {
-  const { client_id, project_key, title, description, status_id, project_details, project_managers } = data;
+  const { client_id, project_key, title, description, status_id, project_details, project_managers, reconciliation_required } = data;
 
   if (!client_id || !project_key || !title) {
     throw serviceError("PROJECT_REQUIRED_FIELDS", "Client, project code and title are required", 400);
@@ -36,7 +36,7 @@ async function create(data, user) {
 
   try {
     const project = await projectRepository.createProject(
-      project_id, client_id, project_key, title, description, projectStatus, project_details
+      project_id, client_id, project_key, title, description, projectStatus, project_details, 'PROJECT', reconciliation_required !== undefined ? reconciliation_required : true
     );
 
     if (project_managers && Array.isArray(project_managers) && project_managers.length > 0) {
@@ -55,7 +55,7 @@ async function create(data, user) {
 }
 
 async function update(projectId, data, user) {
-  const { title, description, status_id, project_details } = data;
+  const { title, description, status_id, project_details, reconciliation_required } = data;
 
   if (!title) {
     throw serviceError("PROJECT_TITLE_REQUIRED", "Project title is required", 400);
@@ -69,7 +69,7 @@ async function update(projectId, data, user) {
   const companyId = await projectRepository.getProjectCompanyId(projectId);
   checkCompanyAccess(user, companyId);
 
-  return await projectRepository.updateProject(projectId, title, description, status_id, project_details);
+  return await projectRepository.updateProject(projectId, title, description, status_id, project_details, undefined, reconciliation_required);
 }
 
 async function updateTaskOrder(projectId, taskOrder, user) {

@@ -9,6 +9,7 @@ async function getTodoItems(userId) {
       TO_CHAR(ti.due_date, 'YYYY-MM-DD') AS due_date,
       ti.task_id,
       ti.is_completed,
+      ti.is_in_progress,
       ti.created_at,
       t.title AS task_title,
       p.project_key,
@@ -36,7 +37,7 @@ async function createTodoItem(data) {
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING todo_item_id, title, details,
       TO_CHAR(due_date, 'YYYY-MM-DD') AS due_date,
-      task_id, is_completed, created_at
+      task_id, is_completed, is_in_progress, created_at
   `;
   const result = await db.query(query, [
     data.user_id,
@@ -56,7 +57,7 @@ async function updateTodoItem(todoItemId, userId, data) {
     WHERE todo_item_id = $5 AND user_id = $6
     RETURNING todo_item_id, title, details,
       TO_CHAR(due_date, 'YYYY-MM-DD') AS due_date,
-      task_id, is_completed
+      task_id, is_completed, is_in_progress
   `;
   const result = await db.query(query, [
     data.title,
@@ -72,9 +73,22 @@ async function updateTodoItem(todoItemId, userId, data) {
 async function toggleTodoItem(todoItemId, userId) {
   const query = `
     UPDATE todo_item
-    SET is_completed = NOT is_completed, updated_at = NOW()
+    SET is_completed = NOT is_completed,
+        is_in_progress = CASE WHEN NOT is_completed THEN FALSE ELSE is_in_progress END,
+        updated_at = NOW()
     WHERE todo_item_id = $1 AND user_id = $2
-    RETURNING todo_item_id, is_completed
+    RETURNING todo_item_id, is_completed, is_in_progress
+  `;
+  const result = await db.query(query, [todoItemId, userId]);
+  return result.rows[0];
+}
+
+async function toggleInProgress(todoItemId, userId) {
+  const query = `
+    UPDATE todo_item
+    SET is_in_progress = NOT is_in_progress, updated_at = NOW()
+    WHERE todo_item_id = $1 AND user_id = $2
+    RETURNING todo_item_id, is_in_progress
   `;
   const result = await db.query(query, [todoItemId, userId]);
   return result.rows[0];
@@ -95,6 +109,7 @@ export {
   createTodoItem,
   updateTodoItem,
   toggleTodoItem,
+  toggleInProgress,
   deleteTodoItem,
 };
 
@@ -103,5 +118,6 @@ export default {
   createTodoItem,
   updateTodoItem,
   toggleTodoItem,
+  toggleInProgress,
   deleteTodoItem,
 };

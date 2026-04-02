@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDateISO } from "../../../utils/date/dateUtils";
 import { exportTMPlanningToExcel } from "../../../utils/export/excel";
+import { useUpdateInitialActualMutation } from "../../planning/api/taskEndpoints";
 import logger from "../../../utils/logger";
 
 export function useTMPlanningActions({
@@ -43,9 +44,11 @@ export function useTMPlanningActions({
   setSelectedUserIds,
   setSelectedClientIds,
   setShowTaskHistoryModal,
+  selectedTaskForHistory,
   setSelectedTaskForHistory,
 }) {
   const { t } = useTranslation(['tmplanning', 'common']);
+  const [updateInitialActual] = useUpdateInitialActualMutation();
 
   const goToPreviousPeriod = useCallback(() => {
     const newStart = new Date(startDate);
@@ -322,6 +325,9 @@ export function useTMPlanningActions({
       client_name: client.client_name,
       client_color: client.client_color,
       project_key: client.project_key,
+      project_type_id: 'TM',
+      initial_actual: client.initial_actual || 0,
+      actual: (client.initial_actual || 0) + (client.total_hours_all || 0),
     });
     setShowTaskHistoryModal(true);
   }, [setSelectedTaskForHistory, setShowTaskHistoryModal]);
@@ -330,6 +336,18 @@ export function useTMPlanningActions({
     setShowTaskHistoryModal(false);
     setSelectedTaskForHistory(null);
   }, [setShowTaskHistoryModal, setSelectedTaskForHistory]);
+
+  const handleInitialActualConfirm = useCallback(async (value) => {
+    const taskId = selectedTaskForHistory?.task_id;
+    if (!taskId) return;
+    try {
+      await updateInitialActual({ taskId, initialActual: value }).unwrap();
+      setSelectedTaskForHistory(prev => prev ? { ...prev, initial_actual: value } : prev);
+      await refetch();
+    } catch (error) {
+      logger.error("Errore aggiornamento initial actual:", error);
+    }
+  }, [selectedTaskForHistory, updateInitialActual, refetch, setSelectedTaskForHistory]);
 
   const handleExport = useCallback(
     async ({ startDate: exportStartDate, endDate: exportEndDate }) => {
@@ -361,6 +379,7 @@ export function useTMPlanningActions({
     handleDetailsModalClose,
     handleTaskHistoryClick,
     handleCloseTaskHistoryModal,
+    handleInitialActualConfirm,
     handleExport,
   };
 }

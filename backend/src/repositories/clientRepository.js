@@ -135,7 +135,8 @@ async function getClientsWithProjects(userRole, companyId) {
        pm.user_id as pm_user_id,
        u.full_name as pm_full_name,
        u.email as pm_email,
-       p.project_type_id
+       p.project_type_id,
+       p.reconciliation_required
      FROM client c
      LEFT JOIN project p ON p.client_id = c.client_id AND p.status_id NOT IN ('DELETED', 'CANCELLED')
      LEFT JOIN project_manager pm ON pm.project_id = p.project_id

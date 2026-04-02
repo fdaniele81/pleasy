@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, ListTodo, Pencil, Plus, CalendarDays, StickyNote } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, Loader, ListTodo, Pencil, Play, Plus, CalendarDays, Square, StickyNote } from 'lucide-react';
 import { getRouteIcon } from '../../constants/routeIcons';
 import EmptyState from '../../shared/ui/EmptyState';
 import Button from '../../shared/ui/Button';
@@ -21,6 +21,7 @@ import { useGetProjectsWithTasksQuery } from '../planning/api/taskEndpoints';
 import {
   useGetTodoListQuery,
   useUpdateTimesheetStatusMutation,
+  useToggleTimesheetInProgressMutation,
   useSaveTimesheetMutation,
 } from '../timesheet/api/timesheetEndpoints';
 import {
@@ -28,6 +29,7 @@ import {
   useCreateTodoItemMutation,
   useUpdateTodoItemMutation,
   useToggleTodoItemMutation,
+  useToggleInProgressMutation,
   useDeleteTodoItemMutation,
 } from './api/todoItemEndpoints';
 
@@ -50,15 +52,18 @@ function TodoList() {
   const { data: timesheetItems = [], isLoading: isLoadingTs } = useGetTodoListQuery();
   const { data: todoItems = [], isLoading: isLoadingTodo } = useGetTodoItemsQuery();
   const [updateStatus] = useUpdateTimesheetStatusMutation();
+  const [toggleTimesheetInProgress] = useToggleTimesheetInProgressMutation();
   const [saveTimesheet] = useSaveTimesheetMutation();
   const [createTodoItem] = useCreateTodoItemMutation();
   const [updateTodoItem] = useUpdateTodoItemMutation();
   const [toggleTodoItem] = useToggleTodoItemMutation();
+  const [toggleInProgress] = useToggleInProgressMutation();
   const [deleteTodoItem] = useDeleteTodoItemMutation();
 
   const isLoading = isLoadingTs || isLoadingTodo;
 
   const [pendingOnly, setPendingOnly] = useState(true);
+  const [inProgressOnly, setInProgressOnly] = useState(false);
   const [timesheetModalOpen, setTimesheetModalOpen] = useState(false);
   const [todoModalOpen, setTodoModalOpen] = useState(false);
   const [editingTimesheetEntry, setEditingTimesheetEntry] = useState(null);
@@ -77,6 +82,7 @@ function TodoList() {
       details: item.details,
       date: item.work_date,
       isCompleted: item.timesheet_status_id === 'COMPLETED',
+      isInProgress: item.is_in_progress || false,
       hours: item.hours_worked,
       client_key: item.client_key,
       project_key: item.project_key,
@@ -97,6 +103,7 @@ function TodoList() {
       details: item.details,
       date: item.due_date || null,
       isCompleted: item.is_completed,
+      isInProgress: item.is_in_progress || false,
       hours: null,
       client_key: item.client_key || null,
       project_key: item.project_key || null,
@@ -112,9 +119,11 @@ function TodoList() {
 
   // ── Filter ──
   const filteredItems = useMemo(() => {
-    if (!pendingOnly) return allItems;
-    return allItems.filter((item) => !item.isCompleted);
-  }, [allItems, pendingOnly]);
+    let items = allItems;
+    if (pendingOnly) items = items.filter((item) => !item.isCompleted);
+    if (inProgressOnly) items = items.filter((item) => item.isInProgress);
+    return items;
+  }, [allItems, pendingOnly, inProgressOnly]);
 
   // ── Group + sort ascending (null dates go last) ──
   const groupedByDate = useMemo(() => {
@@ -157,7 +166,18 @@ function TodoList() {
   }, [isLoading, groupedByDate, scrollToElement]);
 
   const scrollToToday = useCallback(() => {
-    scrollToElement(todayRef.current);
+    // If the today group exists, scroll to it
+    if (todayRef.current) {
+      scrollToElement(todayRef.current);
+      return;
+    }
+    // Otherwise, find the closest date group to today
+    const dates = Object.keys(dateRefsMap.current).filter((d) => d !== NO_DATE_KEY).sort();
+    if (dates.length === 0) return;
+    // Find the first date >= today, or fall back to the last date
+    const target = dates.find((d) => d >= TODAY_ISO) || dates[dates.length - 1];
+    const el = dateRefsMap.current[target];
+    if (el) scrollToElement(el);
   }, [scrollToElement]);
 
   // ── Hold-to-toggle ──
@@ -237,7 +257,8 @@ function TodoList() {
   const stats = useMemo(() => {
     const total = filteredItems.length;
     const completed = filteredItems.filter((i) => i.isCompleted).length;
-    return { total, completed, pending: total - completed };
+    const inProgress = filteredItems.filter((i) => i.isInProgress && !i.isCompleted).length;
+    return { total, completed, pending: total - completed, inProgress };
   }, [filteredItems]);
 
   // ── Calendar data: count items per date for dot indicators ──
@@ -425,6 +446,18 @@ function TodoList() {
             </Button>
 
             <Button
+              onClick={() => setInProgressOnly((v) => !v)}
+              color={inProgressOnly ? "cyan" : "gray"}
+              variant={inProgressOnly ? "solid" : "outline"}
+              size="sm"
+              icon={Loader}
+              fullWidth={false}
+              title={inProgressOnly ? t('todolist:showAll') : t('todolist:inProgressFilter')}
+            >
+              <span className="hidden sm:inline">{inProgressOnly ? t('todolist:inProgressOnly') : t('todolist:inProgressFilter')}</span>
+            </Button>
+
+            <Button
               onClick={scrollToToday}
               variant="outline"
               color="gray"
@@ -468,6 +501,12 @@ function TodoList() {
                   <Clock size={14} className="text-gray-400" />
                   <span>{stats.pending} <span className="hidden sm:inline">{t('todolist:pending')}</span></span>
                 </div>
+                {stats.inProgress > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <Loader size={14} className="text-cyan-500" />
+                    <span>{stats.inProgress} <span className="hidden sm:inline">{t('todolist:inProgress')}</span></span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   <CheckCircle2 size={14} className="text-green-500" />
                   <span>{stats.completed} <span className="hidden sm:inline">{t('todolist:completed')}</span></span>
@@ -515,7 +554,7 @@ function TodoList() {
                         return (
                         <div key={entry.id}>
                           <div
-                            className={`flex items-center gap-3 px-4 py-3 transition-colors select-none cursor-pointer touch-pan-y ${entry.isCompleted ? 'bg-gray-50/50' : ''}`}
+                            className={`flex items-center gap-3 px-4 py-3 transition-colors select-none cursor-pointer touch-pan-y ${entry.isCompleted ? 'bg-gray-50/50' : entry.isInProgress ? 'bg-cyan-50/60' : ''}`}
                             role="button"
                             aria-label={entry.isCompleted ? t('todolist:markInserted') : t('todolist:markCompleted')}
                             onPointerDown={(e) => startHold(e, entry)}
@@ -576,8 +615,16 @@ function TodoList() {
 
                             {/* Content */}
                             <div className="flex-1 min-w-0">
-                              <div className={`text-sm font-medium truncate ${entry.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                                {entry.title}
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-sm font-medium truncate ${entry.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                  {entry.title}
+                                </span>
+                                {entry.isInProgress && !entry.isCompleted && (
+                                  <span className="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-100 text-cyan-700">
+                                    <Loader size={10} className="animate-spin" />
+                                    <span className="hidden sm:inline">{t('todolist:inProgress')}</span>
+                                  </span>
+                                )}
                               </div>
                               {entry.type === 'timesheet' ? (
                                 <div className="text-xs text-gray-400 truncate">
@@ -618,6 +665,24 @@ function TodoList() {
                               <div className={`shrink-0 text-sm font-semibold tabular-nums ${entry.isCompleted ? 'text-gray-400' : 'text-gray-700'}`}>
                                 {entry.hours}h
                               </div>
+                            )}
+
+                            {/* In-progress toggle (not completed) */}
+                            {!entry.isCompleted && (
+                              <button
+                                type="button"
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (entry.type === 'todo') toggleInProgress(entry._todoItemId);
+                                  else toggleTimesheetInProgress(entry._timesheetId);
+                                }}
+                                className={`shrink-0 p-1 transition-colors ${entry.isInProgress ? 'text-cyan-500 hover:text-cyan-600' : 'text-gray-300 hover:text-cyan-500'}`}
+                                aria-label={entry.isInProgress ? t('todolist:stopProgress') : t('todolist:startProgress')}
+                                title={entry.isInProgress ? t('todolist:stopProgress') : t('todolist:startProgress')}
+                              >
+                                {entry.isInProgress ? <Square size={14} /> : <Play size={14} />}
+                              </button>
                             )}
 
                             {/* Edit button */}

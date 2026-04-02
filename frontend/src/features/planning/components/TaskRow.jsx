@@ -139,7 +139,7 @@ export const TaskRow = memo(function TaskRow({
     handleCellMouseDown,
     getVisualDates,
     clearPendingDates,
-  } = useTimelineDrag({ columnWidth: columnWidth || 36, onDateChange, taskStartDate: task.start_date, taskEndDate: task.end_date });
+  } = useTimelineDrag({ columnWidth: columnWidth || 36, getColumnLeft, onDateChange, taskStartDate: task.start_date, taskEndDate: task.end_date });
   clearPendingDatesRef.current = clearPendingDates;
 
   const barColor = useMemo(() => {
@@ -188,7 +188,7 @@ export const TaskRow = memo(function TaskRow({
     const isStartClipped = visualStart < rangeStartISO;
     const isEndClipped = visualEnd > rangeEndISO;
 
-    return { left, width: Math.max(width, 4), isStartClipped, isEndClipped };
+    return { left, width: Math.max(width, 4), isStartClipped, isEndClipped, startDayIdx: dayOffset, endDayIdx: dayOffset + durationDays };
   }, [visualStart, visualEnd, dateRange, getColumnLeft]);
 
   // Determine drag mode from mouse position within the bar
@@ -199,15 +199,19 @@ export const TaskRow = memo(function TaskRow({
     const EDGE_ZONE = 8;
 
     let mode;
+    let anchorDay;
     if (relativeX <= EDGE_ZONE && !barPosition.isStartClipped) {
       mode = 'resize-left';
+      anchorDay = barPosition.startDayIdx;
     } else if (relativeX >= barRect.width - EDGE_ZONE && !barPosition.isEndClipped) {
       mode = 'resize-right';
+      anchorDay = barPosition.endDayIdx;
     } else {
       mode = 'move';
+      anchorDay = barPosition.startDayIdx;
     }
 
-    handleCellMouseDown(e, mode, task.start_date, task.end_date);
+    handleCellMouseDown(e, mode, task.start_date, task.end_date, anchorDay);
   }, [barPosition, handleCellMouseDown, task.start_date, task.end_date]);
 
   return (

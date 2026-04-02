@@ -184,6 +184,16 @@ export const timesheetEndpoints = apiSlice.injectEndpoints({
       ],
     }),
 
+    toggleTimesheetInProgress: builder.mutation({
+      query: (timesheetId) => ({
+        url: `/timesheet/in-progress/${timesheetId}`,
+        method: 'PUT',
+      }),
+      invalidatesTags: [
+        { type: TAG_TYPES.TIMESHEET, id: 'TODO_LIST' },
+      ],
+    }),
+
     getCompanyTimeOffPlan: builder.query({
       query: ({ startDate, endDate }) => ({
         url: '/timeoff/company-plan',
@@ -218,4 +228,5 @@ export const {
   useLazyGetTaskHistoryQuery,
   useGetTodoListQuery,
   useUpdateTimesheetStatusMutation,
+  useToggleTimesheetInProgressMutation,
 } = timesheetEndpoints;

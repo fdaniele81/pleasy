@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FolderKanban, Users, Lock, LockOpen, Check, Loader2 } from 'lucide-react';
+import { FolderKanban, Users, Lock, LockOpen, Check, Loader2, ClipboardCheck } from 'lucide-react';
 import {
   useLazyGetAvailableManagersQuery,
   useLazyGetProjectManagersQuery,
@@ -64,7 +64,8 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
       project_key: '',
       title: '',
       client_id: '',
-      status_id: 'ACTIVE'
+      status_id: 'ACTIVE',
+      reconciliation_required: true
     },
     entity: project,
     isOpen,
@@ -72,7 +73,8 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
       project_key: project.project_key || '',
       title: project.title || '',
       client_id: project.client_id || '',
-      status_id: project.status_id || 'ACTIVE'
+      status_id: project.status_id || 'ACTIVE',
+      reconciliation_required: project.reconciliation_required !== undefined ? project.reconciliation_required : true
     }),
     validate: (data) => {
       if (!data.client_id) {
@@ -93,7 +95,8 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
       const projectData = {
         project_key: data.project_key.trim().toUpperCase(),
         title: data.title.trim(),
-        status_id: data.status_id
+        status_id: data.status_id,
+        reconciliation_required: data.reconciliation_required
       };
 
       onConfirm(projectData, data.client_id);
@@ -312,6 +315,30 @@ const ProjectModal = ({ isOpen, onClose, onConfirm, project = null, clients = []
             <option value="INACTIVE">INACTIVE</option>
           </select>
         </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={formData.reconciliation_required}
+              onChange={(e) => handleChange('reconciliation_required', e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-10 h-5 bg-gray-300 peer-checked:bg-cyan-500 rounded-full transition-colors" />
+            <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <ClipboardCheck size={16} className="text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">
+              {t('projects:reconciliationRequired')}
+            </span>
+          </div>
+        </label>
+        <p className="text-xs text-gray-500 mt-1 ml-[52px]">
+          {t('projects:reconciliationRequiredHint')}
+        </p>
       </div>
 
       {isEditMode ? (

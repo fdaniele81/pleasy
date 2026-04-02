@@ -25,18 +25,18 @@ async function checkProjectKeyExistsByCompany(companyId, projectKey) {
   return result.rowCount > 0;
 }
 
-async function createProject(projectId, clientId, projectKey, title, description, statusId, projectDetails, projectTypeId = 'PROJECT') {
+async function createProject(projectId, clientId, projectKey, title, description, statusId, projectDetails, projectTypeId = 'PROJECT', reconciliationRequired = true) {
   const result = await pool.query(
     `INSERT INTO project
-       (project_id, client_id, project_key, title, description, status_id, project_details, project_type_id, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
-     RETURNING project_id, client_id, project_key, title, description, status_id, project_details, project_type_id, created_at`,
-    [projectId, clientId, projectKey, title, description, statusId, projectDetails, projectTypeId]
+       (project_id, client_id, project_key, title, description, status_id, project_details, project_type_id, reconciliation_required, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+     RETURNING project_id, client_id, project_key, title, description, status_id, project_details, project_type_id, reconciliation_required, created_at`,
+    [projectId, clientId, projectKey, title, description, statusId, projectDetails, projectTypeId, reconciliationRequired]
   );
   return result.rows[0];
 }
 
-async function updateProject(projectId, title, description, statusId, projectDetails, projectTypeId) {
+async function updateProject(projectId, title, description, statusId, projectDetails, projectTypeId, reconciliationRequired) {
   const result = await pool.query(
     `UPDATE project
         SET title = $2,
@@ -44,10 +44,11 @@ async function updateProject(projectId, title, description, statusId, projectDet
             status_id = COALESCE($4, status_id),
             project_details = COALESCE($5, project_details),
             project_type_id = COALESCE($6, project_type_id),
+            reconciliation_required = COALESCE($7, reconciliation_required),
             updated_at = NOW()
       WHERE project_id = $1
-     RETURNING project_id, project_key, title, description, status_id, project_details, project_type_id, updated_at`,
-    [projectId, title, description, statusId, projectDetails, projectTypeId]
+     RETURNING project_id, project_key, title, description, status_id, project_details, project_type_id, reconciliation_required, updated_at`,
+    [projectId, title, description, statusId, projectDetails, projectTypeId, reconciliationRequired]
   );
   return result.rows[0];
 }

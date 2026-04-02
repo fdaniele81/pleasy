@@ -370,6 +370,7 @@ async function getTMPlanning(startDate, endDate, user) {
         task_id: row.task_id,
         timesheets: [],
         total_hours_period: 0,
+        initial_actual: parseFloat(row.initial_actual || 0),
         total_hours_all: parseFloat(row.total_hours_all || 0)
       });
     }
@@ -510,6 +511,14 @@ async function updateTimesheetStatus(timesheetId, statusId, user) {
   return result;
 }
 
+async function toggleTimesheetInProgress(timesheetId, user) {
+  const result = await timesheetRepository.toggleTimesheetInProgress(timesheetId, user.user_id);
+  if (!result) {
+    throw serviceError('Timesheet not found or not updatable', 404);
+  }
+  return result;
+}
+
 export {
   getTimesheets,
   saveTimesheet,
@@ -525,7 +534,8 @@ export {
   saveTimesheetForPM,
   getTaskHistory,
   getTodoList,
-  updateTimesheetStatus
+  updateTimesheetStatus,
+  toggleTimesheetInProgress
 };
 
 export default {
@@ -543,5 +553,6 @@ export default {
   saveTimesheetForPM,
   getTaskHistory,
   getTodoList,
-  updateTimesheetStatus
+  updateTimesheetStatus,
+  toggleTimesheetInProgress
 };

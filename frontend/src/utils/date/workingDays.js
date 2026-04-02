@@ -3,12 +3,19 @@ export const isWeekend = (date) => {
   return day === 0 || day === 6;
 };
 
+const toLocalDateString = (d) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const isHoliday = (date, holidays = []) => {
-  const dateString = date.toISOString().split('T')[0];
+  const dateString = toLocalDateString(date);
 
   return holidays.some(holiday => {
     const holidayDate = new Date(holiday.date);
-    const holidayString = holidayDate.toISOString().split('T')[0];
+    const holidayString = toLocalDateString(holidayDate);
 
     if (holiday.is_recurring) {
       return (

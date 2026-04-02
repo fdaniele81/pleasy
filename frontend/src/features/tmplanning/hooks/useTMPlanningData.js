@@ -118,10 +118,12 @@ export function useTMPlanningData({
           symbol_letter_color: user.symbol_letter_color,
           task_id: client.task_id,
           project_id: client.project_id,
+          project_key: client.project_key,
           timesheets: client.timesheets,
+          initial_actual: client.initial_actual || 0,
           total_hours_all: client.total_hours_all || 0,
         });
-        clientData.total_hours_all += client.total_hours_all || 0;
+        clientData.total_hours_all += (client.initial_actual || 0) + (client.total_hours_all || 0);
       });
     });
 
@@ -205,8 +207,8 @@ export function useTMPlanningData({
   }, [getHoursForDate]);
 
   const getUserTotal = useCallback((user) => {
-    return user.total_hours_all_clients_all || user.clients.reduce(
-      (sum, client) => sum + (client.total_hours_all || 0), 0
+    return user.clients.reduce(
+      (sum, client) => sum + (client.initial_actual || 0) + (client.total_hours_all || 0), 0
     );
   }, []);
 

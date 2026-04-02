@@ -34,5 +34,6 @@
   "excelUserTotal": "USER TOTAL",
   "excelClientTotal": "CLIENT TOTAL",
   "excelNoUserName": "Unnamed user",
-  "excelNoClientName": "Unnamed client"
+  "excelNoClientName": "Unnamed client",
+  "includesInitialActual": "Includes {{hours}}h of initial actual"
 }

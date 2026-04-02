@@ -5,19 +5,21 @@ export function useTimelineDrag({ columnWidth, getColumnLeft, onDateChange, task
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState(null); // 'move' | 'resize-left' | 'resize-right'
   const [dragDeltaDays, setDragDeltaDays] = useState(0);
+  const [dragDeltaPx, setDragDeltaPx] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pendingDates, setPendingDates] = useState(null);
   const dragStartX = useRef(0);
   const anchorDayIdx = useRef(0);
   const initialDates = useRef(null);
 
-  const handleCellMouseDown = useCallback((e, mode, startDate, endDate, anchorDay) => {
+  const handleCellMouseDown = useCallback((e, mode, startDate, endDate, anchorDay, edgeOffsetX = 0) => {
     e.stopPropagation();
     e.preventDefault();
     setIsDragging(true);
     setDragMode(mode);
     setDragDeltaDays(0);
-    dragStartX.current = e.clientX;
+    setDragDeltaPx(0);
+    dragStartX.current = e.clientX - edgeOffsetX;
     anchorDayIdx.current = anchorDay ?? 0;
     initialDates.current = { startDate, endDate };
   }, []);
@@ -26,6 +28,9 @@ export function useTimelineDrag({ columnWidth, getColumnLeft, onDateChange, task
     if (!isDragging) return;
     e.preventDefault();
     const dx = e.clientX - dragStartX.current;
+
+    // Store raw pixel delta for smooth visual feedback
+    setDragDeltaPx(dx);
 
     let deltaDays;
     if (getColumnLeft) {
@@ -56,6 +61,7 @@ export function useTimelineDrag({ columnWidth, getColumnLeft, onDateChange, task
       setIsDragging(false);
       setDragMode(null);
       setDragDeltaDays(0);
+      setDragDeltaPx(0);
       initialDates.current = null;
       return;
     }
@@ -90,6 +96,7 @@ export function useTimelineDrag({ columnWidth, getColumnLeft, onDateChange, task
     setIsDragging(false);
     setDragMode(null);
     setDragDeltaDays(0);
+    setDragDeltaPx(0);
     initialDates.current = null;
 
     if (finalStart && finalEnd) {
@@ -149,6 +156,7 @@ export function useTimelineDrag({ columnWidth, getColumnLeft, onDateChange, task
     isDragging,
     dragMode,
     dragDeltaDays,
+    dragDeltaPx,
     mousePos,
     handleCellMouseDown,
     getVisualDates,

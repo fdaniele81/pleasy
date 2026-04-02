@@ -134,9 +134,6 @@ export const TaskRow = memo(function TaskRow({
 
   const {
     isDragging,
-    dragMode,
-    dragDeltaPx,
-    mousePos,
     handleCellMouseDown,
     getVisualDates,
     clearPendingDates,
@@ -147,7 +144,7 @@ export const TaskRow = memo(function TaskRow({
     return task.owner_symbol_bg_color || getUserColor(task.owner_id);
   }, [task.owner_id, task.owner_symbol_bg_color]);
 
-  // Compute visual start/end dates (with drag delta applied) - used for tooltip and pending state
+  // Compute visual start/end dates (with drag delta applied)
   const { visualStart, visualEnd } = useMemo(() => {
     const dragged = getVisualDates();
     if (dragged) {
@@ -159,17 +156,17 @@ export const TaskRow = memo(function TaskRow({
     };
   }, [task.start_date, task.end_date, getVisualDates]);
 
-  // Helper to compute bar position from dates
-  const computeBarPosition = useCallback((start, end) => {
-    if (!start || !end || !dateRange || dateRange.length === 0) return null;
+  // Compute bar position in pixels for absolute positioning
+  const barPosition = useMemo(() => {
+    if (!visualStart || !visualEnd || !dateRange || dateRange.length === 0) return null;
 
     const rangeStartISO = formatDateISO(dateRange[0]);
     const rangeEndISO = formatDateISO(dateRange[dateRange.length - 1]);
 
-    if (end < rangeStartISO || start > rangeEndISO) return null;
+    if (visualEnd < rangeStartISO || visualStart > rangeEndISO) return null;
 
-    const clampedStart = start < rangeStartISO ? rangeStartISO : start;
-    const clampedEnd = end > rangeEndISO ? rangeEndISO : end;
+    const clampedStart = visualStart < rangeStartISO ? rangeStartISO : visualStart;
+    const clampedEnd = visualEnd > rangeEndISO ? rangeEndISO : visualEnd;
 
     const startDate = new Date(clampedStart);
     const rangeStart = new Date(dateRange[0]);
@@ -184,38 +181,11 @@ export const TaskRow = memo(function TaskRow({
     const left = getColumnLeft(dayOffset);
     const width = getColumnLeft(dayOffset + durationDays) - left;
 
-    const isStartClipped = start < rangeStartISO;
-    const isEndClipped = end > rangeEndISO;
+    const isStartClipped = visualStart < rangeStartISO;
+    const isEndClipped = visualEnd > rangeEndISO;
 
     return { left, width: Math.max(width, 4), isStartClipped, isEndClipped, startDayIdx: dayOffset, endDayIdx: dayOffset + durationDays };
-  }, [dateRange, getColumnLeft]);
-
-  // Base bar position from actual task dates (no drag applied)
-  const baseStart = task.start_date ? formatDateISO(new Date(task.start_date)) : null;
-  const baseEnd = task.end_date ? formatDateISO(new Date(task.end_date)) : null;
-  const baseBarPosition = useMemo(() => computeBarPosition(baseStart, baseEnd), [computeBarPosition, baseStart, baseEnd]);
-
-  // Bar position for rendering: smooth pixel offset during drag, snapped dates otherwise
-  const barPosition = useMemo(() => {
-    if (isDragging && baseBarPosition && dragDeltaPx !== 0) {
-      // During active drag, apply raw pixel offset for smooth visual feedback
-      let left = baseBarPosition.left;
-      let width = baseBarPosition.width;
-
-      if (dragMode === 'move') {
-        left = baseBarPosition.left + dragDeltaPx;
-      } else if (dragMode === 'resize-left') {
-        left = baseBarPosition.left + dragDeltaPx;
-        width = baseBarPosition.width - dragDeltaPx;
-      } else if (dragMode === 'resize-right') {
-        width = baseBarPosition.width + dragDeltaPx;
-      }
-
-      return { ...baseBarPosition, left, width: Math.max(width, 4) };
-    }
-    // When not dragging (or pending), use snapped visual dates
-    return computeBarPosition(visualStart, visualEnd);
-  }, [isDragging, dragMode, dragDeltaPx, baseBarPosition, computeBarPosition, visualStart, visualEnd]);
+  }, [visualStart, visualEnd, dateRange, getColumnLeft]);
 
   // Determine drag mode from mouse position within the bar
   const handleBarMouseDown = useCallback((e) => {
@@ -226,21 +196,18 @@ export const TaskRow = memo(function TaskRow({
 
     let mode;
     let anchorDay;
-    let edgeOffsetX = 0;
     if (relativeX <= EDGE_ZONE && !barPosition.isStartClipped) {
       mode = 'resize-left';
       anchorDay = barPosition.startDayIdx;
-      edgeOffsetX = relativeX;
     } else if (relativeX >= barRect.width - EDGE_ZONE && !barPosition.isEndClipped) {
       mode = 'resize-right';
       anchorDay = barPosition.endDayIdx;
-      edgeOffsetX = relativeX - barRect.width;
     } else {
       mode = 'move';
       anchorDay = barPosition.startDayIdx;
     }
 
-    handleCellMouseDown(e, mode, task.start_date, task.end_date, anchorDay, edgeOffsetX);
+    handleCellMouseDown(e, mode, task.start_date, task.end_date, anchorDay, 0, barRef.current);
   }, [barPosition, handleCellMouseDown, task.start_date, task.end_date]);
 
   return (
@@ -760,17 +727,12 @@ export const TaskRow = memo(function TaskRow({
         </>
       )}
     </tr>
-    {isDragging && visualStart && visualEnd && barRef.current && createPortal(
+    {isDragging && createPortal(
       <div
+        id="timeline-drag-tooltip"
         className="fixed bg-gray-900/90 text-white text-xs px-2 py-1 rounded shadow-lg z-100 pointer-events-none whitespace-nowrap"
-        style={{
-          left: barRef.current.getBoundingClientRect().left + barRef.current.getBoundingClientRect().width / 2,
-          top: barRef.current.getBoundingClientRect().top - 28,
-          transform: 'translateX(-50%)',
-        }}
-      >
-        {safeFormatDate(visualStart)} → {safeFormatDate(visualEnd)}
-      </div>,
+        style={{ transform: 'translateX(-50%)' }}
+      />,
       document.body
     )}
     </>
